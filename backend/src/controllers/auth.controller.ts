@@ -19,7 +19,7 @@ export async function login(req: Request, res: Response) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    res.json({ message: "Login successful!" });
+    res.json({ data: validUser[0], message: "Login successful!" });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
@@ -37,7 +37,13 @@ export async function signUp(req: Request, res: Response) {
         .status(400)
         .json({ message: "Username, password, name, and role   are required" });
     }
-    res.json({ message: "Sign up successful!" });
+    const signUpResult = await sql`
+        INSERT INTO users (username, password, role) 
+        VALUES (${username}, ${password}, ${role}) 
+        RETURNING *
+    `;
+    
+    res.json({ data: signUpResult[0], message: "Sign up successful!" });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
