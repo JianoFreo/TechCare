@@ -21,6 +21,7 @@ export async function connectNeon(): Promise<void> {
                 password VARCHAR(255) NOT NULL,
                 role VARCHAR(50) NOT NULL,
                 created_at DATE NOT NULL DEFAULT CURRENT_DATE
+                FOREIGN KEY (user_id) REFERENCES laboratory_request(patient_id) ON DELETE CASCADE
             );
             CREATE TABLE IF NOT EXISTS laboratory_request (
                 patient_id SERIAL PRIMARY KEY,
@@ -32,8 +33,18 @@ export async function connectNeon(): Promise<void> {
                 cancelled BOOLEAN NOT NULL DEFAULT FALSE,
                 cancellation_reason TEXT,
                 call_queue_number VARCHAR(255) NOT NULL UNIQUE
-        );
-
+                FOREIGN KEY (patient_id) REFERENCES users(user_id) ON DELETE CASCADE
+            );
+            CREATE TABLE IF NOT EXISTS laboratory_result (
+                request_id VARCHAR(255) NOT NULL,
+                result_id SERIAL PRIMARY KEY,
+                encoded_data TEXT NOT NULL,
+                file_url TEXT NOT NULL,
+                release_date DATE NOT NULL DEFAULT CURRENT_DATE,
+                release_time TIME NOT NULL DEFAULT CURRENT_TIME,
+                input_results JSONB NOT NULL,
+                email_results VARCHAR(255) NOT NULL,
+                FOREIGN KEY (request_id) REFERENCES laboratory_request(request_id) ON DELETE CASCADE
 
         `;
 
