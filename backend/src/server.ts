@@ -16,9 +16,7 @@ app.use(express.json());
 app.use("/api/admin", adminRoutes);
 
 // Test route
-app.get("/", (req, res) => {
-  res.json({ message: "Welcome to the TechCare API!" });
-});
+
 
 // Serve React build
 app.use(
