@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import LoginCard from "./components/LoginCard";
 
 function LoginPage() {
   const [username, setUsername] = useState("");
@@ -7,71 +8,56 @@ function LoginPage() {
   const [role, setRole] = useState("");
 
   const login = async () => {
-    try {
-      if (!username || !password || !role) {
-        alert("Please fill in all fields");
-        return;
-      }
-
-      await axios.post("/api/products", {
-        username,
-        password,
-        role,
-      });
-    } catch (error) {
-      console.error("Error uploading product:", error);
+    if (!username || !password || !role) {
+      alert("Please fill in all fields.");
+      return;
     }
+    await axios.post("/api/products", {
+      username,
+      password,
+      role,
+    });
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-md space-y-4">
-        
-        <h1 className="text-2xl font-bold text-center">Login</h1>
+    <div className="min-h-screen flex">
 
-        <div>
-          <p className="mb-1 text-sm font-medium">Username</p>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+
+      <div className="hidden md:flex w-1/2 relative items-center justify-center p-10 text-white">
+
+        {/* background image */}
+        <img
+          src="../../assets/image.png"
+          alt="TechCare"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+
+        {/* dark overlay for readability */}
+        <div className="absolute inset-0 bg-black/40"></div>
+
+        {/* content on top */}
+        <div className="relative z-10 text-center">
+          <h1 className="text-4xl font-bold mb-4">TechCare System</h1>
+          <p className="text-white/80">
+            Secure hospital management platform for doctors, staff, and patients.
+          </p>
         </div>
 
-        <div>
-          <p className="mb-1 text-sm font-medium">Password</p>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div>
-          <p className="mb-1 text-sm font-medium">Role</p>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select role</option>
-            <option value="admin">Admin</option>
-            <option value="doctor">Doctor</option>
-            <option value="patient">Patient</option>
-            <option value="front-desk-staff">Front Desk Staff</option>
-            <option value="laboratory-staff">Laboratory staff</option>
-          </select>
-        </div>
-
-        <button
-          onClick={login}
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
-        >
-          Login
-        </button>
       </div>
+
+      {/* RIGHT SIDE (login area) */}
+      <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-100">
+        <LoginCard
+          username={username}
+          setUsername={setUsername}
+          password={password}
+          setPassword={setPassword}
+          role={role}
+          setRole={setRole}
+          onLogin={login}
+        />
+      </div>
+
     </div>
   );
 }
