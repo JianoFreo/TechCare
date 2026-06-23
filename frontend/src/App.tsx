@@ -7,7 +7,8 @@ function App() {
         <Route path="/about" element={<div>About</div>} />
         <Route path="/login" element={<LoginPage />} />
       </Routes>
-    </div>)
+    </div>
+  )
 }
 
 export default App
