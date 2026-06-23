@@ -39,7 +39,7 @@ function LoginPage() {
         <div className="relative z-10 text-center">
           <h1 className="text-4xl font-bold mb-4">TechCare System</h1>
           <p className="text-white/80">
-            Secure hospital management platform for doctors, staff, and patients.
+            tukmol concept
           </p>
         </div>
 

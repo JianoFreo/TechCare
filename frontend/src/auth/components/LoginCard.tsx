@@ -63,6 +63,7 @@ function LoginCard({
           <option value="doctor">Doctor</option>
           <option value="admin">Admin</option>
           <option value="patient">Patient</option>
+          <option value="front_desk">Front Desk Staff</option>
         </select>
 
         <button
@@ -79,7 +80,7 @@ function LoginCard({
 
       {/* footer */}
       <p className="text-xs text-center text-gray-400 mt-5">
-        Secure access only • Hospital System
+        forgot password? <span className="text-indigo-500 cursor-pointer">Reset</span>
       </p>
     </div>
   );
