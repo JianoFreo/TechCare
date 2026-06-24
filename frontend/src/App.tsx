@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router'
+
 import LoginPage from './auth/LoginPage'
+
 function App() {
   return (
     <div>
