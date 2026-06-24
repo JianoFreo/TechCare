@@ -11,24 +11,26 @@ if (!DATABASE_URL) {
 
 export const sql = neon(DATABASE_URL);
 
-export async function connectNeon(): Promise<void> {
-  try {
     // sa users table nakalagay na deleted user. so pag nagdelete tayop ng user or any instances we should use delete instead we should just add
     //
     // UPDATE users
     // SET deleted = TRUE
     // WHERE user_id = 1;
+export async function connectNeon(): Promise<void> {
+  try {
     await sql`
-    CREATE TABLE IF NOT EXISTS users (
+      CREATE TABLE IF NOT EXISTS users (
         user_id SERIAL PRIMARY KEY,
         username VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
         role VARCHAR(50) NOT NULL,
         deleted BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
+      )
+    `;
 
-    CREATE TABLE IF NOT EXISTS patient (
+    await sql`
+      CREATE TABLE IF NOT EXISTS patient (
         patient_id INT PRIMARY KEY,
         first_name VARCHAR(255) NOT NULL,
         last_name VARCHAR(255) NOT NULL,
@@ -39,17 +41,21 @@ export async function connectNeon(): Promise<void> {
         patient_records JSONB NOT NULL,
 
         FOREIGN KEY (patient_id)
-            REFERENCES users(user_id)
-    );
+          REFERENCES users(user_id)
+      )
+    `;
 
-    CREATE TABLE IF NOT EXISTS services (
+    await sql`
+      CREATE TABLE IF NOT EXISTS services (
         service_id SERIAL PRIMARY KEY,
         service_name VARCHAR(255) NOT NULL UNIQUE,
         price DECIMAL(10,2) NOT NULL,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
+      )
+    `;
 
-    CREATE TABLE IF NOT EXISTS laboratory_request (
+    await sql`
+      CREATE TABLE IF NOT EXISTS laboratory_request (
         request_id VARCHAR(255) PRIMARY KEY,
         patient_id INT NOT NULL,
         service_id INT NOT NULL,
@@ -60,13 +66,15 @@ export async function connectNeon(): Promise<void> {
         call_queue_number VARCHAR(255) NOT NULL UNIQUE,
 
         FOREIGN KEY (patient_id)
-            REFERENCES patient(patient_id),
+          REFERENCES patient(patient_id),
 
         FOREIGN KEY (service_id)
-            REFERENCES services(service_id)
-    );
+          REFERENCES services(service_id)
+      )
+    `;
 
-    CREATE TABLE IF NOT EXISTS laboratory_result (
+    await sql`
+      CREATE TABLE IF NOT EXISTS laboratory_result (
         result_id SERIAL PRIMARY KEY,
         request_id VARCHAR(255) NOT NULL UNIQUE,
         encoded_data TEXT NOT NULL,
@@ -76,18 +84,22 @@ export async function connectNeon(): Promise<void> {
         email_results VARCHAR(255) NOT NULL,
 
         FOREIGN KEY (request_id)
-            REFERENCES laboratory_request(request_id)
-    );
+          REFERENCES laboratory_request(request_id)
+      )
+    `;
 
-    CREATE TABLE IF NOT EXISTS queue (
+    await sql`
+      CREATE TABLE IF NOT EXISTS queue (
         queue_id SERIAL PRIMARY KEY,
         queue_number VARCHAR(255) NOT NULL UNIQUE,
         current_status VARCHAR(50) NOT NULL,
         priority_queue BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
+      )
+    `;
 
-    CREATE TABLE IF NOT EXISTS consultation_request (
+    await sql`
+      CREATE TABLE IF NOT EXISTS consultation_request (
         consultation_id SERIAL PRIMARY KEY,
         result_id INT NOT NULL,
         call_queue_number VARCHAR(255) NOT NULL,
@@ -97,13 +109,15 @@ export async function connectNeon(): Promise<void> {
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
         FOREIGN KEY (result_id)
-            REFERENCES laboratory_result(result_id),
+          REFERENCES laboratory_result(result_id),
 
         FOREIGN KEY (call_queue_number)
-            REFERENCES queue(queue_number)
-    );
+          REFERENCES queue(queue_number)
+      )
+    `;
 
-    CREATE TABLE IF NOT EXISTS billing (
+    await sql`
+      CREATE TABLE IF NOT EXISTS billing (
         billing_id SERIAL PRIMARY KEY,
         patient_id INT NOT NULL,
         service_id INT NOT NULL,
@@ -113,18 +127,20 @@ export async function connectNeon(): Promise<void> {
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
         FOREIGN KEY (patient_id)
-            REFERENCES patient(patient_id),
+          REFERENCES patient(patient_id),
 
         FOREIGN KEY (service_id)
-            REFERENCES services(service_id)
-    );
+          REFERENCES services(service_id)
+      )
     `;
-    console.log("Database initialized successfully on Neon DB");
+
+    console.log("Database initialized successfully");
   } catch (error) {
     console.error("Error initializing DB", error);
     process.exit(1);
   }
 }
+
 // await sql
 //         CREATE TABLE users (
 //             user_id SERIAL PRIMARY KEY,
