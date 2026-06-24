@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+
 // import { Pool } from "pg";
 import "dotenv/config";
 
@@ -11,11 +12,11 @@ if (!DATABASE_URL) {
 
 export const sql = neon(DATABASE_URL);
 
-    // sa users table nakalagay na deleted user. so pag nagdelete tayop ng user or any instances we should use delete instead we should just add
-    //
-    // UPDATE users
-    // SET deleted = TRUE
-    // WHERE user_id = 1;
+// sa users table nakalagay na deleted user. so pag nagdelete tayop ng user or any instances we should use delete instead we should just add
+//
+// UPDATE users
+// SET deleted = TRUE
+// WHERE user_id = 1;
 export async function connectNeon(): Promise<void> {
   try {
     await sql`
