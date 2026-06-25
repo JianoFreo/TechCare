@@ -1,63 +1,87 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import axios from "axios";
-import LoginCard from "./login-page/LoginCard";
+import LeftSideBackground from "./components/LeftSideBackground";
 
 function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
+const navigate = useNavigate();
 
-  const login = async () => {
-    if (!username || !password || !role) {
-      alert("Please fill in all fields.");
-      return;
-    }
-    await axios.post("/api/products", {
+const login = async () => {
+  if (!username || !password) {
+    alert("Please fill in all fields.");
+    return;
+  }
+
+  try {
+    await axios.post("/api/auth/login", {
       username,
       password,
-      role,
     });
-  };
+    navigate("/admin/dashboard");
+  } catch {
+    alert("Login failed. Please check your credentials.",);
+    setUsername("");
+    setPassword("");
+  }
+};
 
   return (
     <div className="min-h-screen flex">
+      <LeftSideBackground />
 
+      {/* RIGHT SIDE */}
+      <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-100">
+        <div className="w-[420px] bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-8 border border-white/40">
+          <div className="text-center mb-6">
+            <h2 className="text-3xl font-bold text-gray-800">
+              Welcome Back
+            </h2>
 
-      <div className="hidden md:flex w-1/2 relative items-center justify-center p-10 text-white">
+            <p className="text-sm text-gray-500 mt-1">
+              Login to TechCare System
+            </p>
+          </div>
 
-        {/* background image */}
-        <img
-          src="../../assets/image.png"
-          alt="TechCare"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+          <div className="space-y-4">
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Username"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200
+                         focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
+                         outline-none transition"
+            />
 
-        {/* dark overlay for readability */}
-        <div className="absolute inset-0 bg-black/40"></div>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200
+                         focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
+                         outline-none transition"
+            />
+            <button
+              onClick={login}
+              className="w-full py-3 rounded-md font-semibold text-white
+                         bg-sky-500 hover:bg-sky-600
+                         active:scale-[0.98]
+                         transition shadow-md"
+            >
+              Login
+            </button>
+          </div>
 
-        {/* content on top */}
-        <div className="relative z-10 text-center">
-          <h1 className="text-4xl font-bold mb-4">TechCare System</h1>
-          <p className="text-white/80">
-            tukmol concept
+          <p className="text-xs text-center text-gray-400 mt-5">
+            forgot password?{" "}
+            <span className="text-indigo-500 cursor-pointer">
+              Reset
+            </span>
           </p>
         </div>
-
       </div>
-
-      {/* RIGHT SIDE (login area) */}
-      <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-100">
-        <LoginCard
-          username={username}
-          setUsername={setUsername}
-          password={password}
-          setPassword={setPassword}
-          role={role}
-          setRole={setRole}
-          onLogin={login}
-        />
-      </div>
-
     </div>
   );
 }
