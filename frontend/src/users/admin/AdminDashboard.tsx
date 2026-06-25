@@ -86,13 +86,7 @@ function AdminDashboard() {
 
             <div
                 onClick={loadAdminDashboard}
-                style={{
-                    cursor: "pointer",
-                    padding: "10px",
-                    border: "1px solid black",
-                    display: "inline-block",
-                    marginBottom: "20px",
-                }}
+                className=" bg-blue-500 text-white text-center py-2 rounded cursor-pointer mb-4"
             >
                 Load Users
             </div>
@@ -101,11 +95,7 @@ function AdminDashboard() {
             {users.map((user) => (
                 <div
                     key={user.user_id}
-                    style={{
-                        border: "1px solid black",
-                        padding: "10px",
-                        marginBottom: "10px"
-                    }}
+                    className="text-center border p-10 mb-4 rounded shadow"
                 >
                     <p>Username: {user.username}</p>
                     <p>Role: {user.role}</p>
