@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+
 // import { Pool } from "pg";
 import "dotenv/config";
 
@@ -11,20 +12,20 @@ if (!DATABASE_URL) {
 
 export const sql = neon(DATABASE_URL);
 
-    // sa users table nakalagay na deleted user. so pag nagdelete tayop ng user or any instances we should use delete instead we should just add
-    //
-    // UPDATE users
-    // SET deleted = TRUE
-    // WHERE user_id = 1;
+// sa users table nakalagay na deleted user. so pag nagdelete tayop ng user or any instances we should use delete instead we should just add
+//
+// UPDATE users
+// SET deleted = TRUE
+// WHERE user_id = 1;
 export async function connectNeon(): Promise<void> {
   try {
+    
     await sql`
       CREATE TABLE IF NOT EXISTS users (
         user_id SERIAL PRIMARY KEY,
         username VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
         role VARCHAR(50) NOT NULL,
-        deleted BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `;
@@ -35,7 +36,6 @@ export async function connectNeon(): Promise<void> {
         first_name VARCHAR(255) NOT NULL,
         last_name VARCHAR(255) NOT NULL,
         date_of_birth DATE NOT NULL,
-        qrcode_id VARCHAR(255) NOT NULL UNIQUE,
         contact_number VARCHAR(255) NOT NULL,
         email_address VARCHAR(255) NOT NULL,
         patient_records JSONB NOT NULL,

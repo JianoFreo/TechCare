@@ -1,37 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import axios from "axios";
 import LeftSideBackground from "./components/LeftSideBackground";
+import axios from "axios";
 
-function LoginPage() {
+function SignupPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("");
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
 
-  const login = async () => {
-    if (!username || !password) {
+
+  const signup = async () => {
+    if (!username || !password || !role) {
       alert("Please fill in all fields.");
       return;
     }
 
-    try {
-     const response = await axios.post("/api/auth/login", {
-        username,
-        password,
-      });
-      if (!response.data) {
-        alert("Login failed. Please check your credentials.");
-        setUsername("");
-        setPassword("");}
-      else{
-      navigate(`/${response.data}`);
-      }
-    } catch {
-      alert("Login failed. Please check your credentials.",);
-      setUsername("");
-      setPassword("");
-    }
+    await axios.post("/api/signup", {
+      username,
+      password,
+      role,
+    });
   };
 
   return (
@@ -43,11 +32,11 @@ function LoginPage() {
         <div className="w-[420px] bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-8 border border-white/40">
           <div className="text-center mb-6">
             <h2 className="text-3xl font-bold text-gray-800">
-              Welcome Back
+              Create Account
             </h2>
 
             <p className="text-sm text-gray-500 mt-1">
-              Login to TechCare System
+              Sign up to get started
             </p>
           </div>
 
@@ -62,43 +51,44 @@ function LoginPage() {
             />
 
             <input
-              type={showPassword ? "text" : "password"}
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
               className="w-full px-4 py-3 rounded-xl border border-gray-200
-             focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
-             outline-none transition"
+                         focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
+                         outline-none transition"
             />
 
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="text-sm text-indigo-500 hover:text-indigo-600"
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200
+                         focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
+                         outline-none transition bg-white"
             >
-              {showPassword ? "Hide Password" : "Show Password"}
-            </button>
+              <option value="">Select Role</option>
+              <option value="doctor">Doctor</option>
+              <option value="admin">Admin</option>
+              <option value="patient">Patient</option>
+              <option value="front_desk">Front Desk Staff</option>
+            </select>
+
             <button
-              onClick={login}
+              onClick={signup}
               className="w-full py-3 rounded-md font-semibold text-white
                          bg-sky-500 hover:bg-sky-600
                          active:scale-[0.98]
                          transition shadow-md"
             >
-              Login
+              Sign Up
             </button>
           </div>
 
           <p className="text-xs text-center text-gray-400 mt-5">
-            forgot password?{" "}
-            <span className="text-indigo-500 cursor-pointer">
-              Reset
-            </span>
-          </p>
-          <p className="text-xs text-center text-gray-400 mt-5">
-            No account yet? {" "}
-            <span className="text-indigo-500 cursor-pointer" onClick={() =>navigate("/sign-up")}>
-              Sign Up
+            Already have an account?{" "}
+            <span className="text-indigo-500 cursor-pointer" onClick={() => navigate("/login")}>
+              Login
             </span>
           </p>
         </div>
@@ -107,4 +97,4 @@ function LoginPage() {
   );
 }
 
-export default LoginPage;
+export default SignupPage;

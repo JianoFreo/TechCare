@@ -1,15 +1,20 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
-// https://vite.dev/config/
+const target =
+  !process.env.NODE_ENV
+    ? "https://techcare-hui6.onrender.com"
+    : "http://localhost:5000";
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/api': {
-        target: 'https://techcare-hui6.onrender.com'
-      }
-    }
-  }
-})
-
+      "/api": {
+        target,
+        changeOrigin: true,
+      },
+    },
+  },
+});

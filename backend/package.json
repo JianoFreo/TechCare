@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --watch src --ext ts --exec tsx src/server.ts",
-    "build": "tsc",
+    "build": "npm install && tsc",
     "start": "node dist/server.js"
   },
   "keywords": [],
@@ -17,13 +17,13 @@
     "@neondatabase/serverless": "^1.1.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "@types/express": "^5.0.6",
-    "@types/node": "^24.0.0",
-    "typescript": "^5.9.2"
+    "nodemon": "^3.1.14"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.3",
+    "ts-node-dev": "^2.0.0",
     "tsx": "^4.22.4",
-    "ts-node-dev": "^2.0.0"
+    "typescript": "^6.0.3"
   }
 }

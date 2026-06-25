@@ -1,10 +1,12 @@
-import { Request, Response } from 'express';
+import { sql } from "../config/db.js";
+import { Request, Response } from "express";
 
-export function getAdminDashboard(req: Request, res: Response) {
-  try{
-    res.json({ message: 'Welcome to the Admin Dashboard!' });
+export async function getAdminDashboard(req: Request, res: Response) {
+  try {
+    const totalUsers = await sql`SELECT * FROM users`;
+    res.json(totalUsers);
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 }
 
@@ -12,7 +14,9 @@ export function addNewUser(req: Request, res: Response) {
   try {
     const { email, role, password, name } = req.body;
     if (!email || !password || !name || !role) {
-      return res.status(400).json({ message: "Email, role, password, and name are required" });
+      return res
+        .status(400)
+        .json({ message: "Email, role, password, and name are required" });
     }
     res.json({ message: "New user added successfully!" });
   } catch (error) {
@@ -25,7 +29,7 @@ export function viewAllUsers(req: Request, res: Response) {
     res.json({ message: "List of all users" });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
-  } 
+  }
 }
 
 export function deleteUser(req: Request, res: Response) {
@@ -44,7 +48,9 @@ export function updateUser(req: Request, res: Response) {
   try {
     const { email, role, password, name } = req.body;
     if (!email || !password || !name || !role) {
-      return res.status(400).json({ message: "Email, role, password, and name are required" });
+      return res
+        .status(400)
+        .json({ message: "Email, role, password, and name are required" });
     }
     res.json({ message: "User updated successfully!" });
   } catch (error) {
