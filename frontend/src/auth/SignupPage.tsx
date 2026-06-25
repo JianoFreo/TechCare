@@ -7,8 +7,9 @@ function SignupPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-
+  
 
   const signup = async () => {
     if (!username || !password || !role) {
@@ -16,11 +17,12 @@ function SignupPage() {
       return;
     }
 
-    await axios.post("/api/signup", {
+    await axios.post("/api/auth/sign-up", {
       username,
       password,
       role,
     });
+    navigate(`/${role}`);
   };
 
   return (
@@ -51,7 +53,7 @@ function SignupPage() {
             />
 
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
@@ -59,6 +61,13 @@ function SignupPage() {
                          focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
                          outline-none transition"
             />
+             <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-sm text-indigo-500 hover:text-indigo-600"
+            >
+              {showPassword ? "Hide Password" : "Show Password"}
+            </button>
 
             <select
               value={role}
@@ -71,7 +80,8 @@ function SignupPage() {
               <option value="doctor">Doctor</option>
               <option value="admin">Admin</option>
               <option value="patient">Patient</option>
-              <option value="front_desk">Front Desk Staff</option>
+              <option value="frontdesk-staff">Front Desk Staff</option>
+              <option value="laboratory-staff">Laboratory Staff</option>
             </select>
 
             <button

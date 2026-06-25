@@ -19,10 +19,17 @@ export const sql = neon(DATABASE_URL);
 // WHERE user_id = 1;
 export async function connectNeon(): Promise<void> {
   try {
-    
     await sql`
       CREATE TABLE IF NOT EXISTS users (
         user_id SERIAL PRIMARY KEY,
+        username VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+    await sql`
+      CREATE TABLE IF NOT EXISTS pending_users (
         username VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
         role VARCHAR(50) NOT NULL,
