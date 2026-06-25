@@ -14,12 +14,14 @@ export async function login(req: Request, res: Response) {
         WHERE username = ${username} 
         AND password = ${password} 
     `;
-
-    if (validUser.length === 0) {
-      return res.status(401).json({ message: "Invalid credentials" });
+    const user = validUser[0];
+    if (!user) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+    else {
+      res.json(user.role);
     }
 
-    res.json({ data: validUser[0], message: "Login successful!" });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }

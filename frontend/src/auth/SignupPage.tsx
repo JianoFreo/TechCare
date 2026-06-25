@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import LeftSideBackground from "./components/LeftSideBackground";
 import axios from "axios";
 
@@ -6,6 +7,8 @@ function SignupPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
+  const navigate = useNavigate();
+
 
   const signup = async () => {
     if (!username || !password || !role) {
@@ -83,9 +86,9 @@ function SignupPage() {
           </div>
 
           <p className="text-xs text-center text-gray-400 mt-5">
-            forgot password?{" "}
-            <span className="text-indigo-500 cursor-pointer">
-              Reset
+            Already have an account?{" "}
+            <span className="text-indigo-500 cursor-pointer" onClick={() => navigate("/login")}>
+              Login
             </span>
           </p>
         </div>

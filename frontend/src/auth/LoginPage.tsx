@@ -6,26 +6,33 @@ import LeftSideBackground from "./components/LeftSideBackground";
 function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
-const login = async () => {
-  if (!username || !password) {
-    alert("Please fill in all fields.");
-    return;
-  }
+  const login = async () => {
+    if (!username || !password) {
+      alert("Please fill in all fields.");
+      return;
+    }
 
-  try {
-    await axios.post("/api/auth/login", {
-      username,
-      password,
-    });
-    navigate("/admin/dashboard");
-  } catch {
-    alert("Login failed. Please check your credentials.",);
-    setUsername("");
-    setPassword("");
-  }
-};
+    try {
+     const response = await axios.post("/api/auth/login", {
+        username,
+        password,
+      });
+      if (!response.data) {
+        alert("Login failed. Please check your credentials.");
+        setUsername("");
+        setPassword("");}
+      else{
+      navigate(`/${response.data}`);
+      }
+    } catch {
+      alert("Login failed. Please check your credentials.",);
+      setUsername("");
+      setPassword("");
+    }
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -55,14 +62,22 @@ const login = async () => {
             />
 
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
               className="w-full px-4 py-3 rounded-xl border border-gray-200
-                         focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
-                         outline-none transition"
+             focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
+             outline-none transition"
             />
+
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-sm text-indigo-500 hover:text-indigo-600"
+            >
+              {showPassword ? "Hide Password" : "Show Password"}
+            </button>
             <button
               onClick={login}
               className="w-full py-3 rounded-md font-semibold text-white
@@ -78,6 +93,12 @@ const login = async () => {
             forgot password?{" "}
             <span className="text-indigo-500 cursor-pointer">
               Reset
+            </span>
+          </p>
+          <p className="text-xs text-center text-gray-400 mt-5">
+            No account yet? {" "}
+            <span className="text-indigo-500 cursor-pointer" onClick={() =>navigate("/sign-up")}>
+              Sign Up
             </span>
           </p>
         </div>
