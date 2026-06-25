@@ -66,8 +66,8 @@ function AdminDashboard() {
     const loadAdminDashboard = async () => {
         try {
             const response = await axios.get("/api/admin");
-            console.log("Admin dashboard data:", response.data.totalUsers);
-            setUsers(response.data.totalUsers);
+            console.log("Admin dashboard data:", response.data);
+            setUsers(response.data);
         } catch (error) {
             console.error("Error fetching admin dashboard data:", error);
         }

@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 export async function getAdminDashboard(req: Request, res: Response) {
   try {
     const totalUsers = await sql`SELECT * FROM users`;
-    res.json({ totalUsers });
+    res.json(totalUsers);
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }

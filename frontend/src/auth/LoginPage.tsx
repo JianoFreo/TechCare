@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import LoginCard from "./components/LoginCard";
+import LoginCard from "./login-page/LoginCard";
 
 function LoginPage() {
   const [username, setUsername] = useState("");
