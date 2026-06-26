@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import Header from "../components/Header";
+import axios from 'axios'
 
 type User = {
     user_id: number;
     username: string;
+    full_name: string
     password: string;
     role: string;
     created_at: string;
@@ -24,21 +26,27 @@ function UserManagement({
     open,
     setOpen,
 }: UserManagementProps) {
-    const [filteredUsers, setFilteredUsers] = useState<User[]>(users);  
+    const [filteredUsers, setFilteredUsers] = useState<User[]>(users);
+    const [newUserEdit, setNewUserEdit] = useState(true)
+    const [fullName, setFullName] = useState("")
+    const [addRole, setAddRole] = useState("")
+    const [addUsername, setAddUsername] = useState("")
+    const [addContactNumber, setAddContactNumber] = useState("")
+    const [addEmail, setAddEmail] = useState("")
     useEffect(() => {
         loadUsers();
     }, [loadUsers]);
 
-    const deleteUser = async (userId: number) => {
-        try {
-            await fetch(`/api/admin/${userId}`, {
-                method: "DELETE",
-            });
-            loadUsers();
-        } catch (error) {
-            console.error("Error deleting user:", error);
-        }
-    };
+    async function addUser(){
+await axios.post("/api/auth/sign-up",{
+    user: newUserEdit,
+    role: addRole,
+    full_name, fullName,
+    password,
+
+
+})
+    }
     function handleSearch(event: React.ChangeEvent<HTMLInputElement>) {
         const searchTerm = event.target.value.toLowerCase();
         const filteredUsers = users.filter((user) =>
@@ -75,6 +83,7 @@ function UserManagement({
                         <tr>
                             <th className="border p-3 text-left">ID</th>
                             <th className="border p-3 text-left">Username</th>
+                            <th className="border p-3 text-left">full name</th>
                             <th className="border p-3 text-left">Role</th>
                             <th className="border p-3 text-left">Contact Number</th>
                             <th className="border p-3 text-left">Email</th>
@@ -84,10 +93,48 @@ function UserManagement({
                     </thead>
 
                     <tbody>
+                        {newUserEdit && (
+                            <tr>
+                                <th className="border bg-gray-200 p-3 text-left">
+                                </th>
+                                <th className="border p-3 text-left">
+                                    <input className="border p-2" onChange={(e) => setAddUsername(e.target.value)} />
+                                </th>
+                                <th className="border p-3 text-left">
+                                    <input className="border p-2" onChange={(e) => setFullName(e.target.value)} />
+                                </th>
+
+                                <th className="border p-3 text-left">
+                                    <select className="border p-2 w-full" onChange={(e) => setAddRole(e.target.value)}>
+                                        <option value="admin">Admin</option>
+                                        <option value="doctor">Doctor</option>
+                                        <option value="laboratory-staff">Laboratory Staff</option>
+                                        <option value="frontdesk-staff">Front Desk Staff</option>
+                                        <option value="patient">Patient</option>
+                                    </select>
+                                </th>
+                                <th className="border p-3 text-left">
+                                    <input className="border p-2" onChange={(e) => setAddContactNumber(e.target.value)} />
+                                </th>
+                                <th className="border p-3 text-left">
+                                    <input className="border p-2" onChange={(e) => setAddEmail(e.target.value)} />
+                                </th>
+                                <th className="border p-3 text-left">
+                                    {Date()}
+                                </th>
+                                <th className="border p-3 text-left">
+                                    <button className="bg-gray-200 p-2 hover:bg-gray-400 ">
+                                        Add user
+                                    </button>
+                                </th>
+                            </tr>
+                        )
+                        }
                         {filteredUsers.map((user) => (
                             <tr key={user.user_id} className="hover:bg-gray-100">
                                 <td className="border p-3">{user.user_id}</td>
                                 <td className="border p-3">{user.username}</td>
+                                <td className="border p-3">{user.full_name}</td>
                                 <td className="border p-3">{user.role}</td>
                                 <td className="border p-3">{user.contact_number}</td>
                                 <td className="border p-3">{user.email}</td>
@@ -107,6 +154,7 @@ function UserManagement({
                             </tr>
                         ))}
                     </tbody>
+
                 </table>
             </div>
         </main>
