@@ -6,8 +6,9 @@ import LeftSideBackground from "./components/LeftSideBackground";
 function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+    const navigate = useNavigate();
+
 
   const login = async () => {
     if (!username || !password) {
@@ -20,7 +21,7 @@ function LoginPage() {
         username,
         password,
       });
-      if (!response.data.user) {
+      if (!response.data) {
         alert(response.data.message);
         setUsername("");
         setPassword("");}
@@ -39,8 +40,8 @@ function LoginPage() {
       <LeftSideBackground />
 
       {/* RIGHT SIDE */}
-      <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-100">
-        <div className="w-[420px] bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-8 border border-white/40">
+      <div className="w-full md:w-1/2 flex items-center justify-center ">
+        <div className="w-105 border-2 p-10">
           <div className="text-center mb-6">
             <h2 className="text-3xl font-bold text-gray-800">
               Welcome Back
@@ -56,9 +57,7 @@ function LoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Username"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200
-                         focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
-                         outline-none transition"
+              className="w-full  p-3 border-2 rounded"
             />
 
             <input
@@ -66,9 +65,7 @@ function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200
-             focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
-             outline-none transition"
+              className="w-full  p-3 border-2 rounded"
             />
 
             <button
@@ -80,10 +77,7 @@ function LoginPage() {
             </button>
             <button
               onClick={login}
-              className="w-full py-3 rounded-md font-semibold text-white
-                         bg-sky-500 hover:bg-sky-600
-                         active:scale-[0.98]
-                         transition shadow-md"
+              className="w-full bg-gray-200 p-3 rounded"
             >
               Login
             </button>
@@ -92,15 +86,15 @@ function LoginPage() {
           <p className="text-xs text-center text-gray-400 mt-5">
             forgot password?{" "}
             <span className="text-indigo-500 cursor-pointer">
-              Reset
+              Send a request
             </span>
           </p>
-          <p className="text-xs text-center text-gray-400 mt-5">
+          {/* <p className="text-xs text-center text-gray-400 mt-5">
             No account yet? {" "}
             <span className="text-indigo-500 cursor-pointer" onClick={() =>navigate("/sign-up")}>
               Sign Up
             </span>
-          </p>
+          </p> */}
         </div>
       </div>
     </div>

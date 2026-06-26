@@ -11,7 +11,6 @@ if (!DATABASE_URL) {
 ///////////////==========================for neon db==============================
 
 export const sql = neon(DATABASE_URL);
-
 // sa users table nakalagay na deleted user. so pag nagdelete tayop ng user or any instances we should use delete instead we should just add
 //
 // UPDATE users
@@ -25,121 +24,124 @@ export async function connectNeon(): Promise<void> {
         username VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
         role VARCHAR(50) NOT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
-    await sql`
-      CREATE TABLE IF NOT EXISTS pending_users (
-        username VARCHAR(255) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL,
-        role VARCHAR(50) NOT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS patient (
-        patient_id INT PRIMARY KEY,
-        first_name VARCHAR(255) NOT NULL,
-        last_name VARCHAR(255) NOT NULL,
-        date_of_birth DATE NOT NULL,
+        full_name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
         contact_number VARCHAR(255) NOT NULL,
-        email_address VARCHAR(255) NOT NULL,
-        patient_records JSONB NOT NULL,
-
-        FOREIGN KEY (patient_id)
-          REFERENCES users(user_id)
-      )
-    `;
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS services (
-        service_id SERIAL PRIMARY KEY,
-        service_name VARCHAR(255) NOT NULL UNIQUE,
-        price DECIMAL(10,2) NOT NULL,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
-    `;
+      `;
+    // await sql`
+    //   CREATE TABLE IF NOT EXISTS pending_users (
+    //     username VARCHAR(255) NOT NULL UNIQUE,
+    //     password VARCHAR(255) NOT NULL,
+    //     role VARCHAR(50) NOT NULL,
+    //     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    //   )
+    // `;
 
-    await sql`
-      CREATE TABLE IF NOT EXISTS laboratory_request (
-        request_id VARCHAR(255) PRIMARY KEY,
-        patient_id INT NOT NULL,
-        service_id INT NOT NULL,
-        status VARCHAR(50) NOT NULL,
-        request_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        cancelled BOOLEAN NOT NULL DEFAULT FALSE,
-        cancellation_reason TEXT,
-        call_queue_number VARCHAR(255) NOT NULL UNIQUE,
+    // await sql`
+    //   CREATE TABLE IF NOT EXISTS patient (
+    //     patient_id INT PRIMARY KEY,
+    //     first_name VARCHAR(255) NOT NULL,
+    //     last_name VARCHAR(255) NOT NULL,
+    //     date_of_birth DATE NOT NULL,
+    //     contact_number VARCHAR(255) NOT NULL,
+    //     email_address VARCHAR(255) NOT NULL,
+    //     patient_records JSONB NOT NULL,
 
-        FOREIGN KEY (patient_id)
-          REFERENCES patient(patient_id),
+    //     FOREIGN KEY (patient_id)
+    //       REFERENCES users(user_id)
+    //   )
+    // `;
 
-        FOREIGN KEY (service_id)
-          REFERENCES services(service_id)
-      )
-    `;
+    // await sql`
+    //   CREATE TABLE IF NOT EXISTS services (
+    //     service_id SERIAL PRIMARY KEY,
+    //     service_name VARCHAR(255) NOT NULL UNIQUE,
+    //     price DECIMAL(10,2) NOT NULL,
+    //     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    //   )
+    // `;
 
-    await sql`
-      CREATE TABLE IF NOT EXISTS laboratory_result (
-        result_id SERIAL PRIMARY KEY,
-        request_id VARCHAR(255) NOT NULL UNIQUE,
-        encoded_data TEXT NOT NULL,
-        file_url TEXT NOT NULL,
-        release_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        input_results JSONB NOT NULL,
-        email_results VARCHAR(255) NOT NULL,
+    // await sql`
+    //   CREATE TABLE IF NOT EXISTS laboratory_request (
+    //     request_id VARCHAR(255) PRIMARY KEY,
+    //     patient_id INT NOT NULL,
+    //     service_id INT NOT NULL,
+    //     status VARCHAR(50) NOT NULL,
+    //     request_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    //     cancelled BOOLEAN NOT NULL DEFAULT FALSE,
+    //     cancellation_reason TEXT,
+    //     call_queue_number VARCHAR(255) NOT NULL UNIQUE,
 
-        FOREIGN KEY (request_id)
-          REFERENCES laboratory_request(request_id)
-      )
-    `;
+    //     FOREIGN KEY (patient_id)
+    //       REFERENCES patient(patient_id),
 
-    await sql`
-      CREATE TABLE IF NOT EXISTS queue (
-        queue_id SERIAL PRIMARY KEY,
-        queue_number VARCHAR(255) NOT NULL UNIQUE,
-        current_status VARCHAR(50) NOT NULL,
-        priority_queue BOOLEAN NOT NULL DEFAULT FALSE,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
+    //     FOREIGN KEY (service_id)
+    //       REFERENCES services(service_id)
+    //   )
+    // `;
 
-    await sql`
-      CREATE TABLE IF NOT EXISTS consultation_request (
-        consultation_id SERIAL PRIMARY KEY,
-        result_id INT NOT NULL,
-        call_queue_number VARCHAR(255) NOT NULL,
-        retrieved_patient_data JSONB NOT NULL,
-        input_results JSONB NOT NULL,
-        input_prescription JSONB NOT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    // await sql`
+    //   CREATE TABLE IF NOT EXISTS laboratory_result (
+    //     result_id SERIAL PRIMARY KEY,
+    //     request_id VARCHAR(255) NOT NULL UNIQUE,
+    //     encoded_data TEXT NOT NULL,
+    //     file_url TEXT NOT NULL,
+    //     release_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    //     input_results JSONB NOT NULL,
+    //     email_results VARCHAR(255) NOT NULL,
 
-        FOREIGN KEY (result_id)
-          REFERENCES laboratory_result(result_id),
+    //     FOREIGN KEY (request_id)
+    //       REFERENCES laboratory_request(request_id)
+    //   )
+    // `;
 
-        FOREIGN KEY (call_queue_number)
-          REFERENCES queue(queue_number)
-      )
-    `;
+    // await sql`
+    //   CREATE TABLE IF NOT EXISTS queue (
+    //     queue_id SERIAL PRIMARY KEY,
+    //     queue_number VARCHAR(255) NOT NULL UNIQUE,
+    //     current_status VARCHAR(50) NOT NULL,
+    //     priority_queue BOOLEAN NOT NULL DEFAULT FALSE,
+    //     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    //   )
+    // `;
 
-    await sql`
-      CREATE TABLE IF NOT EXISTS billing (
-        billing_id SERIAL PRIMARY KEY,
-        patient_id INT NOT NULL,
-        service_id INT NOT NULL,
-        total_amount DECIMAL(10,2) NOT NULL,
-        applied_discount DECIMAL(10,2) NOT NULL DEFAULT 0,
-        payment_confirmation BOOLEAN NOT NULL DEFAULT FALSE,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    // await sql`
+    //   CREATE TABLE IF NOT EXISTS consultation_request (
+    //     consultation_id SERIAL PRIMARY KEY,
+    //     result_id INT NOT NULL,
+    //     call_queue_number VARCHAR(255) NOT NULL,
+    //     retrieved_patient_data JSONB NOT NULL,
+    //     input_results JSONB NOT NULL,
+    //     input_prescription JSONB NOT NULL,
+    //     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-        FOREIGN KEY (patient_id)
-          REFERENCES patient(patient_id),
+    //     FOREIGN KEY (result_id)
+    //       REFERENCES laboratory_result(result_id),
 
-        FOREIGN KEY (service_id)
-          REFERENCES services(service_id)
-      )
-    `;
+    //     FOREIGN KEY (call_queue_number)
+    //       REFERENCES queue(queue_number)
+    //   )
+    // `;
+
+    // await sql`
+    //   CREATE TABLE IF NOT EXISTS billing (
+    //     billing_id SERIAL PRIMARY KEY,
+    //     patient_id INT NOT NULL,
+    //     service_id INT NOT NULL,
+    //     total_amount DECIMAL(10,2) NOT NULL,
+    //     applied_discount DECIMAL(10,2) NOT NULL DEFAULT 0,
+    //     payment_confirmation BOOLEAN NOT NULL DEFAULT FALSE,
+    //     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    //     FOREIGN KEY (patient_id)
+    //       REFERENCES patient(patient_id),
+
+    //     FOREIGN KEY (service_id)
+    //       REFERENCES services(service_id)
+    //   )
+    // `;
 
     console.log("Database initialized successfully");
   } catch (error) {
