@@ -102,13 +102,6 @@ function UserManagement({
                                         >
                                             Edit
                                         </button>
-
-                                        <button
-                                            className="bg-gray-200 px-4 py-2 hover:bg-gray-400"
-                                            onClick={() => deleteUser(user.user_id)}
-                                        >
-                                            Delete
-                                        </button>
                                     </div>
                                 </td>
                             </tr>
