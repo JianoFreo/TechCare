@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router'
 import LoginPage from './auth/LoginPage'
 import SignupPage from './auth/SignupPage'
-import AdminDashboard from './users/admin/AdminDashboard'
+import Admin from './users/admin/Admin'
 import DoctorDashboard from './users/doctor/DoctorDashbaord'
 import FrontdeskDashboard from './users/frontdesk_staff/FrontdeskDashboard'
 import LabstaffDashboard from './users/laboratory_staff/LabstaffDashbaord'
@@ -15,7 +15,7 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/sign-up" element={<SignupPage />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="/doctor" element={<DoctorDashboard />} />
         <Route path="/patient" element={<PatientInformation />} />
         <Route path="/laboratory-staff" element={<LabstaffDashboard />} />

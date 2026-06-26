@@ -1,9 +1,11 @@
+
 type SideBarProps = {
     open: boolean;
-    settings: string;
+    page: string;
+    setPage: React.Dispatch<React.SetStateAction<string>>;
 };
 
-function SideBar({ open, settings }: SideBarProps) {
+function SideBar({ open, page, setPage }: SideBarProps) {
     return (
         <aside
             className={`bg-gray-200 text-black h-screen overflow-hidden transition-all duration-300 ${open ? "w-64 p-6" : "w-0 p-0"
@@ -17,34 +19,38 @@ function SideBar({ open, settings }: SideBarProps) {
 
                     <nav className="flex flex-col gap-3">
                         <a
-                            className={`hover:font-bold border-2 p-5 ${settings === "dashboard"
+                            className={`hover:font-bold border-2 p-5 ${page === "dashboard"
                                 ? "bg-red-800 text-white border-red-800"
                                 : ""
                                 }`}
+                            onClick={() => setPage("dashboard")}    
                         >
                             Dashboard
                         </a>
                         <a
-                            className={`hover:font-bold border-2 p-5 ${settings === "user-management"
+                            className={`hover:font-bold border-2 p-5 ${page === "user-management"
                                 ? "bg-red-800 text-white border-red-800"
                                 : ""
                                 }`}
+                            onClick={() => setPage("user-management")}
                         >
                             User Management
                         </a>
                         <a
-                            className={`hover:font-bold border-2 p-5 ${settings === "service-pricing"
+                            className={`hover:font-bold border-2 p-5 ${page === "service-pricing"
                                 ? "bg-red-800 text-white border-red-800"
                                 : ""
                                 }`}
+                            onClick={() => setPage("service-pricing")}
                         >
                             Service Pricing
                         </a>
                         <a
-                            className={`hover:font-bold border-2 p-5 ${settings === "acitivity-monitoring"
+                            className={`hover:font-bold border-2 p-5 ${page === "activity-monitoring"
                                 ? "bg-red-800 text-white border-red-800"
                                 : ""
                                 }`}
+                            onClick={() => setPage("activity-monitoring")}
                         >
                             Activity Monitoring
                         </a>

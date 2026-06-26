@@ -1,7 +1,7 @@
 import { sql } from "../config/db.js";
 import { Request, Response } from "express";
 
-export async function getAdminDashboard(req: Request, res: Response) {
+export async function getAllUsers(req: Request, res: Response) {
   try {
     const totalUsers = await sql`SELECT * FROM users`;
     res.json(totalUsers);

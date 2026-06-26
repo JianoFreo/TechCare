@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { 
-    getAdminDashboard,
+    getAllUsers,
     addNewUser,
     viewAllUsers,
     deleteUser,
@@ -8,7 +8,7 @@ import {
 } from '../controllers/admin.controller.js';
 const router = Router();
 
-router.get('/', getAdminDashboard);
+router.get('/', getAllUsers);
 router.post('/users', addNewUser);
 router.get('/users', viewAllUsers);
 router.delete('/users', deleteUser);

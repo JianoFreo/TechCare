@@ -1,7 +1,6 @@
+import { useEffect } from "react";
 
-import axios from "axios";
-import { useState, useEffect } from "react";
-import SideBar from "./components/SideBar";
+
 type User = {
     user_id: number;
     username: string;
@@ -11,31 +10,26 @@ type User = {
     created_at: string;
 };
 
+type AdminDashboardProps = {
+    users: User[];
+    open: boolean;
+    setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    loadUsers: () => Promise<void>;
+};
 
-function AdminDashboard() {
-    const [users, setUsers] = useState<User[]>([]);
-    const [open, setOpen] = useState(false);
-
-    const loadAdminDashboard = async () => {
-        try {
-            const response = await axios.get("/api/admin");
-            console.log("Admin dashboard data:", response.data);
-            setUsers(response.data);
-        } catch (error) {
-            console.error("Error fetching admin dashboard data:", error);
-        }
-    };
+function AdminDashboard({
+    users,
+    open,
+    setOpen,
+    loadUsers,
+}: AdminDashboardProps) {
     useEffect(() => {
-        const fetchData = async () => {
-            await loadAdminDashboard();
-        };
-
-        fetchData();
-    }, []);
+        loadUsers();
+    }, [loadUsers]);
 
     return (
         <div className="flex min-h-screen">
-            <SideBar open={open} settings="dashboard" />
+
 
             <main className="flex-1 p-6">
                 <div className="flex items-center gap-4 mb-6">
@@ -49,8 +43,9 @@ function AdminDashboard() {
                     <h1 className="text-3xl font-bold">
                         Admin Dashboard
                     </h1>
+
                     <div
-                        onClick={loadAdminDashboard}
+                        onClick={loadUsers}
                         className="ml-auto bg-red-800 text-white py-2 px-4 cursor-pointer"
                     >
                         Load Users
@@ -105,7 +100,7 @@ export default AdminDashboard;
 //                     <button
 //                         onClick={() => {
 //                             console.log("clicked");
-//                             loadadminDashboard();
+//                             loadUsers();
 //                         }}
 //                         className="reload-button"
 //                     >
