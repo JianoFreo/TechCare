@@ -9,7 +9,7 @@ function SignupPage() {
   const [role, setRole] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  
+
 
   const signup = async () => {
     if (!username || !password || !role) {
@@ -17,12 +17,17 @@ function SignupPage() {
       return;
     }
 
-    await axios.post("/api/auth/sign-up", {
+    const response = await axios.post("/api/auth/sign-up", {
       username,
       password,
       role,
     });
-    navigate(`/${role}`);
+    if (!response.data.user) {
+      alert(response.data.message);
+      return
+    }
+    navigate(`/${response.data.user.role}`);
+
   };
 
   return (
@@ -61,7 +66,7 @@ function SignupPage() {
                          focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
                          outline-none transition"
             />
-             <button
+            <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="text-sm text-indigo-500 hover:text-indigo-600"

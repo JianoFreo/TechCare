@@ -1,6 +1,7 @@
-import { Request, Response } from "express";
+import { json, Request, Response } from "express";
 import { sql } from "../config/db.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 export async function login(req: Request, res: Response) {
   try {
     const { username, password } = req.body;
@@ -45,13 +46,23 @@ export async function signUp(req: Request, res: Response) {
     //     VALUES (${username}, ${hashedPassword}, ${role}) 
     //     RETURNING *
     // `;
+    const existingUser = await sql`
+        SELECT * FROM users
+        WHERE username = ${username}
+    `;
+    if (existingUser.length > 0) {
+      return res.status(200).json({ message: "Username already exists" });
+    }
     const signUpResult = await sql`
         INSERT INTO users (username, password, role) 
         VALUES (${username}, ${hashedPassword}, ${role}) 
         RETURNING *
     `;
+    const token = jwt.sign({ id: signUpResult[0].id }, process.env.JWT_SECRET!, {
+      expiresIn: "1h",
+    });
     
-    res.json({ data: signUpResult[0], message: "Sign up successful!" });
+    res.status(201).json({ user: signUpResult[0], message: "Sign up successful!", token });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }

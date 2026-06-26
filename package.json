@@ -3,9 +3,5 @@
     "dev": "npm run dev --prefix backend",
     "build": "npm run build --prefix backend && npm run build --prefix frontend",
     "start": "npm run start --prefix backend"
-  },
-  "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "jsonwebtoken": "^9.0.3"
   }
 }
