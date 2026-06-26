@@ -33,11 +33,11 @@ export async function login(req: Request, res: Response) {
 
 export async function signUp(req: Request, res: Response) {
   try {
-    const { username, password, role } = req.body;
-    if (!username || !password || !role) {
+    const { username, password, role, full_name, email, contact_number } = req.body;
+    if (!username || !password || !role || !full_name || !email || !contact_number) {
       return res
         .status(400)
-        .json({ message: "Username, password, and role are required" });
+        .json({ message: "All fields are required" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     // const signUpResult = await sql`
@@ -53,8 +53,8 @@ export async function signUp(req: Request, res: Response) {
       return res.status(200).json({ message: "Username already exists" });
     }
     const signUpResult = await sql`
-        INSERT INTO users (username, password, role) 
-        VALUES (${username}, ${hashedPassword}, ${role}) 
+        INSERT INTO users (username, password, role, full_name, email, contact_number) 
+        VALUES (${username}, ${hashedPassword}, ${role}, ${full_name}, ${email}, ${contact_number}) 
         RETURNING *
     `;
     const token = jwt.sign(
