@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import Header from "../components/Header";
 
 
 type User = {
@@ -30,25 +31,7 @@ function AdminDashboard({
     return (
 
         <main className="flex-1 p-6">
-            <div className="flex items-center gap-4 mb-6">
-                <button
-                    onClick={() => setOpen(!open)}
-                    className="text-2xl"
-                >
-                    ☰
-                </button>
-
-                <h1 className="text-3xl font-bold">
-                    Admin Dashboard
-                </h1>
-
-                <div
-                    onClick={loadUsers}
-                    className="ml-auto bg-red-800 text-white py-2 px-4 cursor-pointer"
-                >
-                    Load Users
-                </div>
-            </div>
+            <Header open={open} setOpen={setOpen} loadUsers={loadUsers} page="Admin Dashboard" />
             <div className="flex p-6 gap-4 justify-between">
                 <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">                    <h2>
                     Total Users: {users.length}

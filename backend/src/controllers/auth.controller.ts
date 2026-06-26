@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { json, Request, Response } from "express";
 import { sql } from "../config/db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -47,10 +47,10 @@ export async function signUp(req: Request, res: Response) {
     // `;
     const existingUser = await sql`
         SELECT * FROM users
-        WHERE username = ${username}
+        WHERE username = ${username} OR email = ${email} OR contact_number = ${contact_number}  
     `;
     if (existingUser.length > 0) {
-      return res.status(200).json({ message: "Username already exists" });
+      return res.status(200).json({ message: "User already exists" });
     }
     const signUpResult = await sql`
         INSERT INTO users (username, password, role, full_name, email, contact_number) 

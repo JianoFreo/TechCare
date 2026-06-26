@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import axios from "axios";
 import UserManagement from "./pages/UserManagement";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -18,7 +18,7 @@ function Admin() {
     const [open, setOpen] = useState(false);
     const [page, setPage] = useState("dashboard");
 
-    const loadUsers = async () => {
+    const loadUsers = useCallback(async () => {
         try {
             const response = await axios.get("/api/admin");
             console.log("Admin dashboard data:", response.data);
@@ -26,7 +26,7 @@ function Admin() {
         } catch (error) {
             console.error("Error fetching admin dashboard data:", error);
         }
-    };
+    }, []);
 
     return (
         <div className="flex min-h-screen">
