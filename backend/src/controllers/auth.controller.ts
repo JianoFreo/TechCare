@@ -16,21 +16,20 @@ export async function login(req: Request, res: Response) {
     `;
     const user = validUser[0];
     if (!user) {
-      return res.status(401).json({ message: "Invalid username or password" });
+      return res.status(200).json({ message: "Invalid username" });
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid username or password" });
+      return res.status(200).json({ message: "Invalid password" });
     }
-    res.status(200).json(validUser[0]);
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
+      expiresIn: "1h",
+    });
+    res.status(200).json({ message: "Login successful", user, token });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
-
-
-
-
 
 export async function signUp(req: Request, res: Response) {
   try {
@@ -42,8 +41,8 @@ export async function signUp(req: Request, res: Response) {
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     // const signUpResult = await sql`
-    //     INSERT INTO pending_users (username, password, role) 
-    //     VALUES (${username}, ${hashedPassword}, ${role}) 
+    //     INSERT INTO pending_users (username, password, role)
+    //     VALUES (${username}, ${hashedPassword}, ${role})
     //     RETURNING *
     // `;
     const existingUser = await sql`
@@ -58,11 +57,17 @@ export async function signUp(req: Request, res: Response) {
         VALUES (${username}, ${hashedPassword}, ${role}) 
         RETURNING *
     `;
-    const token = jwt.sign({ id: signUpResult[0].id }, process.env.JWT_SECRET!, {
-      expiresIn: "1h",
-    });
-    
-    res.status(201).json({ user: signUpResult[0], message: "Sign up successful!", token });
+    const token = jwt.sign(
+      { id: signUpResult[0].id },
+      process.env.JWT_SECRET!,
+      {
+        expiresIn: "1h",
+      },
+    );
+
+    res
+      .status(201)
+      .json({ user: signUpResult[0], message: "Sign up successful!", token });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }

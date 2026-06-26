@@ -20,12 +20,12 @@ function LoginPage() {
         username,
         password,
       });
-      if (!response.data) {
-        alert("Login failed. Please check your credentials.");
+      if (!response.data.user) {
+        alert(response.data.message);
         setUsername("");
         setPassword("");}
       else{
-      navigate(`/${response.data}`);
+      navigate(`/${response.data.user.role}`);
       }
     } catch {
       alert("Login failed. Please check your credentials.",);
