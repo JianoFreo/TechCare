@@ -7,7 +7,7 @@ type HeaderProps = {
 
 function Header({ open, setOpen, loadUsers, page }: HeaderProps) {
     return (
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-4 mb-6 ">
             <button
                 onClick={() => setOpen(!open)}
                 className="text-2xl"

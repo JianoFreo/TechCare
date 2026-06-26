@@ -9,13 +9,14 @@ type User = {
     username: string;
     password: string;
     role: string;
-    deleted: boolean;
     created_at: string;
+    contact_number: string;
+    email: string;
 };
 
 function Admin() {
     const [users, setUsers] = useState<User[]>([]);
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(true);
     const [page, setPage] = useState("dashboard");
 
     const loadUsers = useCallback(async () => {

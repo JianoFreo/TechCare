@@ -7,8 +7,9 @@ type User = {
     username: string;
     password: string;
     role: string;
-    deleted: boolean;
     created_at: string;
+    contact_number: string;
+    email: string;
 };
 
 type AdminDashboardProps = {
@@ -33,9 +34,10 @@ function AdminDashboard({
         <main className="flex-1 p-6">
             <Header open={open} setOpen={setOpen} loadUsers={loadUsers} page="Admin Dashboard" />
             <div className="flex p-6 gap-4 justify-between">
-                <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">                    <h2>
-                    Total Users: {users.length}
-                </h2>
+                <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
+                    <h2>
+                        Total Users: {users.length}
+                    </h2>
                 </div>
                 <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
                     <h2>
@@ -53,7 +55,7 @@ function AdminDashboard({
                     </h2>
                 </div>
             </div>
-            <div className="border-3 p-6">
+            <div className="border p-6">
                 <p className="pb-5 text-2xl">
                     SYSTEM OVERVIEW
                 </p>
@@ -61,26 +63,26 @@ function AdminDashboard({
                 <div className="flex gap-3">
                     <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
                         <h2>
-                            Doctors active: {users.filter(user => user.role === "doctor" && !user.deleted).length}
+                            Doctors active: {users.filter(user => user.role === "doctor" ).length}
                         </h2>
 
                     </div>
                     <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
                         <h2>
-                            Labstaff active: {users.filter(user => user.role === "laboratory-staff" && !user.deleted).length}
+                            Labstaff active: {users.filter(user => user.role === "laboratory-staff" ).length}
                         </h2>
                     </div>
                 </div>
                 <div className="flex gap-4">
                     <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
                         <h2>
-                            Front Desk staffs active: {users.filter(user => user.role === "frontdesk-staff" && !user.deleted).length}
+                            Front Desk staffs active: {users.filter(user => user.role === "frontdesk-staff" ).length}
                         </h2>
 
                     </div>
                     <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
                         <h2>
-                            Registered patients: {users.filter(user => user.role === "patient" && !user.deleted).length}
+                            Registered patients: {users.filter(user => user.role === "patient" ).length}
                         </h2>
                     </div>
                 </div>
