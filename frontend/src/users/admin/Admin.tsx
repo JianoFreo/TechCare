@@ -16,7 +16,7 @@ type User = {
 function Admin() {
     const [users, setUsers] = useState<User[]>([]);
     const [open, setOpen] = useState(false);
-    const [page, setPage] = useState("dashboard")
+    const [page, setPage] = useState("dashboard");
 
     const loadUsers = async () => {
         try {
@@ -44,7 +44,7 @@ function Admin() {
                     loadUsers={loadUsers}
                 />
             )}
-            {page === "users" && (
+            {page === "user-management" && (
                 <UserManagement
                     users={users}
                     open={open}

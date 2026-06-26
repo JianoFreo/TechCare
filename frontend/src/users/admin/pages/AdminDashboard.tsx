@@ -28,43 +28,53 @@ function AdminDashboard({
     }, [loadUsers]);
 
     return (
-        <div className="flex min-h-screen">
 
+        <main className="flex-1 p-6">
+            <div className="flex items-center gap-4 mb-6">
+                <button
+                    onClick={() => setOpen(!open)}
+                    className="text-2xl"
+                >
+                    ☰
+                </button>
 
-            <main className="flex-1 p-6">
-                <div className="flex items-center gap-4 mb-6">
-                    <button
-                        onClick={() => setOpen(!open)}
-                        className="text-2xl"
-                    >
-                        ☰
-                    </button>
+                <h1 className="text-3xl font-bold">
+                    Admin Dashboard
+                </h1>
 
-                    <h1 className="text-3xl font-bold">
-                        Admin Dashboard
-                    </h1>
-
-                    <div
-                        onClick={loadUsers}
-                        className="ml-auto bg-red-800 text-white py-2 px-4 cursor-pointer"
-                    >
-                        Load Users
-                    </div>
+                <div
+                    onClick={loadUsers}
+                    className="ml-auto bg-red-800 text-white py-2 px-4 cursor-pointer"
+                >
+                    Load Users
+                </div>
+            </div>
+            <div className="flex p-6 gap-4 justify-between">
+                <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">                    <h2>
+                    Total Users: {users.length}
+                </h2>
+                </div>
+                <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
+                    <h2>
+                        Active Users
+                    </h2>
+                </div>
+                <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
+                    <h2>
+                        Today's Activity:
+                    </h2>
+                </div>
+                <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
+                    <h2>
+                        System status:
+                    </h2>
                 </div>
 
-                <h2>Total Users: {users.length}</h2>
 
-                {users.map((user) => (
-                    <div
-                        key={user.user_id}
-                        className="border p-10 mb-4 rounded shadow"
-                    >
-                        <p>Username: {user.username}</p>
-                        <p>Role: {user.role}</p>
-                    </div>
-                ))}
-            </main>
-        </div>
+            </div>
+
+
+        </main>
     );
 }
 
