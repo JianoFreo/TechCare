@@ -7,7 +7,7 @@ function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
 
   const login = async () => {
@@ -15,21 +15,23 @@ function LoginPage() {
       alert("Please fill in all fields.");
       return;
     }
-
+    const response = await axios.post("/api/auth/login", {
+      username,
+      password,
+    });
+    console.log("Login response:", response.data);
     try {
-     const response = await axios.post("/api/auth/login", {
-        username,
-        password,
-      });
+
       if (!response.data) {
         alert(response.data.message);
         setUsername("");
-        setPassword("");}
-      else{
-      navigate(`/${response.data.user.role}`);
+        setPassword("");
+      }
+      else {
+        navigate(`/${response.data.user.role}`);
       }
     } catch {
-      alert("Login failed. Please check your credentials.",);
+      alert(response.data.message);
       setUsername("");
       setPassword("");
     }
