@@ -40,8 +40,6 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex">
       <LeftSideBackground />
-
-      {/* RIGHT SIDE */}
       <div className="w-full md:w-1/2 flex items-center justify-center ">
         <div className="w-105 border-2 p-10">
           <div className="text-center mb-6">
@@ -79,7 +77,7 @@ function LoginPage() {
             </button>
             <button
               onClick={login}
-              className="w-full bg-gray-200 p-3 rounded"
+              className="w-full bg-gray-200 p-3 rounded hover:bg-gray-300 cursor-pointer"
             >
               Login
             </button>

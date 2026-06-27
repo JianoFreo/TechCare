@@ -12,6 +12,6 @@ router.get('/', getAllUsers);
 router.post('/users', addNewUser);
 router.get('/users', viewAllUsers);
 router.delete('/users', deleteUser);
-router.put('/users', updateUser);
+router.patch('/users/:user_id', updateUser);
 
 export default router;

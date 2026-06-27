@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import Header from "../components/Header";
 import AddUserModal from "../components/AddUserModal";
+import UpdateUserModal from "../components/UpdateUserModal"
 
 type User = {
     user_id: number;
+    full_name:string
     username: string;
     password: string;
     role: string;
@@ -26,9 +28,9 @@ function UserManagement({
     setOpen,
 }: UserManagementProps) {
     const [showAddUser, setShowAddUser] = useState(false);
+    const [showUpdateUser, setShowUpdateUser] = useState(false);
     const [search, setSearch] = useState("");
-
-    useEffect(() => {
+    const [selectedUser, setSelectedUser] = useState<User>(users[0]); useEffect(() => {
         loadUsers();
     }, [loadUsers]);
 
@@ -72,6 +74,13 @@ function UserManagement({
                         loadUsers={loadUsers}
                     />
                 )}
+                {showUpdateUser && (
+                    <UpdateUserModal
+                        selectedUser={selectedUser}
+                        onClose={() => setShowUpdateUser(false)}
+                        loadUsers={loadUsers}
+                    />
+                )}
             </div>
 
             <div className="overflow-x-auto">
@@ -101,9 +110,12 @@ function UserManagement({
                                 </td>
                                 <td className="border p-3">
                                     <div className="flex justify-center items-center gap-2">
-                                        <button className="bg-gray-200 px-4 py-2 hover:bg-gray-400">
+                                        <button className="bg-gray-200 px-4 py-2 hover:bg-gray-400"
+                                            onClick={() => { setSelectedUser(user); setShowUpdateUser(true) }}>
                                             Edit
                                         </button>
+
+
                                     </div>
                                 </td>
                             </tr>

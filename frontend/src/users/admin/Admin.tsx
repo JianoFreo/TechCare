@@ -6,6 +6,7 @@ import SideBar from "./components/SideBar";
 
 type User = {
     user_id: number;
+    full_name:string
     username: string;
     password: string;
     role: string;

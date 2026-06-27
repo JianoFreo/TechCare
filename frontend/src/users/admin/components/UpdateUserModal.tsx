@@ -1,33 +1,42 @@
 import { useState } from "react"
 import axios from "axios"
-type Props = {
-    onClose: () => void;
-    loadUsers: () => void
+type User = {
+    user_id: number;
+    full_name: string
+    username: string;
+    role: string;
+    contact_number: string;
+    email: string;
 };
 
-function AddUserModal({ onClose, loadUsers }: Props) {
-    const [username, setUsername] = useState("")
+type Props = {
+    onClose: () => void;
+    loadUsers: () => void;
+    selectedUser: User;
+};
+
+function UpdateUserModal({ selectedUser, onClose, loadUsers }: Props) {
+    const [username, setUsername] = useState(selectedUser.username)
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
-    const [fullName, setFullName] = useState("")
-    const [contactNumber, setContactNumber] = useState("")
-    const [email, setEmail] = useState("")
-    const [role, setRole] = useState("")
+    const [fullName, setFullName] = useState(selectedUser.full_name)
+    const [contactNumber, setContactNumber] = useState(selectedUser.contact_number)
+    const [email, setEmail] = useState(selectedUser.email)
+    const [role, setRole] = useState(selectedUser.role)
     const [hiddenPassword, setHiddenPassword] = useState(true)
-    const registerUser = async () => {
-        if (!username || !password || !confirmPassword || !fullName || !contactNumber || !email || !role) {
-            alert("please fill out all of the credentials")
-        } else if (password !== confirmPassword) {
+    const editUser = async () => {
+        const data: Record<string, string> = {};
+        if (username.trim()) data.username = username;
+        if (password.trim()) data.password = password;
+        if (role.trim()) data.role = role;
+        if (email.trim()) data.email = email;
+        if (contactNumber.trim()) data.contact_number = contactNumber;
+        if (fullName.trim()) data.full_name = fullName;
+
+        if (password && password !== confirmPassword) {
             alert("your passswords do no match ")
         } else {
-            const response = await axios.post("/api/admin/add-user", {
-                username,
-                password,
-                role,
-                email,
-                contact_number: contactNumber,
-                full_name: fullName,
-            })
+            const response = await axios.patch(`/api/admin/users/${selectedUser.user_id}`, data)
             alert(response.data.message)
             onClose()
             loadUsers()
@@ -37,7 +46,7 @@ function AddUserModal({ onClose, loadUsers }: Props) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="w-full max-w-md -lg bg-white p-6 shadow-xl">
                 <h2 className="text-2xl font-bold mb-4 flex justify-between">
-                    Add User
+                    Update User
                     <button
                         onClick={onClose}
                         className="px-4 py-2 border "
@@ -52,6 +61,7 @@ function AddUserModal({ onClose, loadUsers }: Props) {
                         placeholder="Username"
                         className="w-full border p-2"
                         onChange={(e) => setUsername(e.target.value)}
+                        value={username}
                     />
                     <div className="flex border">
                         <input
@@ -74,6 +84,7 @@ function AddUserModal({ onClose, loadUsers }: Props) {
                         placeholder="Full name"
                         className="w-full border p-2"
                         onChange={(e) => setFullName(e.target.value)}
+                        value={fullName}
 
 
                     />
@@ -82,6 +93,7 @@ function AddUserModal({ onClose, loadUsers }: Props) {
                         placeholder="Contact Number"
                         className="w-full border p-2"
                         onChange={(e) => setContactNumber(e.target.value)}
+                        value={contactNumber}
 
                     />
                     <input
@@ -89,11 +101,13 @@ function AddUserModal({ onClose, loadUsers }: Props) {
                         placeholder="Email"
                         className="w-full border p-2"
                         onChange={(e) => setEmail(e.target.value)}
+                        value={email}
 
                     />
 
                     <select className="w-full border  p-2"
                         onChange={(e) => setRole(e.target.value)}
+                        value={role}
                     >
                         <option >Select Role</option>
                         <option value="admin">Admin</option>
@@ -108,12 +122,12 @@ function AddUserModal({ onClose, loadUsers }: Props) {
 
 
                     <button className="px-4 py-2 bg-gray-200 hover:cursor-pointer hover:bg-gray-400"
-                        onClick={registerUser}>
-                        Add User
+                        onClick={editUser}>
+                        Edit User
                     </button>
                 </div>
             </div>
         </div>
     );
 }
-export default AddUserModal
+export default UpdateUserModal

@@ -1,5 +1,7 @@
 import { sql } from "../config/db.js";
 import { Request, Response } from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 export async function getAllUsers(req: Request, res: Response) {
   try {
@@ -44,15 +46,84 @@ export function deleteUser(req: Request, res: Response) {
   }
 }
 
-export function updateUser(req: Request, res: Response) {
+export async function updateUser(req: Request, res: Response) {
   try {
-    const { email, role, password, name } = req.body;
-    if (!email || !password || !name || !role) {
+    const { user_id } = req.params;
+    const {
+      username,
+      password,
+      role,
+      full_name,
+      email,
+      contact_number,
+    } = req.body;
+
+    let hashedPassword = null;
+
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
+    const updatedUser = await sql`
+      UPDATE users
+      SET
+        username = COALESCE(${username}, username),
+        password = COALESCE(${hashedPassword}, password),
+        role = COALESCE(${role}, role),
+        full_name = COALESCE(${full_name}, full_name),
+        email = COALESCE(${email}, email),
+        contact_number = COALESCE(${contact_number}, contact_number)
+      WHERE user_id = ${user_id}
+      RETURNING *;
+    `;
+
+    res.status(200).json({
+      message: "User updated successfully!",
+      user: updatedUser[0],
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+export async function addUser(req: Request, res: Response) {
+  try {
+    const { username, password, role, full_name, email, contact_number } = req.body;
+    if (!username || !password || !role || !full_name || !email || !contact_number) {
       return res
         .status(400)
-        .json({ message: "Email, role, password, and name are required" });
+        .json({ message: "All fields are required" });
     }
-    res.json({ message: "User updated successfully!" });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    // const signUpResult = await sql`
+    //     INSERT INTO pending_users (username, password, role)
+    //     VALUES (${username}, ${hashedPassword}, ${role})
+    //     RETURNING *
+    // `;
+    const existingUser = await sql`
+        SELECT * FROM users
+        WHERE username = ${username} OR email = ${email} OR contact_number = ${contact_number}  
+    `;
+    if (existingUser.length > 0) {
+      return res.status(200).json({ message: "User already exists" });
+    }
+    const signUpResult = await sql`
+        INSERT INTO users (username, password, role, full_name, email, contact_number) 
+        VALUES (${username}, ${hashedPassword}, ${role}, ${full_name}, ${email}, ${contact_number}) 
+        RETURNING *
+    `;
+    const token = jwt.sign(
+      { id: signUpResult[0].id },
+      process.env.JWT_SECRET!,
+      {
+        expiresIn: "1h",
+      },
+    );
+
+    res
+      .status(201)
+      .json({ user: signUpResult[0], message: "Sign up successful!", token });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
