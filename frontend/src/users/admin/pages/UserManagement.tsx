@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import Header from "../components/Header";
-import axios from 'axios'
+import AddUserModal from "../components/AddUserModal";
 
 type User = {
     user_id: number;
     username: string;
-    full_name: string
     password: string;
     role: string;
     created_at: string;
@@ -26,35 +25,18 @@ function UserManagement({
     open,
     setOpen,
 }: UserManagementProps) {
-    const [filteredUsers, setFilteredUsers] = useState<User[]>(users);
-    const [newUserEdit, setNewUserEdit] = useState(true)
-    const [fullName, setFullName] = useState("")
-    const [addRole, setAddRole] = useState("")
-    const [addUsername, setAddUsername] = useState("")
-    const [addContactNumber, setAddContactNumber] = useState("")
-    const [addEmail, setAddEmail] = useState("")
+    const [showAddUser, setShowAddUser] = useState(false);
+    const [search, setSearch] = useState("");
+
     useEffect(() => {
         loadUsers();
     }, [loadUsers]);
 
-    async function addUser(){
-await axios.post("/api/auth/sign-up",{
-    user: newUserEdit,
-    role: addRole,
-    full_name, fullName,
-    password,
+    const filteredUsers = users.filter((user) =>
+        user.username.toLowerCase().includes(search.toLowerCase()) ||
+        user.email.toLowerCase().includes(search.toLowerCase())
+    );
 
-
-})
-    }
-    function handleSearch(event: React.ChangeEvent<HTMLInputElement>) {
-        const searchTerm = event.target.value.toLowerCase();
-        const filteredUsers = users.filter((user) =>
-            user.username.toLowerCase().includes(searchTerm) ||
-            user.email.toLowerCase().includes(searchTerm)
-        );
-        setFilteredUsers(filteredUsers);
-    }
     return (
         <main className="flex-1 p-6">
             <Header
@@ -67,15 +49,30 @@ await axios.post("/api/auth/sign-up",{
             <h2 className="text-2xl font-bold mb-4">
                 Total Users: {filteredUsers.length}
             </h2>
+
             <div className="flex">
                 <p className="p-2 mb-4 text-4xl">🔎︎</p>
+
                 <input
                     placeholder="Search users..."
                     className="p-2 mb-4 border w-100"
-                    onChange={handleSearch}
+                    onChange={(e) => setSearch(e.target.value)}
                 />
-            </div>
 
+                <button
+                    onClick={() => setShowAddUser(true)}
+                    className="ml-3 p-4 mb-4 bg-gray-200 hover:bg-gray-400"
+                >
+                    Add User
+                </button>
+
+                {showAddUser && (
+                    <AddUserModal
+                        onClose={() => setShowAddUser(false)}
+                        loadUsers={loadUsers}
+                    />
+                )}
+            </div>
 
             <div className="overflow-x-auto">
                 <table className="min-w-full border border-gray-300">
@@ -83,7 +80,6 @@ await axios.post("/api/auth/sign-up",{
                         <tr>
                             <th className="border p-3 text-left">ID</th>
                             <th className="border p-3 text-left">Username</th>
-                            <th className="border p-3 text-left">full name</th>
                             <th className="border p-3 text-left">Role</th>
                             <th className="border p-3 text-left">Contact Number</th>
                             <th className="border p-3 text-left">Email</th>
@@ -93,48 +89,10 @@ await axios.post("/api/auth/sign-up",{
                     </thead>
 
                     <tbody>
-                        {newUserEdit && (
-                            <tr>
-                                <th className="border bg-gray-200 p-3 text-left">
-                                </th>
-                                <th className="border p-3 text-left">
-                                    <input className="border p-2" onChange={(e) => setAddUsername(e.target.value)} />
-                                </th>
-                                <th className="border p-3 text-left">
-                                    <input className="border p-2" onChange={(e) => setFullName(e.target.value)} />
-                                </th>
-
-                                <th className="border p-3 text-left">
-                                    <select className="border p-2 w-full" onChange={(e) => setAddRole(e.target.value)}>
-                                        <option value="admin">Admin</option>
-                                        <option value="doctor">Doctor</option>
-                                        <option value="laboratory-staff">Laboratory Staff</option>
-                                        <option value="frontdesk-staff">Front Desk Staff</option>
-                                        <option value="patient">Patient</option>
-                                    </select>
-                                </th>
-                                <th className="border p-3 text-left">
-                                    <input className="border p-2" onChange={(e) => setAddContactNumber(e.target.value)} />
-                                </th>
-                                <th className="border p-3 text-left">
-                                    <input className="border p-2" onChange={(e) => setAddEmail(e.target.value)} />
-                                </th>
-                                <th className="border p-3 text-left">
-                                    {Date()}
-                                </th>
-                                <th className="border p-3 text-left">
-                                    <button className="bg-gray-200 p-2 hover:bg-gray-400 ">
-                                        Add user
-                                    </button>
-                                </th>
-                            </tr>
-                        )
-                        }
                         {filteredUsers.map((user) => (
                             <tr key={user.user_id} className="hover:bg-gray-100">
                                 <td className="border p-3">{user.user_id}</td>
                                 <td className="border p-3">{user.username}</td>
-                                <td className="border p-3">{user.full_name}</td>
                                 <td className="border p-3">{user.role}</td>
                                 <td className="border p-3">{user.contact_number}</td>
                                 <td className="border p-3">{user.email}</td>
@@ -143,10 +101,7 @@ await axios.post("/api/auth/sign-up",{
                                 </td>
                                 <td className="border p-3">
                                     <div className="flex justify-center items-center gap-2">
-                                        <button
-                                            className="bg-gray-200 px-4 py-2 hover:bg-gray-400"
-                                            onClick={() => { }}
-                                        >
+                                        <button className="bg-gray-200 px-4 py-2 hover:bg-gray-400">
                                             Edit
                                         </button>
                                     </div>
@@ -154,7 +109,6 @@ await axios.post("/api/auth/sign-up",{
                             </tr>
                         ))}
                     </tbody>
-
                 </table>
             </div>
         </main>
