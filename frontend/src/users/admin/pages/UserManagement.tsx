@@ -16,14 +16,14 @@ type User = {
 
 type UserManagementProps = {
     users: User[];
-    loadUsers: () => Promise<void>;
+    loadData: () => Promise<void>;
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 function UserManagement({
     users,
-    loadUsers,
+    loadData,
     open,
     setOpen,
 }: UserManagementProps) {
@@ -31,8 +31,8 @@ function UserManagement({
     const [showUpdateUser, setShowUpdateUser] = useState(false);
     const [search, setSearch] = useState("");
     const [selectedUser, setSelectedUser] = useState<User>(users[0]); useEffect(() => {
-        loadUsers();
-    }, [loadUsers]);
+        loadData();
+    }, [loadData]);
 
     const filteredUsers = users.filter((user) =>
         user.username.toLowerCase().includes(search.toLowerCase()) ||
@@ -44,7 +44,7 @@ function UserManagement({
             <Header
                 open={open}
                 setOpen={setOpen}
-                loadUsers={loadUsers}
+                loadData={loadData}
                 page="User Management"
             />
 
@@ -71,14 +71,14 @@ function UserManagement({
                 {showAddUser && (
                     <AddUserModal
                         onClose={() => setShowAddUser(false)}
-                        loadUsers={loadUsers}
+                        loadData={loadData}
                     />
                 )}
                 {showUpdateUser && (
                     <UpdateUserModal
                         selectedUser={selectedUser}
                         onClose={() => setShowUpdateUser(false)}
-                        loadUsers={loadUsers}
+                        loadData={loadData}
                     />
                 )}
             </div>

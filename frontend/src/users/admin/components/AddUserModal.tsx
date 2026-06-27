@@ -2,10 +2,10 @@ import { useState } from "react"
 import axios from "axios"
 type Props = {
     onClose: () => void;
-    loadUsers: () => void
+    loadData: () => void
 };
 
-function AddUserModal({ onClose, loadUsers }: Props) {
+function AddUserModal({ onClose, loadData }: Props) {
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
@@ -30,7 +30,7 @@ function AddUserModal({ onClose, loadUsers }: Props) {
             })
             alert(response.data.message)
             onClose()
-            loadUsers()
+            loadData()
         }
     }
     return (

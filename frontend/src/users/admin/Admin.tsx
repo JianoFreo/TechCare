@@ -26,24 +26,20 @@ function Admin() {
     const [services, setServices] = useState<Service[]>([]);
     const [open, setOpen] = useState(true);
     const [page, setPage] = useState("dashboard");
-    const loadServices = useCallback(async () => {
+    const loadData = useCallback(async () => {
         try{
-            const response = await axios.get("/api/admin/services");
-            console.log("Services data:", response.data);
-            setServices(response.data);
+            const serviceResponse = await axios.get("/api/admin/services");
+            const userResponse = await axios.get("/api/admin/users");
+
+            console.log("Services data:", serviceResponse.data);
+            setServices(serviceResponse.data);
+            console.log("Users data:", userResponse.data);
+            setUsers(userResponse.data);
         } catch(error){ 
             console.log("Error fetching services:", error);
         }
     }, []);
-    const loadUsers = useCallback(async () => {
-        try {
-            const response = await axios.get("/api/admin/users");
-            console.log("Admin dashboard data:", response.data);
-            setUsers(response.data);
-        } catch (error) {
-            console.error("Error fetching admin dashboard data:", error);
-        }
-    }, []);
+
     return (
         <div className="flex min-h-screen">
              <SideBar
@@ -57,7 +53,7 @@ function Admin() {
                     users={users}
                     open={open}
                     setOpen={setOpen}
-                    loadUsers={loadUsers}
+                    loadData={loadData}
                 />
             )}
             {page === "user-management" && (
@@ -65,7 +61,7 @@ function Admin() {
                     users={users}
                     open={open}
                     setOpen={setOpen}
-                    loadUsers={loadUsers}
+                    loadData={loadData}
                 />
             )}
             {page === "service-pricing" && (
@@ -73,7 +69,7 @@ function Admin() {
                     services={services}
                     open={open}
                     setOpen={setOpen}
-                    loadServices={loadServices}
+                    loadData={loadData}
                 />
             )}
 

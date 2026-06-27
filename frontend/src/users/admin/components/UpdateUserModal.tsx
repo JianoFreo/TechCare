@@ -11,11 +11,11 @@ type User = {
 
 type Props = {
     onClose: () => void;
-    loadUsers: () => void;
+    loadData: () => void;
     selectedUser: User;
 };
 
-function UpdateUserModal({ selectedUser, onClose, loadUsers }: Props) {
+function UpdateUserModal({ selectedUser, onClose, loadData }: Props) {
     const [username, setUsername] = useState(selectedUser.username)
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
@@ -39,7 +39,7 @@ function UpdateUserModal({ selectedUser, onClose, loadUsers }: Props) {
             const response = await axios.patch(`/api/admin/users/${selectedUser.user_id}`, data)
             alert(response.data.message)
             onClose()
-            loadUsers()
+            loadData()
         }
     }
     return (

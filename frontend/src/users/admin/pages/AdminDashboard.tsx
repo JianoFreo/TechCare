@@ -16,23 +16,23 @@ type AdminDashboardProps = {
     users: User[];
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    loadUsers: () => Promise<void>;
+    loadData: () => Promise<void>;
 };
 
 function AdminDashboard({
     users,
     open,
     setOpen,
-    loadUsers,
+    loadData,
 }: AdminDashboardProps) {
     useEffect(() => {
-        loadUsers();
-    }, [loadUsers]);
+        loadData();
+    }, [loadData]);
 
     return (
 
         <main className="flex-1 p-6">
-            <Header open={open} setOpen={setOpen} loadUsers={loadUsers} page="Admin Dashboard" />
+            <Header open={open} setOpen={setOpen} loadData={loadData} page="Admin Dashboard" />
             <div className="flex py-6 gap-4 justify-between">
                 <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
                     <h2>

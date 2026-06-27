@@ -10,17 +10,17 @@ type ServicePricingProps = {
     services: Service[];
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    loadServices: () => Promise<void>;
+    loadData (): Promise<void>;
 };
 
-function ServicePricing({ services, open, setOpen, loadServices }: ServicePricingProps) {
+function ServicePricing({ services, open, setOpen, loadData }: ServicePricingProps) {
     return  (
         <div className="flex-1 p-6">
             <Header
                 page="Service Pricing"
                 open={open}
                 setOpen={setOpen}
-                loadUsers={loadServices}
+                loadData={loadData}
             />
             <div className="overflow-x-auto">
                 <table className="min-w-full">
