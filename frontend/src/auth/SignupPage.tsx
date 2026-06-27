@@ -7,6 +7,7 @@ function SignupPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
 
@@ -16,11 +17,17 @@ function SignupPage() {
       return;
     }
 
-    await axios.post("/api/signup", {
+    const response = await axios.post("/api/auth/sign-up", {
       username,
       password,
       role,
     });
+    if (!response.data.user) {
+      alert(response.data.message);
+      return
+    }
+    navigate(`/${response.data.user.role}`);
+
   };
 
   return (
@@ -29,7 +36,7 @@ function SignupPage() {
 
       {/* RIGHT SIDE */}
       <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-100">
-        <div className="w-[420px] bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-8 border border-white/40">
+        <div className="w-105 bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-8 border border-white/40">
           <div className="text-center mb-6">
             <h2 className="text-3xl font-bold text-gray-800">
               Create Account
@@ -51,7 +58,7 @@ function SignupPage() {
             />
 
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
@@ -59,6 +66,13 @@ function SignupPage() {
                          focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
                          outline-none transition"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-sm text-indigo-500 hover:text-indigo-600"
+            >
+              {showPassword ? "Hide Password" : "Show Password"}
+            </button>
 
             <select
               value={role}
@@ -71,7 +85,8 @@ function SignupPage() {
               <option value="doctor">Doctor</option>
               <option value="admin">Admin</option>
               <option value="patient">Patient</option>
-              <option value="front_desk">Front Desk Staff</option>
+              <option value="frontdesk-staff">Front Desk Staff</option>
+              <option value="laboratory-staff">Laboratory Staff</option>
             </select>
 
             <button
