@@ -106,3 +106,25 @@ export async function getAllservices(req: Request, res: Response) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
+
+export async function addService(req: Request, res: Response) {
+  try {
+    const {service_name, price } = req.body;
+    if (!service_name || price === undefined || price === null) {
+    return res.status(400).json({ message: "All fields are required" });
+}
+    else if (isNaN(price)) {
+      return res.status(400).json({ message: "Price must be a number" });
+    }
+    const newService = await sql`
+      INSERT INTO services (service_name, price)
+      VALUES (${service_name}, ${price})
+      RETURNING *;
+    `;
+    res.status(201).json({ message: "Service added successfully!", service: newService[0] });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
