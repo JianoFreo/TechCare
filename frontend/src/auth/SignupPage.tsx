@@ -36,7 +36,7 @@ function SignupPage() {
 
       {/* RIGHT SIDE */}
       <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-100">
-        <div className="w-[420px] bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-8 border border-white/40">
+        <div className="w-105 bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-8 border border-white/40">
           <div className="text-center mb-6">
             <h2 className="text-3xl font-bold text-gray-800">
               Create Account
