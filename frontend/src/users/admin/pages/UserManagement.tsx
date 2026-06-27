@@ -5,7 +5,7 @@ import UpdateUserModal from "../components/UpdateUserModal"
 
 type User = {
     user_id: number;
-    full_name:string
+    full_name: string
     username: string;
     password: string;
     role: string;
@@ -40,7 +40,7 @@ function UserManagement({
     );
 
     return (
-        <main className="flex-1 p-6">
+        <main className="flex-1 min-w-0 p-6">
             <Header
                 open={open}
                 setOpen={setOpen}
@@ -52,7 +52,7 @@ function UserManagement({
                 Total Users: {filteredUsers.length}
             </h2>
 
-            <div className="flex">
+            <div className="flex items-center gap-3 mb-4">
                 <p className="p-2 mb-4 text-4xl">🔎︎</p>
 
                 <input
@@ -83,7 +83,7 @@ function UserManagement({
                 )}
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="w-full overflow-x-auto">
                 <table className="min-w-full border border-gray-300">
                     <thead className="bg-gray-200">
                         <tr>

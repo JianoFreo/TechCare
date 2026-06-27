@@ -1,17 +1,14 @@
-import { Router } from 'express';
-import { 
-    getAllUsers,
-    addNewUser,
-    viewAllUsers,
-    deleteUser,
-    updateUser
-} from '../controllers/admin.controller.js';
+import { Router } from "express";
+import {
+  addUser,
+  getAllservices,
+  updateUser,
+  getAllUsers,
+} from "../controllers/admin.controller.js";
 const router = Router();
-
-router.get('/', getAllUsers);
-router.post('/users', addNewUser);
-router.get('/users', viewAllUsers);
-router.delete('/users', deleteUser);
-router.patch('/users/:user_id', updateUser);
+router.get("/users", getAllUsers);
+router.post("/users", addUser);
+router.get("/services", getAllservices);
+router.patch("/users/:user_id", updateUser);
 
 export default router;

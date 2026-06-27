@@ -3,6 +3,7 @@ import axios from "axios";
 import UserManagement from "./pages/UserManagement";
 import AdminDashboard from "./pages/AdminDashboard";
 import SideBar from "./components/SideBar";
+import ServicePricingManagement from "./pages/ServicePricing";
 
 type User = {
     user_id: number;
@@ -14,22 +15,35 @@ type User = {
     contact_number: string;
     email: string;
 };
+type Service = {
+    service_id: number;
+    service_name: string;
+    price: number;
+};
 
 function Admin() {
     const [users, setUsers] = useState<User[]>([]);
+    const [services, setServices] = useState<Service[]>([]);
     const [open, setOpen] = useState(true);
     const [page, setPage] = useState("dashboard");
-
+    const loadServices = useCallback(async () => {
+        try{
+            const response = await axios.get("/api/admin/services");
+            console.log("Services data:", response.data);
+            setServices(response.data);
+        } catch(error){ 
+            console.log("Error fetching services:", error);
+        }
+    }, []);
     const loadUsers = useCallback(async () => {
         try {
-            const response = await axios.get("/api/admin");
+            const response = await axios.get("/api/admin/users");
             console.log("Admin dashboard data:", response.data);
             setUsers(response.data);
         } catch (error) {
             console.error("Error fetching admin dashboard data:", error);
         }
     }, []);
-
     return (
         <div className="flex min-h-screen">
              <SideBar
@@ -52,6 +66,14 @@ function Admin() {
                     open={open}
                     setOpen={setOpen}
                     loadUsers={loadUsers}
+                />
+            )}
+            {page === "service-pricing" && (
+                <ServicePricingManagement   
+                    services={services}
+                    open={open}
+                    setOpen={setOpen}
+                    loadServices={loadServices}
                 />
             )}
 

@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+
 export async function getAllUsers(req: Request, res: Response) {
   try {
     const totalUsers = await sql`SELECT * FROM users`;
@@ -12,39 +13,6 @@ export async function getAllUsers(req: Request, res: Response) {
   }
 }
 
-export function addNewUser(req: Request, res: Response) {
-  try {
-    const { email, role, password, name } = req.body;
-    if (!email || !password || !name || !role) {
-      return res
-        .status(400)
-        .json({ message: "Email, role, password, and name are required" });
-    }
-    res.json({ message: "New user added successfully!" });
-  } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-}
-
-export function viewAllUsers(req: Request, res: Response) {
-  try {
-    res.json({ message: "List of all users" });
-  } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-}
-
-export function deleteUser(req: Request, res: Response) {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
-    res.json({ message: "User deleted successfully!" });
-  } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-}
 
 export async function updateUser(req: Request, res: Response) {
   try {
@@ -125,6 +93,16 @@ export async function addUser(req: Request, res: Response) {
       .status(201)
       .json({ user: signUpResult[0], message: "Sign up successful!", token });
   } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+export async function getAllservices(req: Request, res: Response) {
+  try {
+    const services = await sql`SELECT * FROM services`;
+    res.status(200).json(services);
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
