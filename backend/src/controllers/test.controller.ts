@@ -26,7 +26,7 @@ import jwt from "jsonwebtoken";
 
 export async function signIn(req: Request, res: Response, next: NextFunction) {
     const user = req.body
-    const accessToken = jwt.sign(user, process.env.JWT_SECRET!);
+    const accessToken = jwt.sign(user.username, process.env.JWT_SECRET!);
     res.json(accessToken)
 }
 

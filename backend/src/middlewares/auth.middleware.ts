@@ -2,7 +2,7 @@ import { sql } from "../config/db.js";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-export async function authorize(
+export async function authMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -11,7 +11,7 @@ export async function authorize(
     let token;
     if (
       req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer ")
+      req.headers.authorization.startsWith("Bearer")
     ) {
       token = req.headers.authorization.split(" ")[1];
     }
@@ -28,9 +28,9 @@ export async function authorize(
     //   exp: 1782683600
     // }
     const result = await sql`
-  SELECT * from users
-  WHERE user_id = ${(decoded as any).user_id}
-  `;
+      SELECT * from users
+      WHERE user_id = ${(decoded as any).user_id}
+      `;
 
     const user = result[0];
     if (!user) {
@@ -47,11 +47,12 @@ export async function authorize(
     //   role: "admin"
     // }
     next();
-  } catch {
-    return res.status(401).json({ message: "Unauthorized" });
+  } catch(error) {
+    res.status(400).json({error: "auth middleware error"});
   }
 }
 
+export default authMiddleware;
 // export async function authorize(
 //   req: Request,
 //   res: Response,
