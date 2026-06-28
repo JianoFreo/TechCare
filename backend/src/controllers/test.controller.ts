@@ -1,5 +1,5 @@
 // import jwt from "jsonwebtoken";
-// import { Request, Response } from "express";
+// import { NextFunction, Request, Response } from "express";
 
 // export async function signIn(req: Request, res: Response) {
 
@@ -30,7 +30,9 @@ export async function signIn(req: Request, res: Response, next: NextFunction) {
     res.json(accessToken)
 }
 
-export async function getUser(req: Request, res: Response, next: NextFunction) {}
+export async function getUser(req: Request, res: Response, next: NextFunction) {
+    
+}
 
 
 
