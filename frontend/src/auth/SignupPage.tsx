@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import LeftSideBackground from "./components/LeftSideBackground";
-import axios from "axios";
-
+import api from "../lib/axios";
 function SignupPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -17,7 +16,7 @@ function SignupPage() {
       return;
     }
 
-    const response = await axios.post("/api/auth/sign-up", {
+    const response = await api.post("/api/auth/sign-up", {
       username,
       password,
       role,

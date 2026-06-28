@@ -30,6 +30,7 @@ export async function signIn(req: Request, res: Response, next: NextFunction) {
     res.json(accessToken)
 }
 
+export async function getUser(req: Request, res: Response, next: NextFunction) {}
 
 
 

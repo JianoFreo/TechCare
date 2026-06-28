@@ -1,5 +1,5 @@
 import { useState } from "react"
-import axios from "axios"
+import api from "../../../lib/axios"
 type User = {
     user_id: number;
     full_name: string
@@ -36,7 +36,7 @@ function UpdateUserModal({ selectedUser, onClose, loadData }: Props) {
         if (password && password !== confirmPassword) {
             alert("your passswords do no match ")
         } else {
-            const response = await axios.patch(`/api/admin/users/${selectedUser.user_id}`, data)
+            const response = await api.patch(`/api/admin/users/${selectedUser.user_id}`, data)
             alert(response.data.message)
             onClose()
             loadData()

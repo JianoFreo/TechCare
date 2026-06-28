@@ -1,9 +1,9 @@
 import { useCallback, useState } from "react";
-import axios from "axios";
 import UserManagement from "./pages/UserManagement";
 import AdminDashboard from "./pages/AdminDashboard";
 import SideBar from "./components/SideBar";
 import ServicePricingManagement from "./pages/ServicePricing";
+import api from "../../lib/axios";
 
 type User = {
     user_id: number;
@@ -28,8 +28,8 @@ function Admin() {
     const [page, setPage] = useState("dashboard");
     const loadData = useCallback(async () => {
         try{
-            const serviceResponse = await axios.get("/api/admin/services");
-            const userResponse = await axios.get("/api/admin/users");
+            const serviceResponse = await api.get("/api/admin/services");
+            const userResponse = await api.get("/api/admin/users");
 
             console.log("Services data:", serviceResponse.data);
             setServices(serviceResponse.data);

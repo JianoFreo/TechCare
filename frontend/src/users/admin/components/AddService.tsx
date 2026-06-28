@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import axios from 'axios'
-
+import api from '../../../lib/axios'
 type Props = {
     onClose: () => void;
     loadData: () => void;
@@ -10,7 +9,7 @@ function AddService({ loadData, onClose }: Props) {
     // const [serviceId, setServiceId] = useState<string>("")
     const [price, setPrice] = useState<number>(0)
     const addService = async () => {
-        const response = await axios.post("/api/admin/services", {
+        const response = await api.post("/api/admin/services", {
 
             service_name: serviceName,
             price

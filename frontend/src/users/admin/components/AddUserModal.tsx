@@ -1,5 +1,5 @@
 import { useState } from "react"
-import axios from "axios"
+import api from "../../../lib/axios"
 type Props = {
     onClose: () => void;
     loadData: () => void
@@ -20,7 +20,7 @@ function AddUserModal({ onClose, loadData }: Props) {
         } else if (password !== confirmPassword) {
             alert("your passswords do no match ")
         } else {
-            const response = await axios.post("/api/admin/add-user", {
+            const response = await api.post("/api/admin/add-user", {
                 username,
                 password,
                 role,
