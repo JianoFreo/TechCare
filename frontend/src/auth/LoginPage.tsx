@@ -9,7 +9,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-
+  
   const login = async () => {
     if (!username || !password) {
       alert("Please fill in all fields.");
@@ -28,7 +28,10 @@ function LoginPage() {
         setPassword("");
       }
       else {
+        const token = response.data.token;
+        localStorage.setItem("token", token);
         navigate(`/${response.data.user.role}`);
+        console.log(localStorage.getItem("token"));
       }
     } catch {
       alert(response.data.message);

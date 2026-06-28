@@ -10,7 +10,7 @@ import adminMiddleware from "../middlewares/admin.middleware.js"
 import authMiddleware from "../middlewares/auth.middleware.js"
 const router = Router();
 
-// router.use(authMiddleware, adminMiddleware)
+router.use(authMiddleware, adminMiddleware)
 
 router.get("/users", getAllUsers);
 router.post("/users", addUser);
