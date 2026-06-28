@@ -5,8 +5,11 @@ import jwt from "jsonwebtoken";
 
 export async function getAllUsers(req: Request, res: Response) {
   try {
-    const totalUsers = await sql`SELECT * FROM users`;
-    res.json(totalUsers);
+    const users = await sql`SELECT * FROM users`;
+    if(!users){
+      res.json({message: "there are no users "})
+    }
+    res.status(200).json({users});
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
@@ -98,7 +101,7 @@ export async function addUser(req: Request, res: Response) {
 export async function getAllservices(req: Request, res: Response) {
   try {
     const services = await sql`SELECT * FROM services`;
-    res.status(200).json(services);
+    res.status(200).json({services});
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import axios from "axios";
+import api from "../lib/axios";
 import LeftSideBackground from "./components/LeftSideBackground";
 
 function LoginPage() {
@@ -15,7 +15,7 @@ function LoginPage() {
       alert("Please fill in all fields.");
       return;
     }
-    const response = await axios.post("/api/auth/login", {
+    const response = await api.post("/api/auth/login", {
       username,
       password,
     });

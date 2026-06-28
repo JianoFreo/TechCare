@@ -32,9 +32,9 @@ function Admin() {
             const userResponse = await api.get("/api/admin/users");
 
             console.log("Services data:", serviceResponse.data);
-            setServices(serviceResponse.data);
+            setServices(serviceResponse.data.services);
             console.log("Users data:", userResponse.data);
-            setUsers(userResponse.data);
+            setUsers(userResponse.data.users);
         } catch(error){ 
             console.log("Error fetching services:", error);
         }

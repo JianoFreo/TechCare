@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import LeftSideBackground from "./components/LeftSideBackground";
 import api from "../lib/axios";
+
 function SignupPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
