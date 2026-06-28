@@ -3,7 +3,6 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-
 export async function getAllUsers(req: Request, res: Response) {
   try {
     const totalUsers = await sql`SELECT * FROM users`;
@@ -13,18 +12,11 @@ export async function getAllUsers(req: Request, res: Response) {
   }
 }
 
-
 export async function updateUser(req: Request, res: Response) {
   try {
     const { user_id } = req.params;
-    const {
-      username,
-      password,
-      role,
-      full_name,
-      email,
-      contact_number,
-    } = req.body;
+    const { username, password, role, full_name, email, contact_number } =
+      req.body;
 
     let hashedPassword = null;
 
@@ -57,11 +49,17 @@ export async function updateUser(req: Request, res: Response) {
 
 export async function addUser(req: Request, res: Response) {
   try {
-    const { username, password, role, full_name, email, contact_number } = req.body;
-    if (!username || !password || !role || !full_name || !email || !contact_number) {
-      return res
-        .status(400)
-        .json({ message: "All fields are required" });
+    const { username, password, role, full_name, email, contact_number } =
+      req.body;
+    if (
+      !username ||
+      !password ||
+      !role ||
+      !full_name ||
+      !email ||
+      !contact_number
+    ) {
+      return res.status(400).json({ message: "All fields are required" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     // const signUpResult = await sql`
@@ -109,11 +107,10 @@ export async function getAllservices(req: Request, res: Response) {
 
 export async function addService(req: Request, res: Response) {
   try {
-    const {service_name, price } = req.body;
+    const { service_name, price } = req.body;
     if (!service_name || price === undefined || price === null) {
-    return res.status(400).json({ message: "All fields are required" });
-}
-    else if (isNaN(price)) {
+      return res.status(400).json({ message: "All fields are required" });
+    } else if (isNaN(price)) {
       return res.status(400).json({ message: "Price must be a number" });
     }
     const newService = await sql`
@@ -121,10 +118,13 @@ export async function addService(req: Request, res: Response) {
       VALUES (${service_name}, ${price})
       RETURNING *;
     `;
-    res.status(201).json({ message: "Service added successfully!", service: newService[0] });
-
+    res
+      .status(201)
+      .json({ message: "Service added successfully!", service: newService[0] });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
+
+
