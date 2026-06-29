@@ -1,3 +1,8 @@
+import Header from "../components/Header"
+import { useEffect, useState } from "react";
+import ActivityDetails from "../components/ActivityDetails";
+
+
 type Activity = {
   activity_id: number;
   user_id: number;
@@ -15,16 +20,32 @@ type ActivityModalProps = {
 };
 
 
-function ActivityMonitoring({activities, open, setOpen, loadData}: ActivityModalProps) {
+function ActivityMonitoring({ activities, open, setOpen, loadData }: ActivityModalProps) {
 
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
+  const [selectedDetails, setSelectedDetails] = useState<Record<string, unknown> | null>(null);
+  const [showActivityDetails, setShowActivityDetails] = useState(false)
   return (
-    <>
-      <div>
-        <p>
-          Showing 5 of 89 activities from today
-        </p>
-      </div>
+    <main className="flex-1 min-w-0 p-6">
+
+      <Header
+        open={open}
+        setOpen={setOpen}
+        loadData={loadData}
+        page="Activity Monitoring"
+      />
+      {showActivityDetails &&
+        <ActivityDetails
+          details={selectedDetails ?? {}}
+          onClose={() => setShowActivityDetails(false)}
+        />
+      }
+      {/* <button
+        onClick={() => setShowActivityDetails(true)}
+      >Show </button> */}
 
       <div className="overflow-x-auto rounded-lg border border-gray-300 bg-white">
         <table className="min-w-full">
@@ -33,27 +54,39 @@ function ActivityMonitoring({activities, open, setOpen, loadData}: ActivityModal
               <th className="px-4 py-3 text-left">Time stamps</th>
               <th className="px-4 py-3 text-left">User</th>
               <th className="px-4 py-3 text-left">Action</th>
-              <th className="px-4 py-3 text-left">Details</th>
 
-              <th className="px-4 py-3 text-center">Actions</th>
+              <th className="px-4 py-3 text-center"></th>
             </tr>
           </thead>
 
           <tbody>
-            <tr className="border-t hover:bg-gray-50">
-              <td className="px-4 py-3">1</td>
-              <td className="px-4 py-3">John Doe</td>
-              <td className="px-4 py-3">johndoe</td>
-              <td className="px-4 py-3">john@example.com</td>
+            {activities.map((activity) => (
+              <tr className="border-t hover:bg-gray-50">
+                <td className="px-4 py-3">{activity.created_at}</td>
+                <td className="px-4 py-3">{activity.username}</td>
+                <td className="px-4 py-3">{activity.service_name}</td>
 
-              <td className="px-4 py-3 text-center">
-                Edit | Delete
-              </td>
-            </tr>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    className="bg-gray-200"
+                    onClick={() => {
+                      setSelectedDetails(activity.details)
+                      setShowActivityDetails(true)
+                    }}
+                  >
+                    Show Details
+                  </button>
+                </td>
+              </tr>
+
+            )
+            )}
+
           </tbody>
         </table>
       </div>
-    </>
+
+    </main>
   );
 }
 

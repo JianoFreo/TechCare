@@ -44,14 +44,17 @@ function Admin() {
         try {
             const serviceResponse = await api.get("/api/admin/services");
             const userResponse = await api.get("/api/admin/users");
-            const activityResponse = await api.get("/api/admin/users")
+            const activityResponse = await api.get("/api/admin/activities")
 
 
             setActivities(activityResponse.data.activities)
             console.log("Services data:", serviceResponse.data);
+
             setServices(serviceResponse.data.services);
-            console.log("Users data:", userResponse.data);
+            console.log("services data:", userResponse.data);
+
             setUsers(userResponse.data.users);
+             console.log("Users data:", userResponse.data.users);
         } catch (error) {
             console.log("Error fetching services:", error);
         }

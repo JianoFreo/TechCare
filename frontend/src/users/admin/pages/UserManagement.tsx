@@ -30,7 +30,8 @@ function UserManagement({
     const [showAddUser, setShowAddUser] = useState(false);
     const [showUpdateUser, setShowUpdateUser] = useState(false);
     const [search, setSearch] = useState("");
-    const [selectedUser, setSelectedUser] = useState<User>(users[0]); useEffect(() => {
+    const [selectedUser, setSelectedUser] = useState<User>(users[0]); 
+    useEffect(() => {
         loadData();
     }, [loadData]);
 
