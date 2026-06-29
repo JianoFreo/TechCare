@@ -19,24 +19,30 @@ export const sql = neon(DATABASE_URL);
 export async function connectNeon(): Promise<void> {
   try {
     await sql`
-      CREATE TABLE IF NOT EXISTS users (
-        user_id SERIAL PRIMARY KEY,
-        username VARCHAR(255) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL,
-        role VARCHAR(50) NOT NULL,
-        full_name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL UNIQUE,
-        contact_number VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
+        CREATE TABLE IF NOT EXISTS users (
+            user_id SERIAL PRIMARY KEY,
+            username VARCHAR(255) NOT NULL UNIQUE,
+            password VARCHAR(255) NOT NULL,
+            role VARCHAR(50) NOT NULL,
+            full_name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL UNIQUE,
+            contact_number VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )`;
     await sql`
-      CREATE TABLE IF NOT EXISTS services (
-        service_id SERIAL PRIMARY KEY,
-        service_name VARCHAR(255) NOT NULL UNIQUE,
-        price DECIMAL(10, 2) NOT NULL
-      )
-    `;
+        CREATE TABLE IF NOT EXISTS services (
+            service_id SERIAL PRIMARY KEY,
+            service_name VARCHAR(255) NOT NULL UNIQUE,
+            price DECIMAL(10,2) NOT NULL
+        )`;
+    await sql`
+        CREATE TABLE IF NOT EXISTS system_activity (
+            activity_id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(user_id),
+            service_name VARCHAR(255) NOT NULL REFERENCES services(service_name),
+            details JSONB NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )`;
 
     console.log("Database initialized successfully");
   } catch (error) {

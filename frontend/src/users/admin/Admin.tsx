@@ -3,6 +3,7 @@ import UserManagement from "./pages/UserManagement";
 import AdminDashboard from "./pages/AdminDashboard";
 import SideBar from "./components/SideBar";
 import ServicePricingManagement from "./pages/ServicePricing";
+import ActivityMonitoring from "./pages/ActivityMonitoring";
 import api from "../../lib/axios";
 
 type User = {
@@ -20,17 +21,25 @@ type Service = {
     service_name: string;
     price: number;
 };
+type Activities = {
+    activity_id: number;
+    user_id: string;
+    service_id: string;
+    details: JSON;
+    
+}
 
 function Admin() {
     const [users, setUsers] = useState<User[]>([]);
     const [services, setServices] = useState<Service[]>([]);
+    const [activities, setActivities] = useState<Activities>([])
     const [open, setOpen] = useState(true);
     const [page, setPage] = useState("dashboard");
     const loadData = useCallback(async () => {
         try{
             const serviceResponse = await api.get("/api/admin/services");
             const userResponse = await api.get("/api/admin/users");
-
+            
             console.log("Services data:", serviceResponse.data);
             setServices(serviceResponse.data.services);
             console.log("Users data:", userResponse.data);
@@ -66,6 +75,14 @@ function Admin() {
             )}
             {page === "service-pricing" && (
                 <ServicePricingManagement   
+                    services={services}
+                    open={open}
+                    setOpen={setOpen}
+                    loadData={loadData}
+                />
+            )}
+            {page === "activity-monitoring" && (
+                <ActivityMonitoring    
                     services={services}
                     open={open}
                     setOpen={setOpen}

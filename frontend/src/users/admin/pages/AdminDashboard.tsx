@@ -31,63 +31,69 @@ function AdminDashboard({
 
     return (
 
-        <main className="flex-1 p-6">
-            <Header open={open} setOpen={setOpen} loadData={loadData} page="Admin Dashboard" />
-            <div className="flex py-6 gap-4 justify-between">
-                <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
-                    <h2>
-                        Total Users: {users.length}
-                    </h2>
+        <main className="flex-1 min-w-0 p-6">
+            <Header
+                open={open}
+                setOpen={setOpen}
+                loadData={loadData}
+                page="Admin Dashboard"
+            />
+            <div className="overflow-x-auto">
+                <div className="flex py-6 gap-4 justify-between">
+                    <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
+                        <h2>
+                            Total Users: {users.length}
+                        </h2>
+                    </div>
+                    <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
+                        <h2>
+                            Active Users
+                        </h2>
+                    </div>
+                    <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
+                        <h2>
+                            Today's Activity:
+                        </h2>
+                    </div>
+                    <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
+                        <h2>
+                            System status:
+                        </h2>
+                    </div>
                 </div>
-                <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
-                    <h2>
-                        Active Users
-                    </h2>
-                </div>
-                <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
-                    <h2>
-                        Today's Activity:
-                    </h2>
-                </div>
-                <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
-                    <h2>
-                        System status:
-                    </h2>
+                <div className="border p-6">
+                    <p className="pb-5 text-2xl">
+                        SYSTEM OVERVIEW
+                    </p>
+
+                    <div className="flex gap-3">
+                        <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
+                            <h2>
+                                Doctors active: {users.filter(user => user.role === "doctor").length}
+                            </h2>
+
+                        </div>
+                        <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
+                            <h2>
+                                Labstaff active: {users.filter(user => user.role === "laboratory-staff").length}
+                            </h2>
+                        </div>
+                    </div>
+                    <div className="flex gap-4">
+                        <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
+                            <h2>
+                                Front Desk staffs active: {users.filter(user => user.role === "frontdesk-staff").length}
+                            </h2>
+
+                        </div>
+                        <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
+                            <h2>
+                                Registered patients: {users.filter(user => user.role === "patient").length}
+                            </h2>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div className="border p-6">
-                <p className="pb-5 text-2xl">
-                    SYSTEM OVERVIEW
-                </p>
-
-                <div className="flex gap-3">
-                    <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
-                        <h2>
-                            Doctors active: {users.filter(user => user.role === "doctor" ).length}
-                        </h2>
-
-                    </div>
-                    <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
-                        <h2>
-                            Labstaff active: {users.filter(user => user.role === "laboratory-staff" ).length}
-                        </h2>
-                    </div>
-                </div>
-                <div className="flex gap-4">
-                    <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
-                        <h2>
-                            Front Desk staffs active: {users.filter(user => user.role === "frontdesk-staff" ).length}
-                        </h2>
-
-                    </div>
-                    <div className="flex-1 border mb-4 shadow p-10 text-center text-2xl">
-                        <h2>
-                            Registered patients: {users.filter(user => user.role === "patient" ).length}
-                        </h2>
-                    </div>
-                </div>
-            </div>
-
 
         </main>
     );
