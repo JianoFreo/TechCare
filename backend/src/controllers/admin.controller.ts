@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-export async function getAllUsers(req: Request, res: Response) {
+export async function getAllUsers(req: Request, res: Response) { // get /api/admin/users
   try {
     const users = await sql`SELECT * FROM users`;
     if (!users) {
@@ -15,7 +15,7 @@ export async function getAllUsers(req: Request, res: Response) {
   }
 }
 
-export async function updateUser(req: Request, res: Response) {
+export async function updateUser(req: Request, res: Response) { //patch /api/admin/users/:user_id
   try {
     const { user_id } = req.params;
     const { username, password, role, full_name, email, contact_number } =
@@ -50,7 +50,7 @@ export async function updateUser(req: Request, res: Response) {
   }
 }
 
-export async function addUser(req: Request, res: Response) {
+export async function addUser(req: Request, res: Response) { // post /api/admin/users
   try {
     const { username, password, role, full_name, email, contact_number } =
       req.body;
@@ -98,7 +98,7 @@ export async function addUser(req: Request, res: Response) {
   }
 }
 
-export async function getAllservices(req: Request, res: Response) {
+export async function getAllservices(req: Request, res: Response) { // get /api/admin/services
   try {
     const services = await sql`SELECT * FROM services`;
     res.status(200).json({ services });
@@ -108,7 +108,7 @@ export async function getAllservices(req: Request, res: Response) {
   }
 }
 
-export async function addService(req: Request, res: Response) {
+export async function addService(req: Request, res: Response) { // post /api/admin/services
   try {
     const { service_name, price } = req.body;
     if (!service_name || price === undefined || price === null) {
@@ -130,7 +130,7 @@ export async function addService(req: Request, res: Response) {
   }
 }
 
-export async function getAllActivities(req: Request, res: Response) {
+export async function getAllActivities(req: Request, res: Response) { // get /api/admin/activities
   try {
     const activities = await sql`
       SELECT
@@ -177,7 +177,10 @@ export async function getAllActivities(req: Request, res: Response) {
     res.status(500).json({ error: "error on get acts controller" });
   }
 }
-export async function getMyActivities(req: Request, res: Response) {
+
+
+
+export async function getMyActivities(req: Request, res: Response) { // get /api/admin/activity
   try {
     const response = await sql`
     SELECT * FROM system_activity
@@ -193,7 +196,7 @@ export async function getMyActivities(req: Request, res: Response) {
     res.status(500).json({ error: "error on get your activities" });
   }
 }
-export async function addActivity(
+export async function addActivity(  // post /api/admin/activities
   req: Request,
   res: Response,
   next: NextFunction,

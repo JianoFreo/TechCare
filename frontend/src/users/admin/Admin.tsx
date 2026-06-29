@@ -8,7 +8,7 @@ import api from "../../lib/axios";
 
 type User = {
     user_id: number;
-    full_name:string
+    full_name: string
     username: string;
     password: string;
     role: string;
@@ -23,35 +23,43 @@ type Service = {
 };
 type Activities = {
     activity_id: number;
-    user_id: string;
-    service_id: string;
-    details: JSON;
-    
-}
+    user_id: number;
+    username: string;
+    service_name: string;
+    details: Record<string, unknown>;
+    created_at: string;
+};
+// each element must be either:
+
+// No object at all (the array is empty)
+// A complete Activity object
 
 function Admin() {
     const [users, setUsers] = useState<User[]>([]);
     const [services, setServices] = useState<Service[]>([]);
-    const [activities, setActivities] = useState<Activities>([])
+    const [activities, setActivities] = useState<Activities[]>([])  // Acitivities[] this means that this object structure can be a lot of objects // array
     const [open, setOpen] = useState(true);
     const [page, setPage] = useState("dashboard");
     const loadData = useCallback(async () => {
-        try{
+        try {
             const serviceResponse = await api.get("/api/admin/services");
             const userResponse = await api.get("/api/admin/users");
-            
+            const activityResponse = await api.get("/api/admin/users")
+
+
+            setActivities(activityResponse.data.activities)
             console.log("Services data:", serviceResponse.data);
             setServices(serviceResponse.data.services);
             console.log("Users data:", userResponse.data);
             setUsers(userResponse.data.users);
-        } catch(error){ 
+        } catch (error) {
             console.log("Error fetching services:", error);
         }
     }, []);
 
     return (
         <div className="flex min-h-screen">
-             <SideBar
+            <SideBar
                 open={open}
                 page={page}
                 setPage={setPage}
@@ -74,7 +82,7 @@ function Admin() {
                 />
             )}
             {page === "service-pricing" && (
-                <ServicePricingManagement   
+                <ServicePricingManagement
                     services={services}
                     open={open}
                     setOpen={setOpen}
@@ -82,8 +90,8 @@ function Admin() {
                 />
             )}
             {page === "activity-monitoring" && (
-                <ActivityMonitoring    
-                    services={services}
+                <ActivityMonitoring
+                    activities={activities}
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}

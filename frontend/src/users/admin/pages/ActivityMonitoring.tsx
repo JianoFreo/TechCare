@@ -1,5 +1,21 @@
+type Activity = {
+  activity_id: number;
+  user_id: number;
+  username: string;
+  service_name: string;
+  details: Record<string, unknown>;
+  created_at: string;
+};
 
-function ActivityMonitoring() {
+type ActivityModalProps = {
+  activities: Activity[];
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  loadData: () => Promise<void>;
+};
+
+
+function ActivityMonitoring({activities, open, setOpen, loadData}: ActivityModalProps) {
 
 
   return (
