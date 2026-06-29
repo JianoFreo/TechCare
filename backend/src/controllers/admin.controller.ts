@@ -132,7 +132,6 @@ export async function addService(req: Request, res: Response) {
 
 export async function getAllActivities(req: Request, res: Response) {
   try {
- 
     const activities = await sql`
       SELECT
           sa.*,
@@ -144,34 +143,36 @@ export async function getAllActivities(req: Request, res: Response) {
     if (!activities) {
       res.json({ message: "there are no activities" });
       {
-    // "activities": [
-    //     {
-    //         "activity_id": 1,
-    //         "user_id": 11,
-    //         "service_name": "pakalbo",
-    //         "details": {
-    //             "kalbo": "panot",
-    //             "semiKal": "utot"
-    //         },
-    //         "created_at": "2026-06-28T20:19:10.904Z",
-    //         "username": "testing"
-    //     },
-    //     {
-    //         "activity_id": 2,
-    //         "user_id": 11,
-    //         "service_name": "pakalbo",
-    //         "details": {
-    //             "kalbo": "panot",
-    //             "semiKal": "utot"
-    //         },
-    //         "created_at": "2026-06-28T20:19:22.051Z",
-    //         "username": "testing"
-    //     }
-    // ]
-}
+      }
     }
 
     res.status(200).json({ activities });
+    // {
+    //     "activities": [
+    //         {
+    //             "activity_id": 1,
+    //             "user_id": 11,
+    //             "service_name": "pakalbo",
+    //             "details": {
+    //                 "kalbo": "panot",
+    //                 "semiKal": "utot"
+    //             },
+    //             "created_at": "2026-06-28T20:19:10.904Z",
+    //             "username": "testing"
+    //         },
+    //         {
+    //             "activity_id": 2,
+    //             "user_id": 11,
+    //             "service_name": "pakalbo",
+    //             "details": {
+    //                 "kalbo": "panot",
+    //                 "semiKal": "utot"
+    //             },
+    //             "created_at": "2026-06-28T20:19:22.051Z",
+    //             "username": "testing"
+    //         }
+    //     ]
+    // }
   } catch (error) {
     res.status(500).json({ error: "error on get acts controller" });
   }
@@ -204,9 +205,9 @@ export async function addActivity(
     SELECT service_name
     FROM services
     WHERE service_name = ${service_name}
-    `
-    if (!serviceName){
-      res.json({message: "there is no service on that on our database"})
+    `;
+    if (!serviceName) {
+      res.json({ message: "there is no service on that on our database" });
     }
 
     const response = await sql`
