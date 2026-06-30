@@ -10,7 +10,7 @@ function ActivityDetails({ onClose, details }: Props) {
                 <button
                     onClick={onClose}
                 >
-                            close
+                    close
                 </button>
                 <table>
                     <thead className="bg-gray-100">
