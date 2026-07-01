@@ -1,11 +1,14 @@
 import { useCallback, useState } from "react";
-import axios from "axios";
 import UserManagement from "./pages/UserManagement";
 import AdminDashboard from "./pages/AdminDashboard";
 import SideBar from "./components/SideBar";
+import ServicePricingManagement from "./pages/ServicePricing";
+import ActivityMonitoring from "./pages/ActivityMonitoring";
+import api from "../../lib/axios";
 
 type User = {
     user_id: number;
+    full_name: string
     username: string;
     password: string;
     role: string;
@@ -13,25 +16,53 @@ type User = {
     contact_number: string;
     email: string;
 };
+type Service = {
+    service_id: number;
+    service_name: string;
+    price: number;
+};
+type Activities = {
+    activity_id: number;
+    user_id: number;
+    username: string;
+    service_name: string;
+    details: Record<string, unknown>;
+    created_at: string;
+};
+// each element must be either:
+
+// No object at all (the array is empty)
+// A complete Activity object
 
 function Admin() {
     const [users, setUsers] = useState<User[]>([]);
+    const [services, setServices] = useState<Service[]>([]);
+    const [activities, setActivities] = useState<Activities[]>([])  // Acitivities[] this means that this object structure can be a lot of objects // array
     const [open, setOpen] = useState(true);
     const [page, setPage] = useState("dashboard");
-
-    const loadUsers = useCallback(async () => {
+    const loadData = useCallback(async () => {
         try {
-            const response = await axios.get("/api/admin");
-            console.log("Admin dashboard data:", response.data);
-            setUsers(response.data);
+            const serviceResponse = await api.get("/api/admin/services");
+            const userResponse = await api.get("/api/admin/users");
+            const activityResponse = await api.get("/api/admin/activities")
+
+
+            setActivities(activityResponse.data.activities)
+            console.log("Services data:", serviceResponse.data);
+
+            setServices(serviceResponse.data.services);
+            console.log("services data:", userResponse.data);
+
+            setUsers(userResponse.data.users);
+             console.log("Users data:", userResponse.data.users);
         } catch (error) {
-            console.error("Error fetching admin dashboard data:", error);
+            console.log("Error fetching services:", error);
         }
     }, []);
 
     return (
         <div className="flex min-h-screen">
-             <SideBar
+            <SideBar
                 open={open}
                 page={page}
                 setPage={setPage}
@@ -42,7 +73,7 @@ function Admin() {
                     users={users}
                     open={open}
                     setOpen={setOpen}
-                    loadUsers={loadUsers}
+                    loadData={loadData}
                 />
             )}
             {page === "user-management" && (
@@ -50,7 +81,23 @@ function Admin() {
                     users={users}
                     open={open}
                     setOpen={setOpen}
-                    loadUsers={loadUsers}
+                    loadData={loadData}
+                />
+            )}
+            {page === "service-pricing" && (
+                <ServicePricingManagement
+                    services={services}
+                    open={open}
+                    setOpen={setOpen}
+                    loadData={loadData}
+                />
+            )}
+            {page === "activity-monitoring" && (
+                <ActivityMonitoring
+                    activities={activities}
+                    open={open}
+                    setOpen={setOpen}
+                    loadData={loadData}
                 />
             )}
 

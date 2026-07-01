@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import Header from "../components/Header";
 import AddUserModal from "../components/AddUserModal";
+import UpdateUserModal from "../components/UpdateUserModal"
 
 type User = {
     user_id: number;
+    full_name: string
     username: string;
     password: string;
     role: string;
@@ -14,23 +16,24 @@ type User = {
 
 type UserManagementProps = {
     users: User[];
-    loadUsers: () => Promise<void>;
+    loadData: () => Promise<void>;
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 function UserManagement({
     users,
-    loadUsers,
+    loadData,
     open,
     setOpen,
 }: UserManagementProps) {
     const [showAddUser, setShowAddUser] = useState(false);
+    const [showUpdateUser, setShowUpdateUser] = useState(false);
     const [search, setSearch] = useState("");
-
+    const [selectedUser, setSelectedUser] = useState<User>(users[0]); 
     useEffect(() => {
-        loadUsers();
-    }, [loadUsers]);
+        loadData();
+    }, [loadData]);
 
     const filteredUsers = users.filter((user) =>
         user.username.toLowerCase().includes(search.toLowerCase()) ||
@@ -38,11 +41,11 @@ function UserManagement({
     );
 
     return (
-        <main className="flex-1 p-6">
+        <main className="flex-1 min-w-0 p-6">
             <Header
                 open={open}
                 setOpen={setOpen}
-                loadUsers={loadUsers}
+                loadData={loadData}
                 page="User Management"
             />
 
@@ -50,7 +53,7 @@ function UserManagement({
                 Total Users: {filteredUsers.length}
             </h2>
 
-            <div className="flex">
+            <div className="flex items-center gap-3 mb-4">
                 <p className="p-2 mb-4 text-4xl">🔎︎</p>
 
                 <input
@@ -69,12 +72,19 @@ function UserManagement({
                 {showAddUser && (
                     <AddUserModal
                         onClose={() => setShowAddUser(false)}
-                        loadUsers={loadUsers}
+                        loadData={loadData}
+                    />
+                )}
+                {showUpdateUser && (
+                    <UpdateUserModal
+                        selectedUser={selectedUser}
+                        onClose={() => setShowUpdateUser(false)}
+                        loadData={loadData}
                     />
                 )}
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="w-full overflow-x-auto">
                 <table className="min-w-full border border-gray-300">
                     <thead className="bg-gray-200">
                         <tr>
@@ -101,9 +111,12 @@ function UserManagement({
                                 </td>
                                 <td className="border p-3">
                                     <div className="flex justify-center items-center gap-2">
-                                        <button className="bg-gray-200 px-4 py-2 hover:bg-gray-400">
+                                        <button className="bg-gray-200 px-4 py-2 hover:bg-gray-400"
+                                            onClick={() => { setSelectedUser(user); setShowUpdateUser(true) }}>
                                             Edit
                                         </button>
+
+
                                     </div>
                                 </td>
                             </tr>

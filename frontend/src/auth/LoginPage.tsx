@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import axios from "axios";
+import api from "../lib/axios";
 import LeftSideBackground from "./components/LeftSideBackground";
 
 function LoginPage() {
@@ -9,13 +9,13 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-
+  
   const login = async () => {
     if (!username || !password) {
       alert("Please fill in all fields.");
       return;
     }
-    const response = await axios.post("/api/auth/login", {
+    const response = await api.post("/api/auth/login", {
       username,
       password,
     });
@@ -28,7 +28,10 @@ function LoginPage() {
         setPassword("");
       }
       else {
+        const token = response.data.token;
+        localStorage.setItem("token", token);
         navigate(`/${response.data.user.role}`);
+        console.log(localStorage.getItem("token"));
       }
     } catch {
       alert(response.data.message);
@@ -40,8 +43,6 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex">
       <LeftSideBackground />
-
-      {/* RIGHT SIDE */}
       <div className="w-full md:w-1/2 flex items-center justify-center ">
         <div className="w-105 border-2 p-10">
           <div className="text-center mb-6">
@@ -79,7 +80,7 @@ function LoginPage() {
             </button>
             <button
               onClick={login}
-              className="w-full bg-gray-200 p-3 rounded"
+              className="w-full bg-gray-200 p-3 rounded hover:bg-gray-300 cursor-pointer"
             >
               Login
             </button>
