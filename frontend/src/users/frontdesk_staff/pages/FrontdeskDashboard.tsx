@@ -52,8 +52,47 @@ function FrontdeskDashboard({ billing, patients, queue, open, setOpen, loadData 
                 loadData={loadData}
                 page="Frontdesk Dashboard"
             />
-            <h1> waiting patients: {queue.filter((q) => q.status === "Waiting").length}</h1>
-            <h1>Frontdesk Staff Dashboard</h1>
+            <div className="grid grid-cols-4 gap-4">
+                <div className="bg-white p-4 shadow">
+                    <h2 className="text-lg font-semibold mb-2">Patients in Queue</h2>
+                    <p className="text-2xl">{queue.filter((q) => q.status === "Waiting").length}</p>
+                </div>
+                <div className="bg-white p-4  shadow">
+                    <h2 className="text-lg font-semibold mb-2">Registered Today</h2>
+                    <p className="text-2xl">{patients.filter((p) => p.created_at === new Date().toISOString().split('T')[0]).length}</p>
+                </div>
+                <div className="bg-white p-4 shadow">
+                    <h2 className="text-lg font-semibold mb-2">Total Queue</h2>
+                    <p className="text-2xl">{queue.length}</p>
+                </div>
+                <div className="bg-white p-4 shadow">
+                    <h2 className="text-lg font-semibold mb-2">Pending Bill</h2>
+                    <p className="text-2xl">{billing.filter((bill) => bill.status === "unpaid").length}</p>
+                </div>
+            </div>
+            <div className="mt-4 border">
+                <h1 className="flex justify-center mt-7 text-3xl">
+                    <strong>Queue Status Overview</strong>
+                </h1>                <div className="border grid grid-cols-4 gap-4 m-7 p-3">
+                    <div className="bg-white p-4 shadow">
+                        <h2 className="text-lg font-semibold mb-2">Patients in Queue</h2>
+                        <p className="text-2xl">{queue.filter((q) => q.status === "Waiting").length}</p>
+                    </div>
+                    <div className="bg-white p-4  shadow">
+                        <h2 className="text-lg font-semibold mb-2">Registered Today</h2>
+                        <p className="text-2xl">{patients.filter((p) => p.created_at === new Date().toISOString().split('T')[0]).length}</p>
+                    </div>
+                    <div className="bg-white p-4 shadow">
+                        <h2 className="text-lg font-semibold mb-2">Total Queue</h2>
+                        <p className="text-2xl">{queue.length}</p>
+                    </div>
+                    <div className="bg-white p-4 shadow">
+                        <h2 className="text-lg font-semibold mb-2">Pending Bill</h2>
+                        <p className="text-2xl">{billing.filter((bill) => bill.status === "unpaid").length}</p>
+                    </div>
+                </div>
+            </div>
+
         </main>
     )
 }

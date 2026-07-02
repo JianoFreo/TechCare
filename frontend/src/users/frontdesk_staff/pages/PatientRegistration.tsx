@@ -20,9 +20,16 @@ type PatientRegistrationProps = {
 };
 function PatientRegistration({ patients, open, setOpen, loadData }: PatientRegistrationProps) {
     return (
-        <div>
-            patient registry
-        </div>
+        <main className="flex-1 min-w-0 p-6">
+            <Header
+                open={open}
+
+                setOpen={setOpen}
+                loadData={loadData}
+                page="Patient Registration"
+            />
+            <h1>Patient Registration</h1>
+        </main>
     )
 }
-export default PatientRegistration
+            export default PatientRegistration

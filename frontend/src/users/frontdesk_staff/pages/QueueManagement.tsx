@@ -1,3 +1,4 @@
+import Header from "../components/Header";
 type queue = {
     queue_id: number;
     patient_id: number;
@@ -16,9 +17,15 @@ type QueueManagementProps = {
 };
 function QueueManagement({ queue, open, setOpen, loadData }: QueueManagementProps) {
     return (
-        <div>
-            queue management    
-            </div>
+       <main className="flex-1 min-w-0 p-6">
+            <Header
+                open={open}
+                setOpen={setOpen}
+                loadData={loadData}
+                page="Queue Management"
+            />
+            <h1>Queue Management</h1>
+        </main>
     )
 }
 export default QueueManagement
