@@ -38,16 +38,12 @@ export async function connectNeon(): Promise<void> {
         patient_id        VARCHAR(30)  PRIMARY KEY,
         last_name         VARCHAR(100) NOT NULL,
         first_name        VARCHAR(100) NOT NULL,
-        middle_initial    CHAR(1),
         date_of_birth     DATE         NOT NULL,
         sex               VARCHAR(10)  NOT NULL,
         contact_number    VARCHAR(20),
         email             VARCHAR(255),
         address           TEXT,
         emergency_contact TEXT,
-        qr_code           TEXT,
-        created_by        INTEGER      REFERENCES users(user_id),
-        deleted           BOOLEAN      NOT NULL DEFAULT FALSE,
         created_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
       )`;
@@ -154,14 +150,11 @@ export async function connectNeon(): Promise<void> {
       CREATE TABLE IF NOT EXISTS bills (
         bill_id            SERIAL PRIMARY KEY,
         patient_id         VARCHAR(30)   NOT NULL REFERENCES patients(patient_id),
-        created_by         INTEGER       NOT NULL REFERENCES users(user_id),
-        items              JSONB         NOT NULL DEFAULT '[]',
-        subtotal           DECIMAL(10,2) NOT NULL DEFAULT 0,
         discount_pct       DECIMAL(5,2)  NOT NULL DEFAULT 0,
         total_amount       DECIMAL(10,2) NOT NULL DEFAULT 0,
         payment_method     VARCHAR(30)   NOT NULL DEFAULT 'Cash',
         status             VARCHAR(20)   NOT NULL DEFAULT 'Unpaid',
-        receipt_issued_at  TIMESTAMP,
+        receipt_id         VARCHAR(50)   UNIQUE,
         billed_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
       )`;
 

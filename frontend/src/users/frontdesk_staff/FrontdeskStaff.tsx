@@ -10,7 +10,30 @@ import api from "../../lib/axios";
 
 
 function FrontdeskStaff() {
-    const [queue, setQueue] = useState([]);
+    const [patients, setpatients] = useState([]);
+    const [billing, setBilling] = useState([]);
+    const [labRequests, setLabRequests] = useState([]);
+    const [open, setOpen] = useState(true);
+    const [page, setPage] = useState("dashboard");
+    const loadData = useCallback(async () => {
+        try {
+            const serviceResponse = await api.get("/api/admin/services");
+            const userResponse = await api.get("/api/admin/users");
+            const activityResponse = await api.get("/api/admin/activities")
+
+
+            setPatients(activityResponse.data.activities)
+            console.log("Services data:", serviceResponse.data);
+
+            setServices(serviceResponse.data.services);
+            console.log("services data:", userResponse.data);
+
+            setUsers(userResponse.data.users);
+            console.log("Users data:", userResponse.data.users);
+        } catch (error) {
+            console.log("Error fetching services:", error);
+        }
+    }, []);
 
     return (
         <div className="flex min-h-screen">
@@ -22,7 +45,7 @@ function FrontdeskStaff() {
 
             {page === "billing" && (
                 <AdminDashboard
-                    users={users}
+                    patients={patients}
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
