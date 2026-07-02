@@ -7,31 +7,30 @@ import SideBar from "./components/SideBar";
 import ServicePricingManagement from "./pages/ServicePricing";
 import ActivityMonitoring from "./pages/ActivityMonitoring";
 import api from "../../lib/axios";
+import PatientRegistration from "./pages/PatientRegistration";
+import PatientRecords from "./pages/PatientRecords";
+import QueueManagement from "./pages/QueueManagement";
+import Billing from "./pages/Billing";
 
 
 function FrontdeskStaff() {
-    const [patients, setpatients] = useState([]);
+    const [patients, setPatients] = useState([]);
     const [billing, setBilling] = useState([]);
     const [labRequests, setLabRequests] = useState([]);
     const [open, setOpen] = useState(true);
     const [page, setPage] = useState("dashboard");
     const loadData = useCallback(async () => {
         try {
-            const serviceResponse = await api.get("/api/admin/services");
-            const userResponse = await api.get("/api/admin/users");
-            const activityResponse = await api.get("/api/admin/activities")
+            const patientsResponse = await api.get("/fdstaff/patients");
+            const billingResponse = await api.get("/fdstaff/billing");
 
+            setPatients(patientsResponse.data.patients);
+            console.log("Patients data:", patientsResponse.data);
 
-            setPatients(activityResponse.data.activities)
-            console.log("Services data:", serviceResponse.data);
-
-            setServices(serviceResponse.data.services);
-            console.log("services data:", userResponse.data);
-
-            setUsers(userResponse.data.users);
-            console.log("Users data:", userResponse.data.users);
+            setBilling(billingResponse.data.bills);
+            console.log("Billing data:", billingResponse.data);
         } catch (error) {
-            console.log("Error fetching services:", error);
+            console.log("Error fetching billing data:", error);
         }
     }, []);
 
@@ -43,7 +42,7 @@ function FrontdeskStaff() {
                 setPage={setPage}
             />
 
-            {page === "billing" && (
+            {page === "dashboard" && (
                 <AdminDashboard
                     patients={patients}
                     open={open}
@@ -51,8 +50,8 @@ function FrontdeskStaff() {
                     loadData={loadData}
                 />
             )}
-            {page === "frontdesk-dashboard" && (
-                <UserManagement
+            {page === "patient-registration" && (
+                <PatientRegistration
                     users={users}
                     open={open}
                     setOpen={setOpen}
@@ -60,7 +59,7 @@ function FrontdeskStaff() {
                 />
             )}
             {page === "patient-records" && (
-                <ServicePricingManagement
+                <PatientRecords
                     services={services}
                     open={open}
                     setOpen={setOpen}
@@ -68,7 +67,15 @@ function FrontdeskStaff() {
                 />
             )}
             {page === "queue-management" && (
-                <ActivityMonitoring
+                <QueueManagement
+                    activities={activities}
+                    open={open}
+                    setOpen={setOpen}
+                    loadData={loadData}
+                />
+            )}
+            {page === "Billing" && (
+                <Billing
                     activities={activities}
                     open={open}
                     setOpen={setOpen}

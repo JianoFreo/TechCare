@@ -16,7 +16,6 @@ export async function addPatient(req: Request, res: Response) {
             email,
             address,
             emergency_contact,
-            qr_code,
         } = req.body;
 
         // Validate required fields
@@ -92,6 +91,152 @@ export async function addPatient(req: Request, res: Response) {
         //         "created_at": "2024-04-27T12:34:56.789Z",
         //         "updated_at": "2024-04-27T12:34:56.789Z",
         //     }
+        // }
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            message: "Internal server error.",
+        });
+    }
+}
+
+export async function addBills(req: Request, res: Response) {
+    try {
+        const {
+            patient_id,
+            services_ids = [],
+            discount_pct = 0,
+            custom_service = [],
+            payment_method = "Cash",
+            status = "Unpaid",
+        }: {
+            patient_id: string;
+            services_ids: number[];
+            discount_pct?: number;
+            custom_service?: {
+                service_name: string;
+                price: number;
+            }[];
+            payment_method?: string;
+            status?: string;
+        } = req.body;
+
+        // {
+        //   "patient_id": "P-2024-0001",
+        //   "services_ids": [1, 3],
+        //   "custom_service": [
+        //     {
+        //       "service_name": "Medical Certificate",
+        //       "price": 200
+        //     },
+        //     {
+        //       "service_name": "Home Visit Fee",
+        //       "price": 500
+        //     }
+        //   ],
+        //   "discount_pct": 10,
+        //   "payment_method": "Cash",
+        //   "status": "Unpaid"
+        // }
+
+        const services: {
+            service_name: string;
+            price: number;
+        }[] = [];
+
+        // Fetch services from the database
+        for (let i = 0; i < services_ids.length; i++) {
+            const service = await sql`
+                SELECT price, service_name
+                FROM services
+                WHERE service_id = ${services_ids[i]}
+            `;
+
+            if (service.length === 0) {
+                return res.status(404).json({
+                    message: `Service ID ${services_ids[i]} not found`,
+                });
+            }
+
+            services.push({
+                service_name: service[0].service_name,
+                price: Number(service[0].price),
+            });
+        }
+
+        // Add custom services
+        services.push(...custom_service);
+
+        const service_total = services.reduce(
+            (sum, service) => sum + service.price,
+            0
+        );
+
+        const discount = service_total * (discount_pct / 100);
+        const total_amount = service_total - discount;
+
+        const bill = await sql`
+            INSERT INTO bills (
+                patient_id,
+                services_ids,
+                discount_pct,
+                total_amount,
+                payment_method,
+                status
+            )
+            VALUES (
+                ${patient_id},
+                ${services_ids},
+                ${discount_pct},
+                ${total_amount},
+                ${payment_method},
+                ${status}
+            )
+            RETURNING *;
+        `;
+
+        return res.status(201).json({
+            message: "Bill created successfully",
+            bill: {
+                ...bill[0],
+                services,
+            },
+        });
+
+        // {
+        //   "message": "Bill created successfully",
+        //   "bill": {
+        //     "bill_id": 15,
+        //     "patient_id": "P-2024-0001",
+        //     "services_ids": [1, 3],
+        //     "services": [
+        //       {
+        //         "service_name": "Complete Blood Count (CBC)",
+        //         "price": 500
+        //       },
+        //       {
+        //         "service_name": "Chest X-Ray",
+        //         "price": 800
+        //       },
+        //       {
+        //         "service_name": "Medical Certificate",
+        //         "price": 200
+        //       },
+        //       {
+        //         "service_name": "Home Visit Fee",
+        //         "price": 500
+        //       }
+        //     ],
+        //     "discount_pct": "10.00",
+        //     "total_amount": "1800.00",
+        //     "payment_method": "Cash",
+        //     "status": "Unpaid",
+        //     "receipt_id": null,
+        //     "created_at": "2026-07-02T11:45:12.931Z",
+        //     "receipt_issued_at": null,
+        //     "billed_at": "2026-07-02T11:45:12.931Z"
+        //   }
         // }
     } catch (error) {
         console.error(error);

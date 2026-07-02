@@ -1,6 +1,6 @@
 import { sql } from "../../config/db.js";
 import { json, Request, Response } from "express";
-
+import { calculateAge } from "../../utils/calculateAge.js";
 export async function updatePatient(req: Request, res: Response) {
     // PUT /api/fdstaff/patients/:patient_id
 
@@ -56,10 +56,11 @@ export async function updatePatient(req: Request, res: Response) {
             WHERE patient_id = ${patient_id}
             RETURNING *;
         `;
+        const age = calculateAge(updatedPatient.date_of_birth);
 
         return res.status(200).json({
             message: "Patient updated successfully.",
-            patient: updatedPatient,
+            patient: {...updatedPatient, age },
         });
         // {
         //     "message": "Patient updated successfully.",

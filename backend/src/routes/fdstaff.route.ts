@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getAllPatients, getAllBilling } from "../controllers/fdstaff/getRequests.controller.js";
-import { addPatient, addBilling } from "../controllers/fdstaff/postRequests.controller.js";
+import { addPatient, addBills } from "../controllers/fdstaff/postRequests.controller.js";
 
 const router = Router();
 
@@ -10,4 +10,4 @@ router.get("/billing", getAllBilling);
 
 // POST requests
 router.post("/patients", addPatient);
-router.post("/billing", addBilling);
+router.post("/billing", addBills);

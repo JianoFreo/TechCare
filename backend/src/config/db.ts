@@ -150,11 +150,14 @@ export async function connectNeon(): Promise<void> {
       CREATE TABLE IF NOT EXISTS bills (
         bill_id            SERIAL PRIMARY KEY,
         patient_id         VARCHAR(30)   NOT NULL REFERENCES patients(patient_id),
+        services_id        INTEGER[]       NOT NULL REFERENCES services(service_id),
         discount_pct       DECIMAL(5,2)  NOT NULL DEFAULT 0,
         total_amount       DECIMAL(10,2) NOT NULL DEFAULT 0,
         payment_method     VARCHAR(30)   NOT NULL DEFAULT 'Cash',
         status             VARCHAR(20)   NOT NULL DEFAULT 'Unpaid',
-        receipt_id         VARCHAR(50)   UNIQUE,
+        receipt_id         VARCHAR(50)   UNIQUE DEFAULT NULL,
+        created_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        receipt_issued_at  TIMESTAMP     DEFAULT NULL,
         billed_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
       )`;
 
