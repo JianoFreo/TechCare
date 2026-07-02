@@ -52,7 +52,7 @@ function FrontdeskDashboard({ billing, patients, queue, open, setOpen, loadData 
                 loadData={loadData}
                 page="Frontdesk Dashboard"
             />
-            <h1>Frontdesk Dashboard</h1>
+            <h1> waiting patients: {queue.filter((q) => q.status === "Waiting").length}</h1>
             <h1>Frontdesk Staff Dashboard</h1>
         </main>
     )
