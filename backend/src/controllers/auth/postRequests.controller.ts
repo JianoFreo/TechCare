@@ -1,4 +1,4 @@
-import { sql } from "../config/db.js";
+import { sql } from "../../config/db.js";
 import bcrypt from "bcryptjs";
 import { json, Request, Response } from "express";
 import jwt from "jsonwebtoken";

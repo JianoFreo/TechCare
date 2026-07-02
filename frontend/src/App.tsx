@@ -2,10 +2,11 @@ import { Navigate, Route, Routes } from 'react-router'
 import LoginPage from './auth/LoginPage'
 import SignupPage from './auth/SignupPage'
 import Admin from './users/admin/Admin'
-import DoctorDashboard from './users/doctor/DoctorDashbaord'
-import FrontdeskDashboard from './users/frontdesk_staff/FrontdeskDashboard'
+import DoctorDashboard from './users/doctor/DoctorDashboard'
+import FrontdeskStaff from './users/frontdesk_staff/FrontdeskStaff'
 import LabstaffDashboard from './users/laboratory_staff/LabstaffDashbaord'
 import PatientInformation from './users/patient/PatientInformation'
+import QueueTracking from './queue/QueueTracking'
 function App() {
 
   return (
@@ -19,7 +20,8 @@ function App() {
         <Route path="/doctor" element={<DoctorDashboard />} />
         <Route path="/patient" element={<PatientInformation />} />
         <Route path="/laboratory-staff" element={<LabstaffDashboard />} />
-        <Route path="/frontdesk-staff" element={<FrontdeskDashboard />} />
+        <Route path="/frontdesk-staff" element={<FrontdeskStaff />} />
+        <Route path="/queue-tracking" element={<QueueTracking />} />
         
       </Routes>
     </div>
