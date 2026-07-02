@@ -71,7 +71,6 @@ export async function connectNeon(): Promise<void> {
       CREATE TABLE IF NOT EXISTS queue_entries (
         queue_id     SERIAL PRIMARY KEY,
         patient_id   VARCHAR(30) NOT NULL REFERENCES patients(patient_id),
-        assigned_by  INTEGER     REFERENCES users(user_id),
         queue_number INTEGER     NOT NULL,
         service_type VARCHAR(50) NOT NULL,
         status       VARCHAR(20) NOT NULL DEFAULT 'Waiting',

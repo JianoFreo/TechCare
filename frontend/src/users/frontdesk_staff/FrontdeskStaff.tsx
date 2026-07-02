@@ -1,36 +1,35 @@
-
-
 import { useCallback, useState } from "react";
-import UserManagement from "./pages/UserManagement";
-import AdminDashboard from "./pages/AdminDashboard";
-import SideBar from "./components/SideBar";
-import ServicePricingManagement from "./pages/ServicePricing";
-import ActivityMonitoring from "./pages/ActivityMonitoring";
 import api from "../../lib/axios";
-import PatientRegistration from "./pages/PatientRegistration";
-import PatientRecords from "./pages/PatientRecords";
-import QueueManagement from "./pages/QueueManagement";
+import SideBar from "./components/SideBar";
 import Billing from "./pages/Billing";
+import FrontdeskDashboard from "./pages/FrontdeskDashboard";
+import PatientRecords from "./pages/PatientRecords";
+import PatientRegistration from "./pages/PatientRegistration";
+import QueueManagement from "./pages/QueueManagement";
 
 
 function FrontdeskStaff() {
     const [patients, setPatients] = useState([]);
     const [billing, setBilling] = useState([]);
-    const [labRequests, setLabRequests] = useState([]);
+    const [queue, setQueue] = useState([]);
     const [open, setOpen] = useState(true);
     const [page, setPage] = useState("dashboard");
     const loadData = useCallback(async () => {
         try {
             const patientsResponse = await api.get("/fdstaff/patients");
             const billingResponse = await api.get("/fdstaff/billing");
+            const queueEntriesResponse = await api.get("/fdstaff/queue");
 
             setPatients(patientsResponse.data.patients);
             console.log("Patients data:", patientsResponse.data);
 
             setBilling(billingResponse.data.bills);
             console.log("Billing data:", billingResponse.data);
+
+            setQueue(queueEntriesResponse.data.queueEntries);
+            console.log("Queue data:", queueEntriesResponse.data);
         } catch (error) {
-            console.log("Error fetching billing data:", error);
+            console.log("Error fetching queue entries data:", error);
         }
     }, []);
 
@@ -43,8 +42,10 @@ function FrontdeskStaff() {
             />
 
             {page === "dashboard" && (
-                <AdminDashboard
+                <FrontdeskDashboard
                     patients={patients}
+                    billing={billing}
+                    queue={queue}
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
@@ -52,7 +53,7 @@ function FrontdeskStaff() {
             )}
             {page === "patient-registration" && (
                 <PatientRegistration
-                    users={users}
+                    patients={patients}
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
@@ -60,7 +61,7 @@ function FrontdeskStaff() {
             )}
             {page === "patient-records" && (
                 <PatientRecords
-                    services={services}
+                    patients={patients}
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
@@ -68,15 +69,15 @@ function FrontdeskStaff() {
             )}
             {page === "queue-management" && (
                 <QueueManagement
-                    activities={activities}
+                    queue={queue}
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
                 />
             )}
-            {page === "Billing" && (
+            {page === "billing" && (
                 <Billing
-                    activities={activities}
+                    billing={billing}
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}

@@ -28,31 +28,40 @@ function SideBar({ open, page, setPage }: SideBarProps) {
                             Dashboard
                         </a>
                         <a
-                            className={`hover:font-bold border-2 p-5 ${page === "user-management"
+                            className={`hover:font-bold border-2 p-5 ${page === "patient-registration"
                                 ? "bg-red-800 text-white border-red-800"
                                 : ""
                                 }`}
-                            onClick={() => setPage("user-management")}
+                            onClick={() => setPage("patient-registration")}
                         >
-                            User Management
+                            Patient Registration
                         </a>
                         <a
-                            className={`hover:font-bold border-2 p-5 ${page === "service-pricing"
+                            className={`hover:font-bold border-2 p-5 ${page === "patient-records"
                                 ? "bg-red-800 text-white border-red-800"
                                 : ""
                                 }`}
-                            onClick={() => setPage("service-pricing")}
+                            onClick={() => setPage("patient-records")}
                         >
-                            Service Pricing
+                            Patient Records
                         </a>
                         <a
-                            className={`hover:font-bold border-2 p-5 ${page === "activity-monitoring"
+                            className={`hover:font-bold border-2 p-5 ${page === "queue-management"
                                 ? "bg-red-800 text-white border-red-800"
                                 : ""
                                 }`}
-                            onClick={() => setPage("activity-monitoring")}
+                            onClick={() => setPage("queue-management")}
                         >
-                            Activity Monitoring
+                            Queue Management
+                        </a>
+                        <a
+                            className={`hover:font-bold border-2 p-5 ${page === "billing"
+                                ? "bg-red-800 text-white border-red-800"
+                                : ""
+                                }`}
+                            onClick={() => setPage("billing")}
+                        >
+                            Billing
                         </a>
 
 
