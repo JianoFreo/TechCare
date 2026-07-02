@@ -1,3 +1,4 @@
+import Header from "../components/Header";
 type Bill = {
     billing_id: number;
     patient_id: number;
