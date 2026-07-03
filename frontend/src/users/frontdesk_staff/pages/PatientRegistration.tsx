@@ -2,15 +2,19 @@ import { useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import Header from "../components/Header";
 import api from "../../../lib/axios";
+
 type Patient = {
-    patient_id: number;
+    patient_id: string;         // VARCHAR(30) e.g. P-2026-0513-001
     first_name: string;
     last_name: string;
+    middle_initial?: string;
     date_of_birth: string;
+    sex: string;
     contact_number: string;
     email: string;
     address: string;
     emergency_contact: string;
+    qr_code?: string;
     created_at: string;
     updated_at: string;
 }[];
@@ -25,55 +29,83 @@ type PatientRegistrationProps = {
 function PatientRegistration({ patients, open, setOpen, loadData }: PatientRegistrationProps) {
     const [first_name, setFirst_name] = useState("");
     const [last_name, setLast_name] = useState("");
+    const [middle_initial, setMiddle_initial] = useState("");
     const [date_of_birth, setDate_of_birth] = useState("");
+    const [sex, setSex] = useState("");
     const [contact_number, setContact_number] = useState("");
     const [email, setEmail] = useState("");
     const [address, setAddress] = useState("");
     const [emergency_contact, setEmergency_contact] = useState("");
-    const [image, setImage] = useState<File>();
-    const [preview, setPreview] = useState("")
+    const [preview, setPreview] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
     const cardRef = useRef<HTMLDivElement>(null);
+
+    function resetForm() {
+        setFirst_name("");
+        setLast_name("");
+        setMiddle_initial("");
+        setDate_of_birth("");
+        setSex("");
+        setContact_number("");
+        setEmail("");
+        setAddress("");
+        setEmergency_contact("");
+        setPreview("");
+        setError("");
+    }
+
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        setError("");
 
         if (!cardRef.current) return;
 
-        // Take a screenshot of the ID card
-        const canvas = await html2canvas(cardRef.current);
+        setLoading(true);
+        try {
+            // Screenshot the ID card and send it as qr_code / patient photo
+            const canvas = await html2canvas(cardRef.current);
+            const blob = await new Promise<Blob | null>((resolve) =>
+                canvas.toBlob(resolve, "image/png")
+            );
+            if (!blob) throw new Error("Failed to generate ID card image");
 
-        // Convert the canvas into a Blob
-        const blob = await new Promise<Blob | null>((resolve) => {
-            canvas.toBlob(resolve, "image/png");
-        });
+            const idImage = new File([blob], "patient-id.png", { type: "image/png" });
 
-        if (!blob) return;
+            const formData = new FormData();
+            formData.append("first_name", first_name);
+            formData.append("last_name", last_name);
+            formData.append("middle_initial", middle_initial);
+            formData.append("date_of_birth", date_of_birth);
+            formData.append("sex", sex);
+            formData.append("contact_number", contact_number);
+            formData.append("email", email);
+            formData.append("address", address);
+            formData.append("emergency_contact", emergency_contact);
+            formData.append("image", idImage);
 
-        // Turn the Blob into a File
-        const idImage = new File([blob], "patient-id.png", {
-            type: "image/png",
-        });
+            const response = await api("/api/fdstaff", {
+                method: "POST",
+                body: formData,
+            });
 
-        const formData = new FormData();
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data?.message ?? "Registration failed");
+            }
 
-        formData.append("first_name", first_name);
-        formData.append("last_name", last_name);
-        formData.append("date_of_birth", date_of_birth);
-        formData.append("contact_number", contact_number);
-        formData.append("email", email);
-        formData.append("address", address);
-        formData.append("emergency_contact", emergency_contact);
-
-        // Upload the generated ID card
-        formData.append("image", idImage);
-
-        const response = await api("/api/fdstaff", {
-            method: "POST",
-            body: formData,
-        });
-
-        const data = await response.json();
-        console.log(data);
+            resetForm();
+            await loadData();
+        } catch (err: any) {
+            setError(err.message ?? "Something went wrong");
+        } finally {
+            setLoading(false);
+        }
     }
+
+    // Derive the next patient ID for preview from the current patients list
+    const nextId = `P-${new Date().getFullYear()}-${String(patients.length + 1).padStart(3, "0")}`;
 
     return (
         <main className="flex-1 min-w-0 p-6">
@@ -94,8 +126,15 @@ function PatientRegistration({ patients, open, setOpen, loadData }: PatientRegis
                 >
                     <h2 className="text-2xl font-semibold mb-2">Patient Registration</h2>
 
+                    {error && (
+                        <p className="text-red-500 text-sm bg-red-50 border border-red-200 rounded p-2">
+                            {error}
+                        </p>
+                    )}
+
                     <p className="font-medium">First Name</p>
                     <input
+                        required
                         className="border p-2"
                         placeholder="First name"
                         type="text"
@@ -105,6 +144,7 @@ function PatientRegistration({ patients, open, setOpen, loadData }: PatientRegis
 
                     <p className="font-medium">Last Name</p>
                     <input
+                        required
                         className="border p-2"
                         placeholder="Last name"
                         type="text"
@@ -112,16 +152,41 @@ function PatientRegistration({ patients, open, setOpen, loadData }: PatientRegis
                         value={last_name}
                     />
 
+                    <p className="font-medium">Middle Initial</p>
+                    <input
+                        className="border p-2"
+                        placeholder="M"
+                        maxLength={1}
+                        type="text"
+                        onChange={(e) => setMiddle_initial(e.target.value)}
+                        value={middle_initial}
+                    />
+
                     <p className="font-medium">Date of Birth</p>
                     <input
+                        required
                         className="border p-2"
                         type="date"
                         onChange={(e) => setDate_of_birth(e.target.value)}
                         value={date_of_birth}
                     />
 
+                    <p className="font-medium">Sex</p>
+                    <select
+                        required
+                        className="border p-2"
+                        onChange={(e) => setSex(e.target.value)}
+                        value={sex}
+                    >
+                        <option value="" disabled>Select sex</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+
                     <p className="font-medium">Contact Number</p>
                     <input
+                        required
                         className="border p-2"
                         placeholder="Contact number"
                         type="text"
@@ -133,7 +198,7 @@ function PatientRegistration({ patients, open, setOpen, loadData }: PatientRegis
                     <input
                         className="border p-2"
                         placeholder="Email"
-                        type="text"
+                        type="email"
                         onChange={(e) => setEmail(e.target.value)}
                         value={email}
                     />
@@ -156,52 +221,44 @@ function PatientRegistration({ patients, open, setOpen, loadData }: PatientRegis
                         value={emergency_contact}
                     />
 
+                    <p className="font-medium">Patient Photo</p>
                     <input
                         type="file"
                         accept="image/*"
-                        onChange={(event) => {
-                            if (!event.target.files) return;
-
-                            const file = event.target.files[0];
-
-                            // Save the file for uploading later
-                            setImage(file);
-
-                            // Create a temporary URL for previewing
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
                             setPreview(URL.createObjectURL(file));
                         }}
                     />
+
                     <button
                         type="submit"
-                        className="bg-gray-200 p-2 mt-4 hover:bg-gray-300"
+                        disabled={loading}
+                        className="bg-gray-200 p-2 mt-4 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Register Patient
+                        {loading ? "Registering..." : "Register Patient"}
                     </button>
                 </form>
 
+                {/* ID Card Preview */}
                 <div
                     ref={cardRef}
                     className="w-[500px] rounded-2xl overflow-hidden shadow-xl border bg-white"
                 >
-
                     <div className="bg-blue-700 text-white px-5 py-3 flex justify-between items-center">
                         <div>
                             <h2 className="text-lg font-bold">TECHCARE</h2>
-                            <p className="text-xs tracking-wider">
-                                PATIENT IDENTIFICATION CARD
-                            </p>
+                            <p className="text-xs tracking-wider">PATIENT IDENTIFICATION CARD</p>
                         </div>
-
                         <div className="text-right text-[10px]">
-                            <p>ReynaG clinc</p>
+                            <p>ReynaG Clinic</p>
                             <p>Since 2026</p>
                         </div>
                     </div>
 
                     <div className="flex p-5 gap-5">
-
                         <div className="w-32 flex flex-col items-center">
-
                             {preview ? (
                                 <img
                                     src={preview}
@@ -213,66 +270,54 @@ function PatientRegistration({ patients, open, setOpen, loadData }: PatientRegis
                                     PHOTO
                                 </div>
                             )}
-
-                            <p className="text-xs mt-2 text-gray-500">
-                                Patient Photo
-                            </p>
-
+                            <p className="text-xs mt-2 text-gray-500">Patient Photo</p>
                         </div>
 
                         <div className="flex-1 text-sm">
-
                             <div className="mb-3">
                                 <p className="text-gray-500 text-xs">FULL NAME</p>
                                 <p className="font-bold text-xl">
-                                    {first_name} {last_name}
+                                    {first_name || "—"}{" "}
+                                    {middle_initial ? `${middle_initial}. ` : ""}
+                                    {last_name}
                                 </p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-y-2 gap-x-4">
-
                                 <div>
                                     <p className="text-gray-500 text-xs">Birth Date</p>
-                                    <p>{date_of_birth || "-"}</p>
+                                    <p>{date_of_birth || "—"}</p>
                                 </div>
-
+                                <div>
+                                    <p className="text-gray-500 text-xs">Sex</p>
+                                    <p>{sex || "—"}</p>
+                                </div>
                                 <div>
                                     <p className="text-gray-500 text-xs">Contact</p>
-                                    <p>{contact_number || "-"}</p>
+                                    <p>{contact_number || "—"}</p>
                                 </div>
-
-                                <div>
-                                    <p className="text-gray-500 text-xs">Email</p>
-                                    <p className="truncate">{email || "-"}</p>
-                                </div>
-
                                 <div>
                                     <p className="text-gray-500 text-xs">Emergency</p>
-                                    <p>{emergency_contact || "-"}</p>
+                                    <p>{emergency_contact || "—"}</p>
                                 </div>
-
+                                <div className="col-span-2">
+                                    <p className="text-gray-500 text-xs">Email</p>
+                                    <p className="truncate">{email || "—"}</p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="text-gray-500 text-xs">Address</p>
+                                    <p className="truncate">{address || "—"}</p>
+                                </div>
                             </div>
-
-                            <div className="mt-3">
-                                <p className="text-gray-500 text-xs">Address</p>
-                                <p className="truncate">{address || "-"}</p>
-                            </div>
-
                         </div>
-
                     </div>
 
                     <div className="bg-gray-100 border-t px-5 py-2 flex justify-between items-center text-xs">
-                        <span className="font-semibold">
-                            ID #: TC-000001
-                        </span>
-
-                        <span className="text-gray-500">
-                            VALID PATIENT CARD
-                        </span>
+                        <span className="font-semibold">ID #: {nextId}</span>
+                        <span className="text-gray-500">VALID PATIENT CARD</span>
                     </div>
-
                 </div>
+
             </div>
         </main>
     );
