@@ -61,9 +61,19 @@ export async function getMyAccount(req: Request, res: Response) {
     WHERE user_id = ${id}
     `;
     const user_created = response[0];
-    if (!user_created) {res.json({message: "you dont have an account here"})}
-    res.status(200).json({user_created:user_created.created_at}) //this is an object
+    if (!user_created) {
+      res.json({ message: "you dont have an account here" });
+    }
+    res.status(200).json({ user_created: user_created.created_at }); //this is an object
   } catch (error) {
     res.status(500).json({ error: "error im getiing your account" });
+  }
+}
+
+export function postFile(req: Request, res: Response) {
+  try {
+    res.send("uploaded succesfuly");
+  } catch (error) {
+    res.status(500).json({message: 'internal server error'})
   }
 }

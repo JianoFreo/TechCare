@@ -1,5 +1,9 @@
 import express from "express";
 import path from "path";
+import multer from "multer";
+const upload = multer({
+  dest: "uploads/",
+});
 
 // import { initializeWebSocket } from "./websocket.js";
 import { fileURLToPath } from "url";
