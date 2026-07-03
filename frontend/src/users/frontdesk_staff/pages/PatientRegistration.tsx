@@ -1,11 +1,10 @@
-import { useRef, useState } from "react";
-import html2canvas from "html2canvas";
+import { useState } from "react";
 import Header from "../components/Header";
 import api from "../../../lib/axios";
 import IdCard from "./components/IdCard";
 
 type Patient = {
-    patient_id: string;         // VARCHAR(30) e.g. P-2026-0513-001
+    patient_id: string;    
     first_name: string;
     last_name: string;
     middle_initial?: string;
@@ -27,7 +26,12 @@ type PatientRegistrationProps = {
     loadData: () => Promise<void>;
 };
 
-function PatientRegistration({ patients, open, setOpen, loadData }: PatientRegistrationProps) {
+function PatientRegistration({
+    patients,
+    open,
+    setOpen,
+    loadData,
+}: PatientRegistrationProps) {
     const [first_name, setFirst_name] = useState("");
     const [last_name, setLast_name] = useState("");
     const [middle_initial, setMiddle_initial] = useState("");
@@ -37,7 +41,29 @@ function PatientRegistration({ patients, open, setOpen, loadData }: PatientRegis
     const [email, setEmail] = useState("");
     const [address, setAddress] = useState("");
     const [emergency_contact, setEmergency_contact] = useState("");
+    const [image, setImage] = useState<File | null>(null);
 
+    async function handleSubmit(event: React.FormEvent) {
+        event.preventDefault();
+
+        const formData = new FormData();
+        formData.append("first_name", first_name);
+        formData.append("last_name", last_name);
+        formData.append("middle_initial", middle_initial);
+        formData.append("date_of_birth", date_of_birth);
+        formData.append("sex", sex);
+        formData.append("contact_number", contact_number);
+        formData.append("email", email);
+        formData.append("address", address);
+        formData.append("emergency_contact", emergency_contact);
+
+        if (image) {
+            formData.append("image", image);
+        }
+
+        const response = await api.post("/patients", formData);
+        console.log(response.data);
+    }
 
     return (
         <main className="flex-1 min-w-0 p-6">
@@ -47,8 +73,109 @@ function PatientRegistration({ patients, open, setOpen, loadData }: PatientRegis
                 loadData={loadData}
                 page="Patient Registration"
             />
+
             <h1>Patient Registration</h1>
-            <div className="flex justify-between">
+
+            <div className="flex justify-around">
+                {/* FORM */}
+                <form
+                    className="flex flex-col w-100 space-y-4"
+                    onSubmit={handleSubmit}
+                >
+                    <input
+                        className="border border-gray-300 p-2"
+                        type="text"
+                        placeholder="First Name"
+                        value={first_name}
+                        onChange={(e) => setFirst_name(e.target.value)}
+                    />
+
+                    <input
+                        className="border border-gray-300 p-2"
+                        type="text"
+                        placeholder="Last Name"
+                        value={last_name}
+                        onChange={(e) => setLast_name(e.target.value)}
+                    />
+
+                    <input
+                        className="border border-gray-300 p-2"
+                        type="text"
+                        placeholder="Middle Initial"
+                        value={middle_initial}
+                        onChange={(e) => setMiddle_initial(e.target.value)}
+                    />
+
+                    <input
+                        className="border border-gray-300 p-2"
+                        type="date"
+                        value={date_of_birth}
+                        onChange={(e) => setDate_of_birth(e.target.value)}
+                    />
+
+                    <select
+                        className="border border-gray-300 p-2"
+                        value={sex}
+                        onChange={(e) => setSex(e.target.value)}
+                    >
+                        <option value="">Select Sex</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+
+                    <input
+                        className="border border-gray-300 p-2"
+                        type="text"
+                        placeholder="Contact Number"
+                        value={contact_number}
+                        onChange={(e) => setContact_number(e.target.value)}
+                    />
+
+                    <input
+                        className="border border-gray-300 p-2"
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+
+                    <input
+                        className="border border-gray-300 p-2"
+                        type="text"
+                        placeholder="Address"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                    />
+
+                    <input
+                        className="border border-gray-300 p-2"
+                        type="text"
+                        placeholder="Emergency Contact"
+                        value={emergency_contact}
+                        onChange={(e) => setEmergency_contact(e.target.value)}
+                    />
+
+                    {/* FILE */}
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                                setImage(e.target.files[0]);
+                            }
+                        }}
+                    />
+
+                    <button
+                    onClick={handleSubmit}
+                        type="submit"
+                        className="bg-blue-500 text-white p-2 rounded"
+                    >
+                        Register Patient
+                    </button>
+                </form>
+
+                {/* PREVIEW CARD */}
                 <IdCard
                     first_name={first_name}
                     last_name={last_name}
@@ -59,76 +186,8 @@ function PatientRegistration({ patients, open, setOpen, loadData }: PatientRegis
                     address={address}
                     emergency_contact={emergency_contact}
                 />
-                <form className="flex flex-col space-y-4">
-                    <input
-                        className="border border-gray-300 p-2"
-                        type="text"
-                        placeholder="First Name"
-                        value={first_name}
-                        onChange={(e) => setFirst_name(e.target.value)}
-                    />
-                    <input
-                        className="border border-gray-300 p-2"
-                        type="text"
-                        placeholder="Last Name"
-                        value={last_name}
-                        onChange={(e) => setLast_name(e.target.value)}
-                    />
-                    <input
-                        className="border border-gray-300 p-2"
-                        type="text"
-                        placeholder="Middle Initial"
-                        value={middle_initial}
-                        onChange={(e) => setMiddle_initial(e.target.value)}
-                    />
-                    <input
-                        className="border border-gray-300 p-2"
-                        type="date"
-                        placeholder="Date of Birth"
-                        value={date_of_birth}
-                        onChange={(e) => setDate_of_birth(e.target.value)}
-                    />
-                    <select
-                        className="border border-gray-300 p-2"
-                        value={sex}
-                        onChange={(e) => setSex(e.target.value)}
-                    >
-                        <option value="">Select Sex</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                    </select>
-                    <input
-                        className="border border-gray-300 p-2"
-                        type="text"
-                        placeholder="Contact Number"
-                        value={contact_number}
-                        onChange={(e) => setContact_number(e.target.value)}
-                    />
-                    <input
-                        className="border border-gray-300 p-2"
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                    <input
-                        className="border border-gray-300 p-2"
-                        type="text"
-                        placeholder="Address"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                    />
-                    <input
-                        className="border border-gray-300 p-2"
-                        type="text"
-                        placeholder="Emergency Contact"
-                        value={emergency_contact}
-                        onChange={(e) => setEmergency_contact(e.target.value)}
-                    />
-                </form>
             </div>
         </main>
-
-    )
+    );
 }
 export default PatientRegistration;
