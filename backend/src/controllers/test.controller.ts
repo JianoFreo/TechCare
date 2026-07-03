@@ -24,6 +24,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { sql } from "../config/db.js";
+import cloudinary from "../config/cloudinary.js";
 
 export async function signIn(req: Request, res: Response, next: NextFunction) {
   const user = req.body;
@@ -70,10 +71,23 @@ export async function getMyAccount(req: Request, res: Response) {
   }
 }
 
-export function postFile(req: Request, res: Response) {
+export async function uploadImage(req: Request, res: Response) {
   try {
-    res.send("uploaded succesfuly");
-  } catch (error) {
-    res.status(500).json({message: 'internal server error'})
+    if (!req.file) {
+      return res.status(400).json({
+        message: "No image uploaded",
+      });
+    }
+
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "techcare",
+    });
+
+    return res.status(200).json({
+      url: result.secure_url,
+      public_id: result.public_id,
+    });
+  } catch (err) {
+    return res.status(500).json(err);
   }
 }
