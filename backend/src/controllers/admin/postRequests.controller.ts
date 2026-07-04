@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
+
+///// the tokenantion on ad user is just for testing purposes, 
+/// it will be removed later on. optional lang kasi no need tokens right after sign up, its usually on login========
 export async function addUser(req: Request, res: Response) {
   // post /api/admin/users
   try {

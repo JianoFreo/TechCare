@@ -15,6 +15,7 @@ function AddUserModal({ onClose, loadData }: Props) {
     const [contactNumber, setContactNumber] = useState("")
     const [email, setEmail] = useState("")
     const [role, setRole] = useState("")
+    
     const [hiddenPassword, setHiddenPassword] = useState(true)
     const registerUser = async () => {
         if (!username || !password || !confirmPassword || !fullName || !contactNumber || !email || !role) {
@@ -22,17 +23,22 @@ function AddUserModal({ onClose, loadData }: Props) {
         } else if (password !== confirmPassword) {
             alert("your passswords do no match ")
         } else {
-            const response = await api.post("/api/admin/users", {
-                username,
-                password,
-                role,
-                email,
-                contact_number: contactNumber,
-                full_name: fullName,
-            })
-            alert(response.data.message)
-            onClose()
-            loadData()
+            try {
+                const response = await api.post("/api/admin/users", {
+                    username,
+                    password,
+                    role,
+                    email,
+                    contact_number: contactNumber,
+                    full_name: fullName,
+                })
+                alert(response.data.message)
+                onClose()
+                loadData()
+            } catch (error: unknown) {
+                alert((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Something went wrong");
+                console.error(error);
+            }
         }
     }
     return (
