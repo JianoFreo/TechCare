@@ -16,18 +16,18 @@ function FrontdeskStaff() {
     const [page, setPage] = useState("dashboard");
     const loadData = useCallback(async () => {
         try {
-            const patientsResponse = await api.get("/fdstaff/patients");
-            const billingResponse = await api.get("/fdstaff/billing");
-            const queueEntriesResponse = await api.get("/fdstaff/queue");
+            const patientsResponse = await api.get("/api/fdstaff/patients");
+            // const billingResponse = await api.get("/api/fdstaff/billing");
+            // const queueEntriesResponse = await api.get("/api/fdstaff/queue");
 
             setPatients(patientsResponse.data.patients);
             console.log("Patients data:", patientsResponse.data);
 
-            setBilling(billingResponse.data.bills);
-            console.log("Billing data:", billingResponse.data);
+            // setBilling(billingResponse.data.bills);
+            // console.log("Billing data:", billingResponse.data);
 
-            setQueue(queueEntriesResponse.data.queueEntries);
-            console.log("Queue data:", queueEntriesResponse.data);
+            // setQueue(queueEntriesResponse.data.queueEntries);
+            // console.log("Queue data:", queueEntriesResponse.data);
         } catch (error) {
             console.log("Error fetching queue entries data:", error);
         }
@@ -53,7 +53,7 @@ function FrontdeskStaff() {
             )}
             {page === "patient-registration" && (
                 <PatientRegistration
-                    patients={patients}
+                    // patients={patients}
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}

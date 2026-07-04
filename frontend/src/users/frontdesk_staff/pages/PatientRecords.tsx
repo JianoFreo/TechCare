@@ -11,7 +11,7 @@ type Patient = {
     email: string;
     address: string;
     emergency_contact: string;
-    qr_code?: string;
+    image_url?: string;
     created_at: string;
     updated_at: string;
 };
@@ -62,6 +62,7 @@ function PatientRecords({
                 <table className="min-w-full">
                     <thead className="bg-gray-100">
                         <tr>
+                            <th className="px-4 py-3 text-left">Patient IMAGE</th>
                             <th className="px-4 py-3 text-left">Patient ID</th>
                             <th className="px-4 py-3 text-left">Name</th>
                             <th className="px-4 py-3 text-left">Age</th>
@@ -81,6 +82,13 @@ function PatientRecords({
                                 key={patient.patient_id}
                                 className="border-t hover:bg-gray-50"
                             >
+                                <td className="px-4 py-3">
+                                    <img
+                                        src={patient.image_url}
+                                        alt={`${patient.first_name} ${patient.last_name}`}
+                                        className="w-16 h-16 object-cover"
+                                    />
+                                </td>
                                 <td className="px-4 py-3">
                                     {patient.patient_id}
                                 </td>

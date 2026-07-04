@@ -3,14 +3,15 @@ import bcrypt from "bcryptjs";
 import { json, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-export function getAllPatients(req: Request, res: Response) {
+export async function getAllPatients(req: Request, res: Response) {
   // get /api/fdstaff/patients
   try {
-    const patients = sql`SELECT * FROM patients`;
+    const patients = await sql`SELECT * FROM patients`;
     if (!patients) {
       res.json({ message: "there are no patients" });
     }
     res.status(200).json({ patients });
+    //[
     // {
     //     "patient_id":1,
     //     "last_name":"Doe",
@@ -20,18 +21,31 @@ export function getAllPatients(req: Request, res: Response) {
     //     "email":"patient@gmail.com",
     //     "address":"123 Main St",
     //     "emergency_contact":"Jane Doe",
+    //     "image_url":"https://example.com/patient.jpg",
+    //     "created_at":"2026-07-02T00:00:00.000Z",
+    //     "updated_at":"2026-07-02T00:00:00.000Z"
+    // },
+    // {
+    //     "patient_id":2,
+    //     "last_name":"Smith",
+    //     "first_name":"Jane",
+    //     "date_of_birth":"1995-05-15",
+    //     "contact_number":"0987654321",
+    //     "email":"
     //     "created_at":"2026-07-02T00:00:00.000Z",
     //     "updated_at":"2026-07-02T00:00:00.000Z"
     // }
+    //]
   } catch (error) {
+    console.error("Error fetching patients:", error);
     res.status(500).json({ error: "error on fetching patients" });
   }
 }
 
-export function getAllBilling(req: Request, res: Response) {
+export async function getAllBilling(req: Request, res: Response) {
   // get /api/fdstaff/billing
   try {
-    const billing = sql`SELECT * FROM billing`;
+    const billing = await sql`SELECT * FROM billing`;
     if (!billing) {
       res.json({ message: "there are no billing records" });
     }
@@ -63,10 +77,10 @@ export function getAllBilling(req: Request, res: Response) {
   }
 }
 
-export function getAllQueueEntries(req: Request, res: Response) {
+export async function getAllQueueEntries(req: Request, res: Response) {
   // get /api/fdstaff/queue
   try {
-    const queueEntries = sql`SELECT * FROM queue`;
+    const queueEntries = await sql`SELECT * FROM queue`;
     if (!queueEntries) {
       res.json({ message: "there are no queue entries" });
     }

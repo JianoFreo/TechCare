@@ -2,31 +2,31 @@ import { useState } from "react";
 import Header from "../components/Header";
 import api from "../../../lib/axios";
 import IdCard from "./components/IdCard";
-type Patient = {
-    patient_id: string;
-    first_name: string;
-    last_name: string;
-    middle_initial?: string;
-    date_of_birth: string;
-    sex: string;
-    contact_number: string;
-    email: string;
-    address: string;
-    emergency_contact: string;
-    qr_code?: string;
-    created_at: string;
-    updated_at: string;
-}[];
+// type Patient = {
+//     patient_id: string;
+//     first_name: string;
+//     last_name: string;
+//     middle_initial?: string;
+//     date_of_birth: string;
+//     sex: string;
+//     contact_number: string;
+//     email: string;
+//     address: string;
+//     emergency_contact: string;
+//     image_url?: string;
+//     created_at: string;
+//     updated_at: string;
+// }[];
 
 type PatientRegistrationProps = {
-    patients: Patient[];
+    // patients: Patient[];
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     loadData: () => Promise<void>;
 };
 
 function PatientRegistration({
-    patients,
+    // patients,
     open,
     setOpen,
     loadData,
@@ -68,8 +68,18 @@ function PatientRegistration({
                 "/api/fdstaff/patients",
                 formData
             );
-
-            console.log(response.data);
+            alert("Patient registered successfully!" + response.data.message);
+            // Reset form fields
+            setFirst_name("");
+            setLast_name("");
+            setDate_of_birth("");
+            setSex("");
+            setContact_number("");
+            setEmail("");
+            setAddress("");
+            setEmergency_contact("");
+            setImage(null);
+            // setImages([]);  // if you are going to upload multiple files
         } catch (error) {
             console.error(error);
         }
