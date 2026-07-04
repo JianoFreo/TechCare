@@ -35,7 +35,7 @@ export async function connectNeon(): Promise<void> {
     // -------------------------------------------------------
     await sql`
       CREATE TABLE IF NOT EXISTS patients (
-        patient_id        VARCHAR(30)  PRIMARY KEY,
+        patient_id        SERIAL PRIMARY KEY,
         last_name         VARCHAR(100) NOT NULL,
         first_name        VARCHAR(100) NOT NULL,
         date_of_birth     DATE         NOT NULL,
@@ -44,6 +44,7 @@ export async function connectNeon(): Promise<void> {
         email             VARCHAR(255),
         address           TEXT,
         emergency_contact TEXT,
+        image_url         TEXT,
         created_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
       )`;

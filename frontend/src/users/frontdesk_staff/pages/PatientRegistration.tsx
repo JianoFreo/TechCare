@@ -2,9 +2,8 @@ import { useState } from "react";
 import Header from "../components/Header";
 import api from "../../../lib/axios";
 import IdCard from "./components/IdCard";
-
 type Patient = {
-    patient_id: string;    
+    patient_id: string;
     first_name: string;
     last_name: string;
     middle_initial?: string;
@@ -34,7 +33,6 @@ function PatientRegistration({
 }: PatientRegistrationProps) {
     const [first_name, setFirst_name] = useState("");
     const [last_name, setLast_name] = useState("");
-    const [middle_initial, setMiddle_initial] = useState("");
     const [date_of_birth, setDate_of_birth] = useState("");
     const [sex, setSex] = useState("");
     const [contact_number, setContact_number] = useState("");
@@ -42,14 +40,15 @@ function PatientRegistration({
     const [address, setAddress] = useState("");
     const [emergency_contact, setEmergency_contact] = useState("");
     const [image, setImage] = useState<File | null>(null);
+    // const [images, setImages] = useState<File[]>([]);  // iif you are going to upload multiple files
 
-    async function handleSubmit(event: React.FormEvent) {
-        event.preventDefault();
+    async function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
 
         const formData = new FormData();
+
         formData.append("first_name", first_name);
         formData.append("last_name", last_name);
-        formData.append("middle_initial", middle_initial);
         formData.append("date_of_birth", date_of_birth);
         formData.append("sex", sex);
         formData.append("contact_number", contact_number);
@@ -58,11 +57,22 @@ function PatientRegistration({
         formData.append("emergency_contact", emergency_contact);
 
         if (image) {
-            formData.append("image", image);
+            formData.append("image", image); // Must match upload.single("image")
         }
+        // images.forEach((image) => {  // if you are going to upload multiple files
+        //     formData.append("images", image); // Must match upload.array("images")
+        // });
 
-        const response = await api.post("/patients", formData);
-        console.log(response.data);
+        try {
+            const response = await api.post(
+                "/api/fdstaff/patients",
+                formData
+            );
+
+            console.log(response.data);
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     return (
@@ -98,13 +108,6 @@ function PatientRegistration({
                         onChange={(e) => setLast_name(e.target.value)}
                     />
 
-                    <input
-                        className="border border-gray-300 p-2"
-                        type="text"
-                        placeholder="Middle Initial"
-                        value={middle_initial}
-                        onChange={(e) => setMiddle_initial(e.target.value)}
-                    />
 
                     <input
                         className="border border-gray-300 p-2"
@@ -165,9 +168,19 @@ function PatientRegistration({
                             }
                         }}
                     />
+                    {/* If you are going to upload multiple files */}
+                    {/* <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) => {
+                            if (e.target.files) {
+                                setImages(Array.from(e.target.files));
+                            }
+                        }}
+                    /> */}
 
                     <button
-                    onClick={handleSubmit}
                         type="submit"
                         className="bg-blue-500 text-white p-2 rounded"
                     >
