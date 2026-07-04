@@ -2,10 +2,9 @@ import { sql } from "../../config/db.js";
 import { calculateAge } from "../../utils/calculateAge.js";
 import { json, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-
 import { ENV } from "../../config/env.js";
-
 import cloudinary from "../../config/cloudinary.js";
+
 export async function addPatient(req: Request, res: Response) {
   // POST /api/fdstaff/patients
   try {
@@ -15,6 +14,7 @@ export async function addPatient(req: Request, res: Response) {
     console.log(ENV.CLOUDINARY_API_SECRET);
     console.log("BODY:", req.body);
     console.log("FILE:", req.file);
+    console.log(await cloudinary.api.ping());
 
     const {
       last_name,
@@ -34,15 +34,16 @@ export async function addPatient(req: Request, res: Response) {
           "patient_id, last_name, first_name, date_of_birth, and sex are required.",
       });
     }
-    let imageUrl: string | null = null;
-    if (req.file) {
-      console.log(req.file);
-      console.log(req.file?.path);
-      console.log(cloudinary.config());
-      const uploadedImage = await cloudinary.uploader.upload(req.file.path);
-      imageUrl = uploadedImage.secure_url;
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ message: "At least one image is required" });
     }
 
+    const uploadPromise = await cloudinary.uploader.upload(req.file.path, {
+      folder: "products",
+    });
+    const imageUrl = uploadPromise.secure_url;
     // if you are going to upload multipple files
     // let imageUrls: string[] = [];
 
@@ -111,13 +112,13 @@ export async function addPatient(req: Request, res: Response) {
   } catch (error: any) {
     console.dir(error, { depth: null });
 
+    if (error.error) {
+      console.dir(error.error, { depth: null });
+    }
+
     if (error.response) {
       console.dir(error.response, { depth: null });
     }
-
-    return res.status(500).json({
-      message: error.message,
-    });
   }
 }
 
