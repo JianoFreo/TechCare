@@ -71,7 +71,7 @@ export async function connectNeon(): Promise<void> {
     await sql`
       CREATE TABLE IF NOT EXISTS queue_entries (
         queue_id     SERIAL PRIMARY KEY,
-        patient_id   VARCHAR(30) NOT NULL REFERENCES patients(patient_id),
+        patient_id   INTEGER     NOT NULL REFERENCES patients(patient_id),
         queue_number INTEGER     NOT NULL,
         service_type VARCHAR(50) NOT NULL,
         status       VARCHAR(20) NOT NULL DEFAULT 'Waiting',
@@ -100,7 +100,7 @@ export async function connectNeon(): Promise<void> {
     await sql`
       CREATE TABLE IF NOT EXISTS consultations (
         consultation_id SERIAL PRIMARY KEY,
-        patient_id      VARCHAR(30) NOT NULL REFERENCES patients(patient_id),
+        patient_id      INTEGER     NOT NULL REFERENCES patients(patient_id),
         doctor_id       INTEGER     NOT NULL REFERENCES users(user_id),
         queue_id        INTEGER     UNIQUE   REFERENCES queue_entries(queue_id),
         reason          VARCHAR(500),
@@ -128,7 +128,7 @@ export async function connectNeon(): Promise<void> {
       CREATE TABLE IF NOT EXISTS lab_requests (
         request_id      SERIAL PRIMARY KEY,
         consultation_id INTEGER      REFERENCES consultations(consultation_id),
-        patient_id      VARCHAR(30)  NOT NULL REFERENCES patients(patient_id),
+        patient_id      INTEGER      NOT NULL REFERENCES patients(patient_id),
         doctor_id       INTEGER      NOT NULL REFERENCES users(user_id),
         test_type       VARCHAR(200) NOT NULL,
         results         JSONB,
@@ -148,17 +148,17 @@ export async function connectNeon(): Promise<void> {
     // -------------------------------------------------------
     await sql`
       CREATE TABLE IF NOT EXISTS bills (
-        bill_id            SERIAL PRIMARY KEY,
-        patient_id         VARCHAR(30)   NOT NULL REFERENCES patients(patient_id),
-        services_id        INTEGER[]       NOT NULL REFERENCES services(service_id),
-        discount_pct       DECIMAL(5,2)  NOT NULL DEFAULT 0,
-        total_amount       DECIMAL(10,2) NOT NULL DEFAULT 0,
-        payment_method     VARCHAR(30)   NOT NULL DEFAULT 'Cash',
-        status             VARCHAR(20)   NOT NULL DEFAULT 'Unpaid',
-        receipt_id         VARCHAR(50)   UNIQUE DEFAULT NULL,
-        created_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        receipt_issued_at  TIMESTAMP     DEFAULT NULL,
-        billed_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+          bill_id            SERIAL PRIMARY KEY,
+          patient_id         INTEGER      NOT NULL REFERENCES patients(patient_id),
+          items              JSONB        NOT NULL,
+          discount_pct       DECIMAL(5,2)  NOT NULL DEFAULT 0,
+          total_amount       DECIMAL(10,2) NOT NULL DEFAULT 0,
+          payment_method     VARCHAR(30)   NOT NULL DEFAULT 'Cash',
+          status             VARCHAR(20)   NOT NULL DEFAULT 'Unpaid',
+          receipt_id         VARCHAR(50)   UNIQUE,
+          created_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          receipt_issued_at  TIMESTAMP,
+          billed_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
       )`;
 
     // -------------------------------------------------------

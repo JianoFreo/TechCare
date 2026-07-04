@@ -28,7 +28,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/fdstaff", fdstaffRoutes);
 // Test route
-
 const frontendPath = path.resolve(__dirname, "../../frontend/dist");
 
 app.use(express.static(frontendPath));
