@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "../components/Header";
 import api from "../../../lib/axios";
 import IdCard from "./components/IdCard";
@@ -40,6 +40,38 @@ function PatientRegistration({
     const [address, setAddress] = useState("");
     const [emergency_contact, setEmergency_contact] = useState("");
     const [image, setImage] = useState<File | null>(null);
+    const [preview, setPreview] = useState<string>("");
+
+    function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+
+        if (!file) return;
+
+        // If there was an old preview, free its memory before creating a new one.
+        // This DOES NOT delete the user's file.
+        if (preview) {
+            URL.revokeObjectURL(preview);
+        }
+
+        // Save the file for uploading later.
+        setImage(file);
+
+        // Create a temporary blob URL so <img> can display the image immediately.
+        setPreview(URL.createObjectURL(file));
+    }
+    useEffect(() => {
+        // This cleanup runs when:
+        // 1. The component is removed from the page, OR
+        // 2. The effect runs again because 'preview' changed.
+        //
+        // It revokes the PREVIOUS blob URL, not the current one being displayed.
+        return () => {
+            if (preview) {
+                URL.revokeObjectURL(preview);
+            }
+        };
+    }, [preview]);
+
     // const [images, setImages] = useState<File[]>([]);  // iif you are going to upload multiple files
 
     async function handleSubmit(e: React.FormEvent) {
@@ -172,11 +204,7 @@ function PatientRegistration({
                     <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => {
-                            if (e.target.files?.[0]) {
-                                setImage(e.target.files[0]);
-                            }
-                        }}
+                        onChange={handleImageChange}
                     />
                     {/* If you are going to upload multiple files */}
                     {/* <input
@@ -200,14 +228,15 @@ function PatientRegistration({
 
                 {/* PREVIEW CARD */}
                 <IdCard
+                    preview={preview}
                     first_name={first_name}
                     last_name={last_name}
                     date_of_birth={date_of_birth}
                     sex={sex}
                     contact_number={contact_number}
+                    emergency_contact={emergency_contact}
                     email={email}
                     address={address}
-                    emergency_contact={emergency_contact}
                 />
             </div>
         </main>

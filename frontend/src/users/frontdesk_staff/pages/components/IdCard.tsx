@@ -1,5 +1,4 @@
-type IdCardProps = {
-    patient_id?: number;
+type Patient = {
     first_name: string;
     last_name: string;
     date_of_birth: string;
@@ -10,8 +9,12 @@ type IdCardProps = {
     emergency_contact: string;
 };
 
+type IdCardProps = {
+    preview?: string;
+};
+
 function IdCard({
-    patient_id,
+    preview,
     first_name,
     last_name,
     date_of_birth,
@@ -20,7 +23,7 @@ function IdCard({
     email,
     address,
     emergency_contact,
-}: IdCardProps) {
+}: IdCardProps & Patient) {
     return (
         <div
             className="w-72 h-44 shrink-0 border rounded-md text-xs bg-cover bg-center relative overflow-hidden"
@@ -36,11 +39,25 @@ function IdCard({
             </div>
 
             <div className="p-2 flex space-x-3 leading-tight">
-                <div className="w-16 h-16 border bg-white/40"></div>
+                {/* Patient Photo */}
+                <div className="w-16 h-16 border bg-white/40 overflow-hidden rounded">
+                    {preview ? (
+                        <img
+                            src={preview}
+                            alt="Patient"
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-600">
+                            No Photo
+                        </div>
+                    )}
+                </div>
 
-                <div className="space-y-1">
+                {/* Patient Details */}
+                <div className="space-y-1 flex-1">
                     <p className="bg-white/70 px-1 rounded">
-                        Patient ID: {patient_id}
+                        Patient ID: 000:1233
                     </p>
 
                     <p className="bg-white/70 px-1 rounded">
@@ -75,4 +92,5 @@ function IdCard({
         </div>
     );
 }
+
 export default IdCard;

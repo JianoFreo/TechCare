@@ -25,3 +25,38 @@ api.interceptors.request.use((config) => {
 });
 
 export default api;
+// There are two kinds of interceptors:
+
+// Request interceptor (before sending)
+// api.interceptors.request.use((config) => {
+//   config.headers.Authorization = "Bearer token";
+//   config.baseURL = "https://example.com";
+//   config.timeout = 10000;
+
+//   return config;
+// });
+
+//===========================================================================================
+// interceptors is a property on the Axios instance.
+
+// api.interceptors
+
+// It contains tools for intercepting requests and responses.
+
+// Conceptually:
+
+// api = {
+//     interceptors: {
+//         request: { ... },
+//         response: { ... }
+//     }
+// }
+//===========================================================================================
+// Response interceptor (after receiving)
+// api.interceptors.response.use((response) => {
+//   console.log(response.data);
+
+//   return response;
+// });
+
+// Here, you can modify the response before the rest of your application sees it.
