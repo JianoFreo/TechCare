@@ -267,3 +267,34 @@ export async function addBills(req: Request, res: Response) {
     });
   }
 }
+
+export async function addQueueEntry(req: Request, res: Response) {
+  try {
+    const { patient_id, service_type, is_priority, status } = req.body;
+    let total;
+    if (is_priority === "senior" || "pwd") {
+      total = await sql`
+        SELECT COUNT(*) AS total
+        FROM queue_entries
+        WHERE is_priority = "senior" OR "priority"
+    `;
+    } else {
+      total = await sql`
+      SELECT COUNT(*) AS total
+      FROM queue_entries
+      WHERE is_priority = "regular"
+    `;
+    }
+    const newQueueNumber = Number(total[0].total) + 1;
+    const newQueue = await sql`
+        INSERT INTO queue_entries (patient_id, queue_number, service_type, status)
+        VALUES (${patient_id}, ${newQueueNumber}, ${service_type}, ${status})
+        RETURNING *;
+    `
+    
+    res.status(200).json({newQueue})
+    console.log(newQueueNumber);
+  } catch (error) {
+    console.log(error);
+  }
+}

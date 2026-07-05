@@ -6,6 +6,7 @@ import {
 import {
   addPatient,
   addBills,
+  addQueueEntry,
 } from "../controllers/fdstaff/postRequests.controller.js";
 import {upload} from "../middlewares/multer.middleware.js";
 
@@ -24,4 +25,5 @@ router.post("/patients", upload.single("image"), addPatient);
 //   addPatient,
 // );
 router.post("/billing", addBills);
+router.post("/billing", addQueueEntry);
 export default router;
