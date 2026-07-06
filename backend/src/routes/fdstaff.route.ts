@@ -1,15 +1,8 @@
-import { Router } from "express";
-import {
-  getAllPatients,
-  getAllBilling,
-} from "../controllers/fdstaff/getRequests.controller.js";
-import {
-  addPatient,
-  addBills,
-  addQueueEntry,
-} from "../controllers/fdstaff/postRequests.controller.js";
-import {upload} from "../middlewares/multer.middleware.js";
 import { getAllservices } from "../controllers/admin/getRequests.controller.js";
+import { getAllBilling, getAllPatients, getAllQueueEntries } from "../controllers/fdstaff/getRequests.controller.js";
+import { addBills, addPatient, addQueueEntry } from "../controllers/fdstaff/postRequests.controller.js";
+import { upload } from "../middlewares/multer.middleware.js";
+import { Router } from "express";
 
 const router = Router();
 
@@ -17,6 +10,7 @@ const router = Router();
 router.get("/patients", getAllPatients);
 router.get("/billing", getAllBilling);
 router.get("/services", getAllservices);
+router.get("/queues", getAllQueueEntries);
 
 // POST requests
 router.post("/patients", upload.single("image"), addPatient);
@@ -27,5 +21,5 @@ router.post("/patients", upload.single("image"), addPatient);
 //   addPatient,
 // );
 router.post("/billing", addBills);
-router.post("/queue", addQueueEntry);
+router.post("/queues", addQueueEntry);
 export default router;

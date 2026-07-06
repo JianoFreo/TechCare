@@ -1,9 +1,9 @@
+import cloudinary from "../../config/cloudinary.js";
 import { sql } from "../../config/db.js";
+import { ENV } from "../../config/env.js";
 import { calculateAge } from "../../utils/calculateAge.js";
 import { json, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { ENV } from "../../config/env.js";
-import cloudinary from "../../config/cloudinary.js";
 
 export async function addPatient(req: Request, res: Response) {
   // POST /api/fdstaff/patients
@@ -297,7 +297,7 @@ export async function addQueueEntry(req: Request, res: Response) {
           .status(404)
           .json({ message: "the patient id you entered doesnt exist" });
       }
-      patientName = patientName[0].last_name + " " + patientName[0].first_name;
+      patientName = patientName[0].last_name + ", " + patientName[0].first_name;
     }
     const newQueueNumber = Number(total[0].total) + 1;
     const newQueue = await sql`

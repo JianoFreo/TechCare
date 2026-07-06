@@ -77,10 +77,10 @@ export async function getAllBilling(req: Request, res: Response) {
   }
 }
 
-export async function getAllQueueEntries(req: Request, res: Response) {
+export async function getAllQueueEntries(req: Request, res: Response) { // get /api/fdstaff/queues
   // get /api/fdstaff/queue
   try {
-    const queueEntries = await sql`SELECT * FROM queue`;
+    const queueEntries = await sql`SELECT * FROM queue_entries`;
     if (!queueEntries) {
       res.json({ message: "there are no queue entries" });
     }
@@ -113,7 +113,7 @@ export async function getAllQueueEntries(req: Request, res: Response) {
     res.status(500).json({ error: "error on fetching queue entries" });
   }
 }
-export async function getAllservices(req: Request, res: Response) { // get /api/admin/services
+export async function getAllservices(req: Request, res: Response) { // get /api/fdstaff/services
   try {
     const services = await sql`
         SELECT service_id, service_name, price 

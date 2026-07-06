@@ -23,7 +23,7 @@ type Patient = {
     updated_at: string;
 }[];
 
-type queue = {
+type Queue = {
     queue_id: number;
     patient_id: number;
     queue_number: number;
@@ -37,13 +37,13 @@ type queue = {
 type FrontdeskDashboardProps = {
     billing: Bill;
     patients: Patient;
-    queue: queue;
+    queues: Queue;
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     loadData: () => Promise<void>;
 };
 
-function FrontdeskDashboard({ billing, patients, queue, open, setOpen, loadData }: FrontdeskDashboardProps) {
+function FrontdeskDashboard({ billing, patients, queues, open, setOpen, loadData }: FrontdeskDashboardProps) {
     return (
         <main className="flex-1 min-w-0 p-6">
             <Header
@@ -55,7 +55,7 @@ function FrontdeskDashboard({ billing, patients, queue, open, setOpen, loadData 
             <div className="grid grid-cols-4 gap-4">
                 <div className="bg-white p-4 shadow">
                     <h2 className="text-lg font-semibold mb-2">Patients in Queue</h2>
-                    <p className="text-2xl">{queue.filter((q) => q.status === "Waiting").length}</p>
+                    <p className="text-2xl">{queues.filter((q) => q.status === "Waiting").length}</p>
                 </div>
                 <div className="bg-white p-4  shadow">
                     <h2 className="text-lg font-semibold mb-2">Registered Today</h2>
@@ -63,7 +63,7 @@ function FrontdeskDashboard({ billing, patients, queue, open, setOpen, loadData 
                 </div>
                 <div className="bg-white p-4 shadow">
                     <h2 className="text-lg font-semibold mb-2">Total Queue</h2>
-                    <p className="text-2xl">{queue.length}</p>
+                    <p className="text-2xl">{queues.length}</p>
                 </div>
                 <div className="bg-white p-4 shadow">
                     <h2 className="text-lg font-semibold mb-2">Pending Bill</h2>
@@ -76,7 +76,7 @@ function FrontdeskDashboard({ billing, patients, queue, open, setOpen, loadData 
                 </h1>                <div className="border grid grid-cols-4 gap-4 m-7 p-3">
                     <div className="bg-white p-4 shadow">
                         <h2 className="text-lg font-semibold mb-2">Patients in Queue</h2>
-                        <p className="text-2xl">{queue.filter((q) => q.status === "Waiting").length}</p>
+                        <p className="text-2xl">{queues.filter((q) => q.status === "Waiting").length}</p>
                     </div>
                     <div className="bg-white p-4  shadow">
                         <h2 className="text-lg font-semibold mb-2">Registered Today</h2>
@@ -84,7 +84,7 @@ function FrontdeskDashboard({ billing, patients, queue, open, setOpen, loadData 
                     </div>
                     <div className="bg-white p-4 shadow">
                         <h2 className="text-lg font-semibold mb-2">Total Queue</h2>
-                        <p className="text-2xl">{queue.length}</p>
+                        <p className="text-2xl">{queues.length}</p>
                     </div>
                     <div className="bg-white p-4 shadow">
                         <h2 className="text-lg font-semibold mb-2">Pending Bill</h2>

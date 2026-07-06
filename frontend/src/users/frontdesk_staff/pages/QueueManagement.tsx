@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
-import Header from "../components/Header";
+import { useEffect, useState } from "react";
+
 import api from "../../../lib/axios";
+import Header from "../components/Header";
 
 type Queue = {
     queue_id: number;
     patient_id: number;
+    patient_name: string;
     queue_number: number;
     service_name: string;
     service_id: number;
@@ -19,7 +21,7 @@ type Service = {
 }[];
 type QueueManagementProps = {
     services: Service
-    queue: Queue;
+    queues: Queue;
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     loadData: () => Promise<void>;
@@ -27,7 +29,7 @@ type QueueManagementProps = {
 
 function QueueManagement({
     services,
-    queue,
+    queues,
     open,
     setOpen,
     loadData,
@@ -49,7 +51,7 @@ function QueueManagement({
                 service_id: serviceId,
                 service_name: serviceName
             });
-            const response = await api.post("/api/fdstaff/queue", {
+            const response = await api.post("/api/fdstaff/queues", {
                 patient_id: patientId,
                 is_priority: isPriority,
                 service_id: serviceId,
@@ -65,8 +67,7 @@ function QueueManagement({
             setServiceName(null);
             loadData();
         } catch (error) {
-            console.log(error)
-            alert(error)
+            alert((error as { response?: { data?: { message?: string } } }).response?.data?.message);
         }
     }
     return (
@@ -85,6 +86,7 @@ function QueueManagement({
                     if you have already been admitted before pleas einsert your pateint ID
                 </p>
                 <input
+                    value={patientId ?? ""}
                     onChange={(e) => {
                         setPatientId(
                             e.target.value === "" ? null : Number(e.target.value)
@@ -126,16 +128,18 @@ function QueueManagement({
                         <tr>
                             <th className="px-6 py-3">Queue Number</th>
                             <th className="px-6 py-3">Patient ID</th>
+                            <th className="px-6 py-3">Patient Name</th>
                             <th className="px-6 py-3">Service Type</th>
                             <th className="px-6 py-3">Status</th>
                         </tr>
                     </thead>
 
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {queue.map((queueItem) => (
+                        {queues.map((queueItem) => (
                             <tr key={queueItem.queue_id}>
                                 <td className="px-6 py-4">{queueItem.queue_number}</td>
-                                <td className="px-6 py-4">{queueItem.patient_id}</td>
+                                <td className="px-6 py-4">{queueItem.patient_id ? queueItem.patient_id : "not registered"}</td>
+                                <td className="px-6 py-4">{queueItem.patient_name ? queueItem.patient_name : "not registered"}</td>
                                 <td className="px-6 py-4">{queueItem.service_name}</td>
                                 <td className="px-6 py-4">{queueItem.status}</td>
                             </tr>
