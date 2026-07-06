@@ -41,27 +41,33 @@ function QueueManagement({
         loadData();
     }, [loadData]);
     async function submitQueue(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault() // Prevent the default form submission behavior
-        console.log("Submitting queue with data:", {
-            patient_id: patientId,
-            is_priority: isPriority,
-            service_id: serviceId,
-            service_name: serviceName
-        });
-        const response = await api.post("/api/fdstaff/queue", {
-            patient_id: patientId,
-            is_priority: isPriority,
-            service_id: serviceId,
-            service_name: serviceName
-        });
+        try {
+            e.preventDefault() // Prevent the default form submission behavior
+            console.log("Submitting queue with data:", {
+                patient_id: patientId,
+                is_priority: isPriority,
+                service_id: serviceId,
+                service_name: serviceName
+            });
+            const response = await api.post("/api/fdstaff/queue", {
+                patient_id: patientId,
+                is_priority: isPriority,
+                service_id: serviceId,
+                service_name: serviceName
+            });
 
 
-        console.log("Queue submitted:", response.data);
-        setPatientId(null);
-        setIsPriority(false);
-        setServiceId(null);
-        setServiceName(null);
-        loadData();
+            console.log("Queue submitted:", response.data);
+            alert(response.data.message)
+            setPatientId(null);
+            setIsPriority(false);
+            setServiceId(null);
+            setServiceName(null);
+            loadData();
+        } catch (error) {
+            console.log(error)
+            alert(error)
+        }
     }
     return (
         <main className="flex-1 min-w-0 p-6">
@@ -80,10 +86,10 @@ function QueueManagement({
                 </p>
                 <input
                     onChange={(e) => {
-                        setPatientId(Number(e.target.value));
+                        setPatientId(
+                            e.target.value === "" ? null : Number(e.target.value)
+                        );
                     }}
-                    value={patientId ?? ""}
-                    placeholder="patient ID"
                 />
                 <input
                     type="checkbox"
@@ -104,7 +110,7 @@ function QueueManagement({
                         <option
                             key={service.service_id}
                             value={service.service_id}
-                            
+
                         >
                             {service.service_name}
                         </option>

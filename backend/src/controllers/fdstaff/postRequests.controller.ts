@@ -285,14 +285,27 @@ export async function addQueueEntry(req: Request, res: Response) {
       WHERE is_priority = FALSE
     `;
     }
+    let patientName = null;
+    if (patient_id) {
+    patientName = await sql`
+    SELECT last_name, first_name
+    FROM patients
+    WHERE patient_id = ${patient_id}
+    `;
+      if (patientName.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "the patient id you entered doesnt exist" });
+      }
+      patientName = patientName[0].last_name + " " + patientName[0].first_name;
+    }
     const newQueueNumber = Number(total[0].total) + 1;
     const newQueue = await sql`
-        INSERT INTO queue_entries (patient_id, queue_number, service_id, service_name)
-        VALUES (${patient_id}, ${newQueueNumber}, ${service_id}, ${service_name})
+        INSERT INTO queue_entries (patient_id, patient_name, queue_number, service_id, service_name)
+        VALUES (${patient_id}, ${patientName}, ${newQueueNumber}, ${service_id}, ${service_name})
         RETURNING *;
-    `
-    
-    res.status(200).json({newQueue})
+    `;
+    res.status(200).json({ newQueue, message: "added to queue" });
     console.log(newQueueNumber);
   } catch (error) {
     console.log(error);

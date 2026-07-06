@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+
 import "dotenv/config";
 
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -72,6 +73,7 @@ export async function connectNeon(): Promise<void> {
       CREATE TABLE IF NOT EXISTS queue_entries (
         queue_id     SERIAL PRIMARY KEY,
         patient_id   INTEGER     REFERENCES patients(patient_id),
+        patient_name VARCHAR(255),
         queue_number INTEGER     NOT NULL,
         service_id   INTEGER NOT NULL REFERENCES services(service_id),
         service_name VARCHAR(255) NOT NULL,
