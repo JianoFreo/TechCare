@@ -12,13 +12,18 @@ function FrontdeskStaff() {
     const [patients, setPatients] = useState([]);
     const [billing, setBilling] = useState([]);
     const [queue, setQueue] = useState([]);
+    const [services, setServices] = useState([])
     const [open, setOpen] = useState(true);
     const [page, setPage] = useState("dashboard");
     const loadData = useCallback(async () => {
         try {
+            const serviceResoponse = await api.get("/api/fdstaff/services");
             const patientsResponse = await api.get("/api/fdstaff/patients");
             // const billingResponse = await api.get("/api/fdstaff/billing");
             // const queueEntriesResponse = await api.get("/api/fdstaff/queue");
+
+            setServices(serviceResoponse.data.services)
+            console.log("service data :", serviceResoponse.data)
 
             setPatients(patientsResponse.data.patients);
             console.log("Patients data:", patientsResponse.data);
@@ -69,6 +74,7 @@ function FrontdeskStaff() {
             )}
             {page === "queue-management" && (
                 <QueueManagement
+                    services={services}
                     queue={queue}
                     open={open}
                     setOpen={setOpen}

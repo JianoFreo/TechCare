@@ -73,13 +73,14 @@ export async function connectNeon(): Promise<void> {
         queue_id     SERIAL PRIMARY KEY,
         patient_id   INTEGER     REFERENCES patients(patient_id),
         queue_number INTEGER     NOT NULL,
-        service_type VARCHAR(50) NOT NULL REFERENCES services(service_id)
+        service_id   INTEGER NOT NULL REFERENCES services(service_id),
+        service_name VARCHAR(255) NOT NULL,
         is_priority  BOOLEAN     NOT NULL DEFAULT FALSE,
         status       VARCHAR(20) NOT NULL DEFAULT 'waiting',
         created_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
       )`;
-    
+
     // -------------------------------------------------------
     // CONSULTATIONS
     // findings + prescription merged into JSONB columns

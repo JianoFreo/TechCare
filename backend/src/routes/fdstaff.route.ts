@@ -9,12 +9,14 @@ import {
   addQueueEntry,
 } from "../controllers/fdstaff/postRequests.controller.js";
 import {upload} from "../middlewares/multer.middleware.js";
+import { getAllservices } from "../controllers/admin/getRequests.controller.js";
 
 const router = Router();
 
 // GET requests
 router.get("/patients", getAllPatients);
 router.get("/billing", getAllBilling);
+router.get("/services", getAllservices);
 
 // POST requests
 router.post("/patients", upload.single("image"), addPatient);
@@ -25,5 +27,5 @@ router.post("/patients", upload.single("image"), addPatient);
 //   addPatient,
 // );
 router.post("/billing", addBills);
-router.post("/billing", addQueueEntry);
+router.post("/queue", addQueueEntry);
 export default router;

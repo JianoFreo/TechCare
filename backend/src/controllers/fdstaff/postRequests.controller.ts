@@ -270,25 +270,25 @@ export async function addBills(req: Request, res: Response) {
 
 export async function addQueueEntry(req: Request, res: Response) {
   try {
-    const { patient_id, service_type, is_priority, status } = req.body;
+    const { patient_id, service_id, service_name, is_priority } = req.body;
     let total;
-    if (is_priority === "senior" || "pwd") {
+    if (is_priority) {
       total = await sql`
         SELECT COUNT(*) AS total
         FROM queue_entries
-        WHERE is_priority = "senior" OR "priority"
+        WHERE is_priority = TRUE
     `;
     } else {
       total = await sql`
       SELECT COUNT(*) AS total
       FROM queue_entries
-      WHERE is_priority = "regular"
+      WHERE is_priority = FALSE
     `;
     }
     const newQueueNumber = Number(total[0].total) + 1;
     const newQueue = await sql`
-        INSERT INTO queue_entries (patient_id, queue_number, service_type, status)
-        VALUES (${patient_id}, ${newQueueNumber}, ${service_type}, ${status})
+        INSERT INTO queue_entries (patient_id, queue_number, service_id, service_name)
+        VALUES (${patient_id}, ${newQueueNumber}, ${service_id}, ${service_name})
         RETURNING *;
     `
     
