@@ -10,6 +10,7 @@ type Queue = {
     queue_number: number;
     service_name: string;
     service_id: string;
+    service_type: string;
     status: string;
     created_at: string;
     updated_at: string;
@@ -40,7 +41,7 @@ function QueueManagement({
     const [patientId, setPatientId] = useState<string | null>(null)
     const [isPriority, setIsPriority] = useState(false)
     const [serviceId, setServiceId] = useState<string | null>(null)
-    const [serviceType, setServiceType] = useState<string | null>(null)
+    // const [serviceType, setServiceType] = useState<string | null>(null)
     const [serviceName, setServiceName] = useState<string | null>(null)
     useEffect(() => {
         loadData();
@@ -52,24 +53,23 @@ function QueueManagement({
                 patient_id: patientId,
                 is_priority: isPriority,
                 service_id: serviceId,
-                service_type: serviceType
+                // service_type: serviceType
             });
             const response = await api.post("/api/fdstaff/queues", {
                 patient_id: patientId,
                 is_priority: isPriority,
                 service_id: serviceId,
-                service_type: serviceType,
+                // service_type: serviceType,
                 service_name: serviceName
 
             });
 
 
             console.log("Queue submitted:", response.data);
-            alert(response.data.message)
             setPatientId(null);
             setIsPriority(false);
             setServiceId(null);
-            setServiceType(null);
+            // setServiceType(null);
             setServiceName(null);
             loadData();
         } catch (error) {
@@ -109,8 +109,8 @@ function QueueManagement({
                     value={serviceId ?? ""}
                     onChange={(e) => {
                         setServiceId(e.target.value);
-                        setServiceType(e.target.selectedOptions[0].text);
                         setServiceName(e.target.selectedOptions[0].text);
+                        // setServiceType(e.target.selectedOptions[0].getAttribute("data-service-type"));
                     }}
                 >
                     <option value="">Select a service</option>
@@ -121,7 +121,7 @@ function QueueManagement({
                             value={service.service_id}
 
                         >
-                            {service.service_name}
+                            {service.service_name} {service.service_type}
                         </option>
                     ))}
                 </select>

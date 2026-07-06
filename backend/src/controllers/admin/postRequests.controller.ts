@@ -62,8 +62,8 @@ export async function addUser(req: Request, res: Response) {
 export async function addService(req: Request, res: Response) {
   // post /api/admin/services
   try {
-    const { service_name, price } = req.body;
-    if (!service_name || price === undefined || price === null) {
+    const { service_name, price, service_type } = req.body;
+    if (!service_name || price === undefined || price === null || !service_type) {
       return res.status(400).json({ message: "All fields are required" });
     } else if (isNaN(price)) {
       return res.status(400).json({ message: "Price must be a number" });
@@ -78,8 +78,8 @@ export async function addService(req: Request, res: Response) {
     }
     const serviceId = await generateServiceId();
     const newService = await sql`
-      INSERT INTO services (service_id, service_name, price)
-      VALUES (${serviceId}, ${service_name}, ${price})
+      INSERT INTO services (service_id, service_name, price, service_type)
+      VALUES (${serviceId}, ${service_name}, ${price}, ${service_type})
       RETURNING *;
     `;
     res

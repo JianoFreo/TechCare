@@ -163,3 +163,39 @@ export async function generateLaboratoryQueueId() {
 }
 //LAB-0017
 
+export async function generateQueueNumberConsultation(){
+  const queue = await sql`
+    SELECT queue_number
+    FROM queue_entries
+    WHERE service_name = 'consultation'
+    ORDER BY queue_number DESC
+    LIMIT 1
+    `
+  let nextNumber = 1;
+  const last = queue[0]?.queue_number;
+
+  if (last) {
+    nextNumber = Number(last) + 1;
+  }
+
+  return nextNumber;
+
+}
+export async function generateQueueNumberLaboratory(){
+  const queue = await sql`
+    SELECT queue_number
+    FROM queue_entries
+    WHERE service_name = 'laboratory'
+    ORDER BY queue_number DESC
+    LIMIT 1
+    `
+  let nextNumber = 1;
+  const last = queue[0]?.queue_number;
+
+  if (last) {
+    nextNumber = Number(last) + 1;
+  }
+
+  return nextNumber;
+
+}

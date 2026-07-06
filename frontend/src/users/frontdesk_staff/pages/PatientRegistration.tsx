@@ -114,6 +114,7 @@ function PatientRegistration({
             // setImages([]);  // if you are going to upload multiple files
         } catch (error) {
             console.error(error);
+            alert("Error registering patient: " + (error as { response?: { data?: { message?: string } } }).response?.data?.message);
         }
     }
 

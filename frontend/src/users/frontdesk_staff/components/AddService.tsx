@@ -9,9 +9,10 @@ function AddService({ loadData, onClose }: Props) {
     const [serviceName, setServiceName] = useState<string>("")
     // const [serviceId, setServiceId] = useState<string>("")
     const [price, setPrice] = useState<number>(0)
+    const [serviceType, setServiceType] = useState<string>("")
     const addService = async () => {
-        const response = await api.post("/api/admin/services", {
-
+        const response = await api.post("/api/admin/addService", {
+            service_type: serviceType,
             service_name: serviceName,
             price
         })
@@ -59,6 +60,8 @@ function AddService({ loadData, onClose }: Props) {
                     />
                     <select
                         className="w-full border p-2"
+                        value={serviceType}
+                        onChange={(e) => setServiceType(e.target.value)}
                     >
                         <option value="">Select a service type</option>
                         <option value="consultation">Consultation</option>
