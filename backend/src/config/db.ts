@@ -37,7 +37,8 @@ export async function connectNeon(): Promise<void> {
     // -------------------------------------------------------
     await sql`
       CREATE TABLE IF NOT EXISTS patients (
-        patient_id        SERIAL PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
+        patient_id        VARCHAR(255) UNIQUE NOT NULL,
         last_name         VARCHAR(100) NOT NULL,
         first_name        VARCHAR(100) NOT NULL,
         date_of_birth     DATE         NOT NULL,
@@ -58,8 +59,9 @@ export async function connectNeon(): Promise<void> {
     // -------------------------------------------------------
     await sql`
       CREATE TABLE IF NOT EXISTS services (
-        service_id   SERIAL PRIMARY KEY,
-        service_name VARCHAR(255)  NOT NULL UNIQUE,
+        id           SERIAL PRIMARY KEY,
+        service_id   VARCHAR(255) UNIQUE NOT NULL,
+        service_name VARCHAR(255) NOT NULL UNIQUE,
         price        DECIMAL(10,2) NOT NULL,
         active       BOOLEAN       NOT NULL DEFAULT TRUE,
         created_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -72,11 +74,12 @@ export async function connectNeon(): Promise<void> {
     // -------------------------------------------------------
     await sql`
       CREATE TABLE IF NOT EXISTS queue_entries (
-        queue_id     SERIAL PRIMARY KEY,
-        patient_id   INTEGER     REFERENCES patients(patient_id),
+        id           SERIAL PRIMARY KEY,
+        queue_id     VARCHAR(255) UNIQUE NOT NULL,
+        patient_id   VARCHAR(255)     REFERENCES patients(patient_id),
         patient_name VARCHAR(255),
         queue_number INTEGER     NOT NULL,
-        service_id   INTEGER NOT NULL REFERENCES services(service_id),
+        service_id   VARCHAR(255) NOT NULL REFERENCES services(service_id),
         service_name VARCHAR(255) NOT NULL,
         is_priority  BOOLEAN     NOT NULL DEFAULT FALSE,
         status       VARCHAR(20) NOT NULL DEFAULT 'waiting',
@@ -104,10 +107,11 @@ export async function connectNeon(): Promise<void> {
     // -------------------------------------------------------
     await sql`
       CREATE TABLE IF NOT EXISTS consultations (
-        consultation_id SERIAL PRIMARY KEY,
-        patient_id      INTEGER     NOT NULL REFERENCES patients(patient_id),
+      id SERIAL PRIMARY KEY,
+        consultation_id VARCHAR(255) UNIQUE NOT NULL,
+        patient_id      VARCHAR(255)     NOT NULL REFERENCES patients(patient_id),
         doctor_id       VARCHAR(255)NOT NULL REFERENCES users(user_id),
-        queue_id        INTEGER     UNIQUE   REFERENCES queue_entries(queue_id),
+        queue_id        VARCHAR(255)     UNIQUE   REFERENCES queue_entries(queue_id),
         reason          VARCHAR(500),
         findings        JSONB,
         prescription    JSONB,
@@ -130,9 +134,10 @@ export async function connectNeon(): Promise<void> {
     // -------------------------------------------------------
     await sql`
       CREATE TABLE IF NOT EXISTS lab_requests (
-        request_id      SERIAL PRIMARY KEY,
+        id              SERIAL PRIMARY KEY,
+        request_id      VARCHAR(255) UNIQUE NOT NULL,
         consultation_id INTEGER      REFERENCES consultations(consultation_id),
-        patient_id      INTEGER      NOT NULL REFERENCES patients(patient_id),
+        patient_id      VARCHAR(255)     NOT NULL REFERENCES patients(patient_id),
         doctor_id       VARCHAR(255) NOT NULL REFERENCES users(user_id),
         test_type       VARCHAR(200) NOT NULL,
         results         JSONB,
@@ -152,8 +157,9 @@ export async function connectNeon(): Promise<void> {
     // -------------------------------------------------------
     await sql`
       CREATE TABLE IF NOT EXISTS bills (
-          bill_id            SERIAL PRIMARY KEY,
-          patient_id         INTEGER      NOT NULL REFERENCES patients(patient_id),
+          id                 SERIAL PRIMARY KEY,
+          bill_id            VARCHAR(255) UNIQUE NOT NULL,
+          patient_id         VARCHAR(255)     NOT NULL REFERENCES patients(patient_id),
           items              JSONB        NOT NULL,
           discount_pct       DECIMAL(5,2)  NOT NULL DEFAULT 0,
           total_amount       DECIMAL(10,2) NOT NULL DEFAULT 0,
@@ -171,7 +177,8 @@ export async function connectNeon(): Promise<void> {
     // -------------------------------------------------------
     await sql`
       CREATE TABLE IF NOT EXISTS system_activity (
-        activity_id  SERIAL PRIMARY KEY,
+        id  SERIAL PRIMARY KEY,
+        activity_id  VARCHAR(255) UNIQUE NOT NULL,
         user_id      VARCHAR(255) NOT NULL REFERENCES users(user_id),
         service_name VARCHAR(255) NOT NULL REFERENCES services(service_name),
         details      JSONB        NOT NULL,

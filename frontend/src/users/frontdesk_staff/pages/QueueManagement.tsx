@@ -4,7 +4,7 @@ import api from "../../../lib/axios";
 import Header from "../components/Header";
 
 type Queue = {
-    queue_id: number;
+    queue_id: string;
     patient_id: number;
     patient_name: string;
     queue_number: number;
@@ -15,7 +15,8 @@ type Queue = {
     updated_at: string;
 }[];
 type Service = {
-    service_id: number;
+    id: number;
+    service_id: string;
     service_name: string;
     price: number;
 }[];

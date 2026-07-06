@@ -4,7 +4,7 @@ import { ENV } from "../../config/env.js";
 import { calculateAge } from "../../utils/calculateAge.js";
 import { json, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-
+import { generateConsultationQueueId, generateLaboratoryQueueId } from "../../utils/generateId.js";
 export async function addPatient(req: Request, res: Response) {
   // POST /api/fdstaff/patients
   try {
@@ -285,6 +285,18 @@ export async function addQueueEntry(req: Request, res: Response) {
       WHERE is_priority = FALSE
     `;
     }
+    if (!patient_id || !service_id || !service_name) {
+      return res.status(400).json({
+        message: "patient_id, service_id, and service_name are required.",
+      });
+    }
+    let queueId;
+    if (service_name === "consultation") {
+      queueId = await generateConsultationQueueId();
+    }
+    if (service_name === "laboratory") {
+      queueId = await generateLaboratoryQueueId();
+    }
     let patientName = null;
     if (patient_id) {
     patientName = await sql`
@@ -301,8 +313,8 @@ export async function addQueueEntry(req: Request, res: Response) {
     }
     const newQueueNumber = Number(total[0].total) + 1;
     const newQueue = await sql`
-        INSERT INTO queue_entries (patient_id, patient_name, queue_number, service_id, service_name)
-        VALUES (${patient_id}, ${patientName}, ${newQueueNumber}, ${service_id}, ${service_name})
+        INSERT INTO queue_entries (queue_id, patient_id, patient_name, queue_number, service_id, service_name)
+        VALUES (${queueId}, ${patient_id}, ${patientName}, ${newQueueNumber}, ${service_id}, ${service_name})
         RETURNING *;
     `;
     res.status(200).json({ newQueue, message: "added to queue" });

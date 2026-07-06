@@ -4,7 +4,8 @@ import ActivityDetails from "../components/ActivityDetails";
 
 
 type Activity = {
-  activity_id: number;
+  id: number;
+  activity_id: string;
   user_id: number;
   username: string;
   service_name: string;

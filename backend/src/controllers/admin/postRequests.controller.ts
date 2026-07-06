@@ -2,9 +2,13 @@ import { sql } from "../../config/db.js";
 import bcrypt from "bcryptjs";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { generateUserId } from "../../utils/generateUserId.js";
+import {
+  generateUserId,
+  generateServiceId,
+  generateActivityId,
+} from "../../utils/generateId.js";
 
-///// the tokenantion on ad user is just for testing purposes, 
+///// the tokenantion on ad user is just for testing purposes,
 /// it will be removed later on. optional lang kasi no need tokens right after sign up, its usually on login========
 export async function addUser(req: Request, res: Response) {
   // post /api/admin/users
@@ -34,7 +38,7 @@ export async function addUser(req: Request, res: Response) {
     if (existingUser.length > 0) {
       return res.status(200).json({ message: "User already exists" });
     }
-    const userId = await generateUserId()
+    const userId = await generateUserId();
     const signUpResult = await sql`
         INSERT INTO users (user_id, username, password, role, full_name, email, contact_number) 
         VALUES (${userId}, ${username}, ${hashedPassword}, ${role}, ${full_name}, ${email}, ${contact_number}) 
@@ -64,9 +68,18 @@ export async function addService(req: Request, res: Response) {
     } else if (isNaN(price)) {
       return res.status(400).json({ message: "Price must be a number" });
     }
+
+    const existingService = await sql`
+        SELECT * FROM services
+        WHERE service_name = ${service_name}
+    `;
+    if (existingService.length > 0) {
+      return res.status(200).json({ message: "Service already exists" });
+    }
+    const serviceId = await generateServiceId();
     const newService = await sql`
-      INSERT INTO services (service_name, price)
-      VALUES (${service_name}, ${price})
+      INSERT INTO services (service_id, service_name, price)
+      VALUES (${serviceId}, ${service_name}, ${price})
       RETURNING *;
     `;
     res
@@ -78,7 +91,8 @@ export async function addService(req: Request, res: Response) {
   }
 }
 
-export async function addActivity(req: Request, res: Response) { // post /api/admin/activities
+export async function addActivity(req: Request, res: Response) {
+  // post /api/admin/activities
   try {
     const user_id = req.user.user_id;
     const { activity_id, service_name, details } = req.body;
@@ -90,10 +104,10 @@ export async function addActivity(req: Request, res: Response) { // post /api/ad
     if (!serviceName) {
       res.json({ message: "there is no service on that on our database" });
     }
-
+    const activityId = await generateActivityId();
     const response = await sql`
-      INSERT INTO system_activity (user_id, service_name, details)
-      values (${user_id}, ${service_name}, ${details})
+      INSERT INTO system_activity (activity_id, user_id, service_name, details)
+      values (${activityId}, ${user_id}, ${service_name}, ${details})
     `;
     res.status(201).json({ user: response[0], message: "Sign up successful!" });
   } catch (error) {

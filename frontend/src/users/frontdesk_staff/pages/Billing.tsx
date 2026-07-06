@@ -1,7 +1,8 @@
 import Header from "../components/Header";
 type Bill = {
-    billing_id: number;
-    patient_id: number;
+    id: number;
+    billing_id: string;
+    patient_id: string;
     discount_pct: number;
     total_amount: number;
     payment_method: string;

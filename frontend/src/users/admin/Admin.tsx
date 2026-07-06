@@ -7,7 +7,8 @@ import ActivityMonitoring from "./pages/ActivityMonitoring";
 import api from "../../lib/axios";
 
 type User = {
-    user_id: number;
+    id: number;
+    user_id: string;
     full_name: string
     username: string;
     password: string;
@@ -17,12 +18,15 @@ type User = {
     email: string;
 };
 type Service = {
-    service_id: number;
+    id: number;
+    service_id: string;
     service_name: string;
     price: number;
+    active: boolean
 };
 type Activities = {
-    activity_id: number;
+    id: number;
+    activity_id: string;
     user_id: number;
     username: string;
     service_name: string;

@@ -1,7 +1,8 @@
-import { useState } from "react";
+// import { useState } from "react";
 import Header from "../components/Header";
 
 type Patient = {
+    id: number;
     patient_id: string;
     first_name: string;
     last_name: string;

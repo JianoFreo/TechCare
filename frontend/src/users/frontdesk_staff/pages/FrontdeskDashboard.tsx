@@ -1,8 +1,9 @@
 import Header from "../components/Header";
 
 type Bill = {
-    bill_id: number;
-    patient_id: number;
+    id: number;
+    bill_id: string;
+    patient_id: string;
     discount_pct: number;
     total_amount: number;
     payment_method: string;
@@ -11,7 +12,8 @@ type Bill = {
     billed_at: string;
 }[];
 type Patient = {
-    patient_id: number;
+    id: number;
+    patient_id: string;
     first_name: string;
     last_name: string;
     date_of_birth: string;
@@ -24,10 +26,11 @@ type Patient = {
 }[];
 
 type Queue = {
-    queue_id: number;
-    patient_id: number;
+    id: number;
+    queue_id: string;
+    patient_id: string;
     queue_number: number;
-    doctor_id: number;
+    doctor_id: string;
     service_type: string;
     status: string;
     created_at: string;

@@ -1,7 +1,8 @@
 import { useState } from "react"
 import api from "../../../lib/axios";   
 type User = {
-    user_id: number;
+    id: number;
+    user_id: string;
     full_name: string
     username: string;
     role: string;

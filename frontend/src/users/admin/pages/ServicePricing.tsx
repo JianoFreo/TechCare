@@ -3,7 +3,8 @@ import AddService from "../components/AddService"
 import { useState } from 'react'
 
 type Service = {
-    service_id: number;
+    id:number;
+    service_id: string;
     service_name: string;
     price: number;
     active:boolean
