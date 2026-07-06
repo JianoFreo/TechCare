@@ -18,7 +18,8 @@ export async function connectNeon(): Promise<void> {
     // -------------------------------------------------------
     await sql`
       CREATE TABLE IF NOT EXISTS users (
-        user_id        SERIAL PRIMARY KEY,
+        id             SERIAL PRIMARY KEY,
+        user_id        VARCHAR(255) UNIQUE NOT NULL,
         username       VARCHAR(255) NOT NULL UNIQUE,
         password       VARCHAR(255) NOT NULL,
         role           VARCHAR(50)  NOT NULL,
@@ -105,7 +106,7 @@ export async function connectNeon(): Promise<void> {
       CREATE TABLE IF NOT EXISTS consultations (
         consultation_id SERIAL PRIMARY KEY,
         patient_id      INTEGER     NOT NULL REFERENCES patients(patient_id),
-        doctor_id       INTEGER     NOT NULL REFERENCES users(user_id),
+        doctor_id       VARCHAR(255)NOT NULL REFERENCES users(user_id),
         queue_id        INTEGER     UNIQUE   REFERENCES queue_entries(queue_id),
         reason          VARCHAR(500),
         findings        JSONB,
@@ -114,7 +115,6 @@ export async function connectNeon(): Promise<void> {
         consulted_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at      TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
       )`;
-
     // -------------------------------------------------------
     // LAB REQUESTS
     // results merged into JSONB column
@@ -133,7 +133,7 @@ export async function connectNeon(): Promise<void> {
         request_id      SERIAL PRIMARY KEY,
         consultation_id INTEGER      REFERENCES consultations(consultation_id),
         patient_id      INTEGER      NOT NULL REFERENCES patients(patient_id),
-        doctor_id       INTEGER      NOT NULL REFERENCES users(user_id),
+        doctor_id       VARCHAR(255) NOT NULL REFERENCES users(user_id),
         test_type       VARCHAR(200) NOT NULL,
         results         JSONB,
         status          VARCHAR(20)  NOT NULL DEFAULT 'Pending',
@@ -172,7 +172,7 @@ export async function connectNeon(): Promise<void> {
     await sql`
       CREATE TABLE IF NOT EXISTS system_activity (
         activity_id  SERIAL PRIMARY KEY,
-        user_id      INTEGER      NOT NULL REFERENCES users(user_id),
+        user_id      VARCHAR(255) NOT NULL REFERENCES users(user_id),
         service_name VARCHAR(255) NOT NULL REFERENCES services(service_name),
         details      JSONB        NOT NULL,
         created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP

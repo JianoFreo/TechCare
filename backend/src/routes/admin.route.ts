@@ -22,7 +22,7 @@ router.get("/services", getAllservices);
 router.get("/activity", getMyActivities);
 router.get("/activities", getAllActivities);
 router.get("/users", getAllUsers);
-router.post("/users", addUser);
+router.post("/add-user", addUser);
 router.post("/services", addService);
 router.patch("/users/:user_id", updateUser);
 router.post("/activities", addActivity);

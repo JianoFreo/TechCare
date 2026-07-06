@@ -2,7 +2,7 @@ import { sql } from "../../config/db.js";
 import bcrypt from "bcryptjs";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-
+import { generateUserId } from "../../utils/generateUserId.js";
 
 ///// the tokenantion on ad user is just for testing purposes, 
 /// it will be removed later on. optional lang kasi no need tokens right after sign up, its usually on login========
@@ -34,9 +34,10 @@ export async function addUser(req: Request, res: Response) {
     if (existingUser.length > 0) {
       return res.status(200).json({ message: "User already exists" });
     }
+    const userId = await generateUserId()
     const signUpResult = await sql`
-        INSERT INTO users (username, password, role, full_name, email, contact_number) 
-        VALUES (${username}, ${hashedPassword}, ${role}, ${full_name}, ${email}, ${contact_number}) 
+        INSERT INTO users (user_id, username, password, role, full_name, email, contact_number) 
+        VALUES (${userId}, ${username}, ${hashedPassword}, ${role}, ${full_name}, ${email}, ${contact_number}) 
         RETURNING *
     `;
     console.log("INSERT RESULT:", signUpResult);
@@ -47,12 +48,11 @@ export async function addUser(req: Request, res: Response) {
         expiresIn: "1h",
       },
     );
-
     res
       .status(201)
       .json({ user: signUpResult[0], message: "Sign up successful!", token });
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: " Error on uplaoding new user" });
   }
 }
 export async function addService(req: Request, res: Response) {
