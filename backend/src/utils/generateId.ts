@@ -142,7 +142,7 @@ export async function generateConsultationQueueId() {
     nextNumber = Number(last.slice(-4)) + 1;
   }
   const sequence = String(nextNumber).padStart(4, "0");
-  return `CQ-${sequence}`;
+  return `CONS-${sequence}`;
 }
 export async function generateLaboratoryQueueId() {
   const queue = await sql`
@@ -159,7 +159,7 @@ export async function generateLaboratoryQueueId() {
     nextNumber = Number(last.slice(-4)) + 1;
   }
   const sequence = String(nextNumber).padStart(4, "0");
-  return `LQ-${sequence}`;
+  return `LAB-${sequence}`;
 }
 //LAB-0017
 

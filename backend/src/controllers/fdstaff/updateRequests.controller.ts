@@ -87,3 +87,30 @@ export async function updatePatient(req: Request, res: Response) {
         });
     }
 }
+
+
+export async function callQueueEntry(req: Request, res: Response) {
+    try {  
+        const { queue_id, queue_number,  } = req.body;
+
+        const existingQueueEntry = await sql`
+            UPDATE queue_entries
+                SET status = 'calling' AND queue_number = 0
+                WHERE queue_id = ${queue_id}
+            RETURNING *;
+        `;
+        const updateQueueBehind = await sql`
+            UPDATE queue_entries
+                SET queue_number = queue_number - 1
+                WHERE queue_number > ${queue_number}
+            RETURNING *;
+        `;
+        res.status(200).json({ message: "Queue entry called successfully", existingQueueEntry, updateQueueBehind });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+
+
+}
