@@ -1,6 +1,7 @@
 function LeftSideBackground() {
     return (
-        <div className="hidden md:flex w-3/5 relative items-center justify-center p-10 text-white">            <img
+        <div className="hidden md:flex w-3/5 relative items-center justify-center p-10 text-white">            
+        <img
             src="assets/login-bg.gif"
             alt="TechCare"
             className="absolute inset-0 w-full h-full object-cover"

@@ -4,7 +4,8 @@ import AddUserModal from "../components/AddUserModal";
 import UpdateUserModal from "../components/UpdateUserModal"
 
 type User = {
-    user_id: number;
+    id: number;
+    user_id: string;
     full_name: string
     username: string;
     password: string;

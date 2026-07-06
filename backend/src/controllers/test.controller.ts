@@ -24,6 +24,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { sql } from "../config/db.js";
+import cloudinary from "../config/cloudinary.js";
 
 export async function signIn(req: Request, res: Response, next: NextFunction) {
   const user = req.body;
@@ -61,9 +62,32 @@ export async function getMyAccount(req: Request, res: Response) {
     WHERE user_id = ${id}
     `;
     const user_created = response[0];
-    if (!user_created) {res.json({message: "you dont have an account here"})}
-    res.status(200).json({user_created:user_created.created_at}) //this is an object
+    if (!user_created) {
+      res.json({ message: "you dont have an account here" });
+    }
+    res.status(200).json({ user_created: user_created.created_at }); //this is an object
   } catch (error) {
     res.status(500).json({ error: "error im getiing your account" });
+  }
+}
+
+export async function uploadImage(req: Request, res: Response) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        message: "No image uploaded",
+      });
+    }
+
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "techcare",
+    });
+
+    return res.status(200).json({
+      url: result.secure_url,
+      public_id: result.public_id,
+    });
+  } catch (err) {
+    return res.status(500).json(err);
   }
 }

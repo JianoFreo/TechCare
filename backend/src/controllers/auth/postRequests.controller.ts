@@ -1,7 +1,9 @@
-import { sql } from "../config/db.js";
+import { sql } from "../../config/db.js";
 import bcrypt from "bcryptjs";
 import { json, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import path from "path";
+import { ENV } from "../../config/env.js";
 
 export async function login(req: Request, res: Response) {
   try {
@@ -23,9 +25,13 @@ export async function login(req: Request, res: Response) {
     if (!isMatch) {
       return res.status(200).json({ message: "Invalid password" }); 
     }
-    const token = jwt.sign({user_id: user.user_id}, process.env.JWT_SECRET!, {expiresIn : "1d"}); // it goingg to make a token out of user id
+    const token = jwt.sign({user_id: user.user_id}, ENV.JWT_SECRET, {expiresIn : "5min"}); // it goingg to make a token out of user id
     // this has to be an object because jwt.sign expects an object as the first argument, not a string. So we wrap user.user_id in an object with a key of user_id.
-    res.status(200).json({ message: "Login successful", user, token });
+    const refreshToken = jwt.sign({user_id: user.user_id}, ENV.REFRESH_TOKEN_SECRET, {expiresIn : "1d"}); // it goingg to make a token out of user id
+
+
+    
+    res.status(200).json({ message: "Login successful", user, token, refreshToken });
     //   {
     //   "message": "Login successful",
     //   "user": {

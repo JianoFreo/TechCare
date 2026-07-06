@@ -3,7 +3,8 @@ import Header from "../components/Header";
 
 
 type User = {
-    user_id: number;
+    id: number;
+    user_id: string;
     username: string;
     password: string;
     role: string;
