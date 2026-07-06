@@ -24,7 +24,7 @@ function AddUserModal({ onClose, loadData }: Props) {
             alert("your passswords do no match ")
         } else {
             try {
-                const response = await api.post("/api/admin/users", {
+                const response = await api.post("/api/admin/add-user", {
                     username,
                     password,
                     role,

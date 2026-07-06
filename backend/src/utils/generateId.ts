@@ -162,3 +162,4 @@ export async function generateLaboratoryQueueId() {
   return `LQ-${sequence}`;
 }
 //LAB-0017
+

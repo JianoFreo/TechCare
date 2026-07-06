@@ -116,7 +116,7 @@ export async function getAllQueueEntries(req: Request, res: Response) { // get /
 export async function getAllservices(req: Request, res: Response) { // get /api/fdstaff/services
   try {
     const services = await sql`
-        SELECT service_id, service_name, price 
+        SELECT service_id, service_name, price, service_type
         FROM services
         WHERE active = TRUE
     `

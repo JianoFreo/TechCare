@@ -56,12 +56,16 @@ function AddService({ loadData, onClose }: Props) {
                         className="w-full border p-2"
                         onChange={(e) => setPrice(Number(e.target.value))}
                         value={price}
-
                     />
-
+                    <select
+                        className="w-full border p-2"
+                    >
+                        <option value="">Select a service type</option>
+                        <option value="consultation">Consultation</option>
+                        <option value="laboratory">Laboratory</option>
+                    </select>
                     <button className="px-4 py-2 bg-gray-200 hover:cursor-pointer hover:bg-gray-400"
                         onClick={() => addService()}>
-                        {/* onClick={addService}> */}
                         add service
                     </button>
                 </div>
@@ -69,7 +73,5 @@ function AddService({ loadData, onClose }: Props) {
         </div>
 
     )
-
-
 }
 export default AddService

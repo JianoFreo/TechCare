@@ -6,6 +6,7 @@ type Service = {
     id:number;
     service_id: string;
     service_name: string;
+    service_type: string;
     price: number;
     active:boolean
 };
@@ -57,6 +58,7 @@ function ServicePricing({ services, open, setOpen, loadData }: ServicePricingPro
                         <tr>
                             <th className="px-4 py-3 text-left">ID</th>
                             <th className="px-4 py-3 text-left">Service Name</th>
+                            <th className="px-4 py-3 text-left">Service Type</th>
                             <th className="px-4 py-3 text-left">Price</th>
                             <th className="px-4 py-3 text-left">is active</th>
                         </tr>
@@ -66,6 +68,7 @@ function ServicePricing({ services, open, setOpen, loadData }: ServicePricingPro
                             <tr key={service.service_id} className="border-t hover:bg-gray-50">
                                 <td className="px-4 py-3">{service.service_id}</td>
                                 <td className="px-4 py-3">{service.service_name}</td>
+                                <td className="px-4 py-3">{service.service_type}</td>
                                 <td className="px-4 py-3">{service.price}</td>
                                 <td className="px-4 py-3">{service.active ? "ACTIVE ": "NOT ACTIVE"}</td>
                             </tr>

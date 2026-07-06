@@ -22,7 +22,8 @@ type Service = {
     service_id: string;
     service_name: string;
     price: number;
-    active: boolean
+    active: boolean,
+    service_type: string
 };
 type Activities = {
     id: number;

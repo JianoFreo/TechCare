@@ -4,7 +4,11 @@ import { ENV } from "../../config/env.js";
 import { calculateAge } from "../../utils/calculateAge.js";
 import { json, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { generateConsultationQueueId, generateLaboratoryQueueId } from "../../utils/generateId.js";
+import {
+  generateConsultationQueueId,
+  generateLaboratoryQueueId,
+  generatePatientId,
+} from "../../utils/generateId.js";
 export async function addPatient(req: Request, res: Response) {
   // POST /api/fdstaff/patients
   try {
@@ -39,7 +43,7 @@ export async function addPatient(req: Request, res: Response) {
         .status(400)
         .json({ message: "At least one image is required" });
     }
-
+    const patientId = await generatePatientId();
     const uploadPromise = await cloudinary.uploader.upload(req.file.path, {
       folder: "products",
     });
@@ -63,6 +67,7 @@ export async function addPatient(req: Request, res: Response) {
 
     const response = await sql`
             INSERT INTO patients (
+                patient_id,
                 last_name,
                 first_name,
                 date_of_birth,
@@ -75,6 +80,7 @@ export async function addPatient(req: Request, res: Response) {
 
             )
             VALUES (
+                ${patientId},
                 ${last_name},
                 ${first_name},
                 ${date_of_birth},
@@ -268,38 +274,86 @@ export async function addBills(req: Request, res: Response) {
   }
 }
 
+// export async function addQueueEntry(req: Request, res: Response) {
+//   try {
+//     const { patient_id, service_id, service_type, is_priority } = req.body;
+//     let total;
+//     if (is_priority) {
+//       total = await sql`
+//         SELECT COUNT(*) AS total
+//         FROM queue_entries
+//         WHERE is_priority = TRUE
+//     `;
+//     } else {
+//       total = await sql`
+//       SELECT COUNT(*) AS total
+//       FROM queue_entries
+//       WHERE is_priority = FALSE
+//     `;
+//     }
+//     if (!patient_id || !service_id || !service_type) {
+//       return res.status(400).json({
+//         message: "patient_id, service_id, and service_type are required.",
+//       });
+//     }
+//     let queueId;
+//     if (service_type === "consultation") {
+//       queueId = await generateConsultationQueueId();
+//     }
+//     if (service_type === "laboratory") {
+//       queueId = await generateLaboratoryQueueId();
+//     }
+//     let patientName = null;
+//     if (patient_id) {
+//       patientName = await sql`
+//     SELECT last_name, first_name
+//     FROM patients
+//     WHERE patient_id = ${patient_id}
+//     `;
+//       if (patientName.length === 0) {
+//         return res
+//           .status(404)
+//           .json({ message: "the patient id you entered doesnt exist" });
+//       }
+//       patientName = patientName[0].last_name + ", " + patientName[0].first_name;
+//     }
+//     const newQueueNumber = Number(total[0].total) + 1;
+//     const newQueue = await sql`
+//         INSERT INTO queue_entries (queue_id, patient_id, patient_name, queue_number, service_id, service_type)
+//         VALUES (${queueId}, ${patient_id}, ${patientName}, ${newQueueNumber}, ${service_id}, ${service_type})
+//         RETURNING *;
+//     `;
+//     res.status(200).json({ newQueue, message: "added to queue" });
+//     console.log(newQueueNumber);
+//   } catch (error) {
+//     console.log(error);
+//   }
+// }
+
 export async function addQueueEntry(req: Request, res: Response) {
   try {
-    const { patient_id, service_id, service_name, is_priority } = req.body;
-    let total;
-    if (is_priority) {
-      total = await sql`
-        SELECT COUNT(*) AS total
-        FROM queue_entries
-        WHERE is_priority = TRUE
-    `;
-    } else {
-      total = await sql`
-      SELECT COUNT(*) AS total
-      FROM queue_entries
-      WHERE is_priority = FALSE
-    `;
-    }
-    if (!patient_id || !service_id || !service_name) {
+    const { patient_id, service_id, service_type, service_name, is_priority } = req.body;
+    if (!patient_id || !service_id || !service_type) {
       return res.status(400).json({
-        message: "patient_id, service_id, and service_name are required.",
+        message: "patient_id, service_id, and service_type are required.",
       });
     }
+    const total = await sql`
+    SELECT COUNT(*) AS total
+    FROM queue_entries
+    WHERE service_type = ${service_type}
+  `;
+    const newQueueNumber = Number(total[0].total) + 1;
     let queueId;
-    if (service_name === "consultation") {
+    if (service_type === "consultation") {
       queueId = await generateConsultationQueueId();
     }
-    if (service_name === "laboratory") {
+    if (service_type === "laboratory") {
       queueId = await generateLaboratoryQueueId();
     }
     let patientName = null;
     if (patient_id) {
-    patientName = await sql`
+      patientName = await sql`
     SELECT last_name, first_name
     FROM patients
     WHERE patient_id = ${patient_id}
@@ -311,14 +365,12 @@ export async function addQueueEntry(req: Request, res: Response) {
       }
       patientName = patientName[0].last_name + ", " + patientName[0].first_name;
     }
-    const newQueueNumber = Number(total[0].total) + 1;
     const newQueue = await sql`
-        INSERT INTO queue_entries (queue_id, patient_id, patient_name, queue_number, service_id, service_name)
-        VALUES (${queueId}, ${patient_id}, ${patientName}, ${newQueueNumber}, ${service_id}, ${service_name})
+        INSERT INTO queue_entries (queue_id, patient_id, patient_name, queue_number, service_id, service_name, service_type, is_priority)
+        VALUES (${queueId}, ${patient_id}, ${patientName}, ${newQueueNumber}, ${service_id}, ${service_name}, ${service_type}, ${is_priority})
         RETURNING *;
     `;
     res.status(200).json({ newQueue, message: "added to queue" });
-    console.log(newQueueNumber);
   } catch (error) {
     console.log(error);
   }

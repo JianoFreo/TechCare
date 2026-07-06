@@ -5,11 +5,11 @@ import Header from "../components/Header";
 
 type Queue = {
     queue_id: string;
-    patient_id: number;
+    patient_id: string;
     patient_name: string;
     queue_number: number;
     service_name: string;
-    service_id: number;
+    service_id: string;
     status: string;
     created_at: string;
     updated_at: string;
@@ -18,6 +18,7 @@ type Service = {
     id: number;
     service_id: string;
     service_name: string;
+    service_type: string;
     price: number;
 }[];
 type QueueManagementProps = {
@@ -36,9 +37,10 @@ function QueueManagement({
     loadData,
 }: QueueManagementProps) {
 
-    const [patientId, setPatientId] = useState<number | null>(null)
+    const [patientId, setPatientId] = useState<string | null>(null)
     const [isPriority, setIsPriority] = useState(false)
-    const [serviceId, setServiceId] = useState<number | null>(null)
+    const [serviceId, setServiceId] = useState<string | null>(null)
+    const [serviceType, setServiceType] = useState<string | null>(null)
     const [serviceName, setServiceName] = useState<string | null>(null)
     useEffect(() => {
         loadData();
@@ -50,13 +52,15 @@ function QueueManagement({
                 patient_id: patientId,
                 is_priority: isPriority,
                 service_id: serviceId,
-                service_name: serviceName
+                service_type: serviceType
             });
             const response = await api.post("/api/fdstaff/queues", {
                 patient_id: patientId,
                 is_priority: isPriority,
                 service_id: serviceId,
+                service_type: serviceType,
                 service_name: serviceName
+
             });
 
 
@@ -65,6 +69,7 @@ function QueueManagement({
             setPatientId(null);
             setIsPriority(false);
             setServiceId(null);
+            setServiceType(null);
             setServiceName(null);
             loadData();
         } catch (error) {
@@ -90,7 +95,7 @@ function QueueManagement({
                     value={patientId ?? ""}
                     onChange={(e) => {
                         setPatientId(
-                            e.target.value === "" ? null : Number(e.target.value)
+                            e.target.value === "" ? null : e.target.value
                         );
                     }}
                 />
@@ -103,7 +108,8 @@ function QueueManagement({
                 <select
                     value={serviceId ?? ""}
                     onChange={(e) => {
-                        setServiceId(Number(e.target.value));
+                        setServiceId(e.target.value);
+                        setServiceType(e.target.selectedOptions[0].text);
                         setServiceName(e.target.selectedOptions[0].text);
                     }}
                 >

@@ -55,11 +55,11 @@ export async function connectNeon(): Promise<void> {
     // -------------------------------------------------------
     // SERVICES
     // admin-managed catalogue with pricing
-    // soft-delete: UPDATE services SET deleted = TRUE WHERE service_id = ?
     // -------------------------------------------------------
     await sql`
       CREATE TABLE IF NOT EXISTS services (
         id           SERIAL PRIMARY KEY,
+        service_type VARCHAR(50)  NOT NULL,
         service_id   VARCHAR(255) UNIQUE NOT NULL,
         service_name VARCHAR(255) NOT NULL UNIQUE,
         price        DECIMAL(10,2) NOT NULL,
@@ -80,7 +80,7 @@ export async function connectNeon(): Promise<void> {
         patient_name VARCHAR(255),
         queue_number INTEGER     NOT NULL,
         service_id   VARCHAR(255) NOT NULL REFERENCES services(service_id),
-        service_name VARCHAR(255) NOT NULL,
+        service_type VARCHAR(255) NOT NULL,
         is_priority  BOOLEAN     NOT NULL DEFAULT FALSE,
         status       VARCHAR(20) NOT NULL DEFAULT 'waiting',
         created_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -110,7 +110,7 @@ export async function connectNeon(): Promise<void> {
       id SERIAL PRIMARY KEY,
         consultation_id VARCHAR(255) UNIQUE NOT NULL,
         patient_id      VARCHAR(255)     NOT NULL REFERENCES patients(patient_id),
-        doctor_id       VARCHAR(255)NOT NULL REFERENCES users(user_id),
+        doctor_id       VARCHAR(255)    NOT NULL REFERENCES users(user_id),
         queue_id        VARCHAR(255)     UNIQUE   REFERENCES queue_entries(queue_id),
         reason          VARCHAR(500),
         findings        JSONB,
@@ -136,7 +136,7 @@ export async function connectNeon(): Promise<void> {
       CREATE TABLE IF NOT EXISTS lab_requests (
         id              SERIAL PRIMARY KEY,
         request_id      VARCHAR(255) UNIQUE NOT NULL,
-        consultation_id INTEGER      REFERENCES consultations(consultation_id),
+        consultation_id VARCHAR(255) REFERENCES consultations(consultation_id),
         patient_id      VARCHAR(255)     NOT NULL REFERENCES patients(patient_id),
         doctor_id       VARCHAR(255) NOT NULL REFERENCES users(user_id),
         test_type       VARCHAR(200) NOT NULL,
