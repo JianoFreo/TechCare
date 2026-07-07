@@ -84,6 +84,7 @@ function FrontdeskStaff() {
 
             {page === "queue-management" && (
                 <QueueManagement
+                    patients={patients}
                     services={services}
                     queues={queues}
                     open={open}

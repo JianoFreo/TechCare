@@ -20,6 +20,18 @@ type Queue = {
     created_at: string;
     updated_at: string;
 }[];
+type Patient = {
+    id:number
+    patient_id: string
+    first_name: string;
+    last_name: string;
+    date_of_birth: string;
+    sex: string;
+    contact_number: string;
+    email: string;
+    address: string;
+    emergency_contact: string;
+}[];
 type Service = {
     id: number;
     service_id: string;
@@ -28,6 +40,7 @@ type Service = {
     price: number;
 }[];
 type QueueManagementProps = {
+    patients:Patient,
     services: Service
     queues: Queue;
     open: boolean;
@@ -41,6 +54,7 @@ function QueueManagement({
     open,
     setOpen,
     loadData,
+    patients
 }: QueueManagementProps) {
 
     const [patientId, setPatientId] = useState<string | null>(null)
@@ -96,6 +110,7 @@ function QueueManagement({
             </h1>
 
             <SubmitNewQueue
+                patients={patients}
                 services={services}
                 patientId={patientId}
                 setPatientId={setPatientId}
