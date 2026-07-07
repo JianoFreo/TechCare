@@ -20,6 +20,7 @@ type QueuesProps = {
     queuesType: "consultation" | "laboratory";
     loadData: () => Promise<void>;
 };
+
 function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
     const [queueIdToServe, setQueueIdToServe] = useState<string | null>(null)
     const [queueNumberToServe, setQueueNumberToServe] = useState<number | null>(null)
