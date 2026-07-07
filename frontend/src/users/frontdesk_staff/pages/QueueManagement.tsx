@@ -2,8 +2,12 @@ import { useEffect, useState } from "react";
 
 import api from "../../../lib/axios";
 import Header from "../components/Header";
+import LabAndConsuQueues from "./components/LabAndConsuQueues";
+import NowServing from "./components/NowServing";
+import SubmitNewQueue from "./components/SubmitNewQueue";
 
 type Queue = {
+    id: number;
     queue_id: string;
     patient_id: string;
     patient_name: string;
@@ -11,6 +15,7 @@ type Queue = {
     service_name: string;
     service_id: string;
     service_type: string;
+    is_priority: boolean;
     status: string;
     created_at: string;
     updated_at: string;
@@ -66,6 +71,7 @@ function QueueManagement({
 
 
             console.log("Queue submitted:", response.data);
+            alert("Queue submitted successfully!");
             setPatientId(null);
             setIsPriority(false);
             setServiceId(null);
@@ -77,7 +83,7 @@ function QueueManagement({
         }
     }
     return (
-        <main className="flex-1 min-w-0 p-6">
+        <main className="flex-1 min-w-0 bg-gray-100 p-6">
             <Header
                 open={open}
                 setOpen={setOpen}
@@ -85,74 +91,39 @@ function QueueManagement({
                 page="Queue Management"
             />
 
+            <h1 className="mb-6 text-3xl font-bold text-gray-800">
+                Queue Management
+            </h1>
 
-            <h1 className="text-2xl font-bold mb-4">Queue Management</h1>
-            <form onSubmit={submitQueue}>
-                <p>
-                    if you have already been admitted before pleas einsert your pateint ID
-                </p>
-                <input
-                    value={patientId ?? ""}
-                    onChange={(e) => {
-                        setPatientId(
-                            e.target.value === "" ? null : e.target.value
-                        );
-                    }}
+            <SubmitNewQueue
+                services={services}
+                patientId={patientId}
+                setPatientId={setPatientId}
+                submitQueue={submitQueue}
+                setServeQueueId={setServiceId}
+                setServiceName={setServiceName}
+                serviceId={serviceId}
+                isPriority={isPriority}
+                setIsPriority={setIsPriority}
+                setServiceId={setServiceId}
+            />
+            <div className="mt-8 flex flex-col gap-6">
+                <NowServing
+                    queues={queues}
+                    loadData={loadData}
                 />
-                <input
-                    type="checkbox"
-
-                    checked={isPriority}
-                    onChange={(e) => setIsPriority(e.target.checked)}
+                <LabAndConsuQueues
+                    queues={queues}
+                    queuesType="consultation"
+                    loadData={loadData}
                 />
-                <select
-                    value={serviceId ?? ""}
-                    onChange={(e) => {
-                        setServiceId(e.target.value);
-                        setServiceName(e.target.selectedOptions[0].text);
-                        // setServiceType(e.target.selectedOptions[0].getAttribute("data-service-type"));
-                    }}
-                >
-                    <option value="">Select a service</option>
 
-                    {services.map((service) => (
-                        <option
-                            key={service.service_id}
-                            value={service.service_id}
+                <LabAndConsuQueues
+                    queues={queues}
+                    queuesType="laboratory"
+                    loadData={loadData}
 
-                        >
-                            {service.service_name} {service.service_type}
-                        </option>
-                    ))}
-                </select>
-                <button type="submit">
-                    Submit
-                </button>
-            </form>
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3">Queue Number</th>
-                            <th className="px-6 py-3">Patient ID</th>
-                            <th className="px-6 py-3">Patient Name</th>
-                            <th className="px-6 py-3">Service Type</th>
-                            <th className="px-6 py-3">Status</th>
-                        </tr>
-                    </thead>
-
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {queues.map((queueItem) => (
-                            <tr key={queueItem.queue_id}>
-                                <td className="px-6 py-4">{queueItem.queue_number}</td>
-                                <td className="px-6 py-4">{queueItem.patient_id ? queueItem.patient_id : "not registered"}</td>
-                                <td className="px-6 py-4">{queueItem.patient_name ? queueItem.patient_name : "not registered"}</td>
-                                <td className="px-6 py-4">{queueItem.service_name}</td>
-                                <td className="px-6 py-4">{queueItem.status}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                />
             </div>
         </main>
     );

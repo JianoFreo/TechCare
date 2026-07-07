@@ -334,53 +334,100 @@ export async function addBills(req: Request, res: Response) {
 
 export async function addQueueEntry(req: Request, res: Response) {
   try {
+    // Get the data sent by the frontend
     const { patient_id, service_id, service_name, is_priority } = req.body;
+
+    // Make sure a service was selected
     if (!service_id) {
       return res.status(400).json({
         message: "service_id and service_type are required.",
       });
     }
+
+    // Retrieve the service type (consultation or laboratory)
+    // based on the selected service_id
     const serviceType = await sql`
-    SELECT service_type
-    FROM services
-    WHERE service_id = ${service_id}
+      SELECT service_type
+      FROM services
+      WHERE service_id = ${service_id}
     `;
+
+    // Variables that will store the generated queue ID
+    // and queue number
     let queueId;
     let queueNumber;
+
+    // Generate consultation queue ID and number
     if (serviceType[0].service_type === "consultation") {
       queueId = await generateConsultationQueueId();
-      queueNumber = await generateQueueNumberConsultation();
+      queueNumber = await generateQueueNumberConsultation(); // Exammple return : CONS-0017
     }
+
+    // Generate laboratory queue ID and number
     if (serviceType[0].service_type === "laboratory") {
-      queueNumber = await generateQueueNumberLaboratory();
       queueId = await generateLaboratoryQueueId();
+      queueNumber = await generateQueueNumberLaboratory(); // Example return: LAB-0017
     }
+
+    // Default patient name for walk-in patients
     let patientName = null;
+
+    // If a patient ID was entered, verify that it exists
     if (patient_id) {
       patientName = await sql`
-    SELECT last_name, first_name
-    FROM patients
-    WHERE patient_id = ${patient_id}
-    `;
-      const serviceType = await sql`
-    SELECT service_type
-    FROM services
-    WHERE service_id = ${service_id}
-    `;
+        SELECT last_name, first_name
+        FROM patients
+        WHERE patient_id = ${patient_id}
+      `;
+
+      // If no patient matches the entered ID,
+      // return a 404 error
       if (patientName.length === 0) {
         return res
           .status(404)
-          .json({ message: "the patient id you entered doesnt exist" });
+          .json({ message: "The patient ID you entered doesn't exist." });
       }
+
+      // Convert the patient's first and last name
+      // into a single display string
       patientName = patientName[0].last_name + ", " + patientName[0].first_name;
     }
+
+    // Insert the new queue entry into the database
     const newQueue = await sql`
-        INSERT INTO queue_entries (queue_id, patient_id, patient_name, queue_number, service_id, service_name, service_type, is_priority)
-        VALUES (${queueId}, ${patient_id}, ${patientName}, ${queueNumber}, ${service_id}, ${service_name}, ${serviceType[0].service_type}, ${is_priority})
-        RETURNING *;
+      INSERT INTO queue_entries (
+        queue_id,
+        patient_id,
+        patient_name,
+        queue_number,
+        service_id,
+        service_name,
+        service_type,
+        is_priority
+      )
+      VALUES (
+        ${queueId},
+        ${patient_id},
+        ${patientName},
+        ${queueNumber},
+        ${service_id},
+        ${service_name},
+        ${serviceType[0].service_type},
+        ${is_priority}
+      )
+      RETURNING *;
     `;
-    res.status(200).json({ newQueue, message: "added to queue" });
+
+    // Send the newly created queue entry back to the client
+    res.status(200).json({
+      newQueue,
+      message: "Added to queue",
+    });
   } catch (error) {
+    // Log unexpected server/database errors
     console.log(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
   }
 }
