@@ -129,30 +129,82 @@ function QueueManagement({
                     Submit
                 </button>
             </form>
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3">Queue Number</th>
-                            <th className="px-6 py-3">Patient ID</th>
-                            <th className="px-6 py-3">Patient Name</th>
-                            <th className="px-6 py-3">Service Type</th>
-                            <th className="px-6 py-3">Status</th>
-                        </tr>
-                    </thead>
+            <div className="mt-6 flex gap-6">
+                {/* Consultation Queue */}
+                <div className="w-1/2">
+                    <h1 className="mb-2 text-xl font-bold">Consultation Queue</h1>
 
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {queues.map((queueItem) => (
-                            <tr key={queueItem.queue_id}>
-                                <td className="px-6 py-4">{queueItem.queue_number}</td>
-                                <td className="px-6 py-4">{queueItem.patient_id ? queueItem.patient_id : "not registered"}</td>
-                                <td className="px-6 py-4">{queueItem.patient_name ? queueItem.patient_name : "not registered"}</td>
-                                <td className="px-6 py-4">{queueItem.service_name}</td>
-                                <td className="px-6 py-4">{queueItem.status}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                    <div className="overflow-x-auto border rounded-lg shadow">
+                        <table className="w-full table-auto divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-3 py-2 text-left text-sm">Queue #</th>
+                                    <th className="px-3 py-2 text-left text-sm">Patient ID</th>
+                                    <th className="px-3 py-2 text-left text-sm">Patient Name</th>
+                                    <th className="px-3 py-2 text-left text-sm">Service</th>
+                                    <th className="px-3 py-2 text-left text-sm">Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody className="divide-y divide-gray-200 bg-white">
+                                {queues.map(
+                                    (queueItem) =>
+                                        queueItem.service_type === "consultation" && (
+                                            <tr key={queueItem.queue_id}>
+                                                <td className="px-3 py-2 text-sm">{queueItem.queue_number}</td>
+                                                <td className="px-3 py-2 text-sm">
+                                                    {queueItem.patient_id || "Not registered"}
+                                                </td>
+                                                <td className="px-3 py-2 text-sm">
+                                                    {queueItem.patient_name || "Not registered"}
+                                                </td>
+                                                <td className="px-3 py-2 text-sm">{queueItem.service_name}</td>
+                                                <td className="px-3 py-2 text-sm">{queueItem.status}</td>
+                                            </tr>
+                                        )
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Laboratory Queue */}
+                <div className="w-1/2">
+                    <h1 className="mb-2 text-xl font-bold">Laboratory Queue</h1>
+
+                    <div className="overflow-x-auto border rounded-lg shadow">
+                        <table className="w-full table-auto divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-3 py-2 text-left text-sm">Queue #</th>
+                                    <th className="px-3 py-2 text-left text-sm">Patient ID</th>
+                                    <th className="px-3 py-2 text-left text-sm">Patient Name</th>
+                                    <th className="px-3 py-2 text-left text-sm">Service</th>
+                                    <th className="px-3 py-2 text-left text-sm">Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody className="divide-y divide-gray-200 bg-white">
+                                {queues.map(
+                                    (queueItem) =>
+                                        queueItem.service_type === "laboratory" && (
+                                            <tr key={queueItem.queue_id}>
+                                                <td className="px-3 py-2 text-sm">{queueItem.queue_number}</td>
+                                                <td className="px-3 py-2 text-sm">
+                                                    {queueItem.patient_id || "Not registered"}
+                                                </td>
+                                                <td className="px-3 py-2 text-sm">
+                                                    {queueItem.patient_name || "Not registered"}
+                                                </td>
+                                                <td className="px-3 py-2 text-sm">{queueItem.service_name}</td>
+                                                <td className="px-3 py-2 text-sm">{queueItem.status}</td>
+                                            </tr>
+                                        )
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </main>
     );

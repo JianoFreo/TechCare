@@ -1,6 +1,14 @@
 import { getAllservices } from "../controllers/admin/getRequests.controller.js";
-import { getAllBilling, getAllPatients, getAllQueueEntries } from "../controllers/fdstaff/getRequests.controller.js";
-import { addBills, addPatient, addQueueEntry } from "../controllers/fdstaff/postRequests.controller.js";
+import {
+  getAllBilling,
+  getAllPatients,
+  getAllQueueEntries,
+} from "../controllers/fdstaff/getRequests.controller.js";
+import {
+  addBills,
+  addPatient,
+  addQueueEntry,
+} from "../controllers/fdstaff/postRequests.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { Router } from "express";
 
