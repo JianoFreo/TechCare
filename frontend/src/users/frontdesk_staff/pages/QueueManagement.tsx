@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 
 import api from "../../../lib/axios";
 import Header from "../components/Header";
-import Queues from "./components/Queues";
+import LabAndConsuQueues from "./components/LabAndConsuQueues";
+import NowServing from "./components/NowServing";
+import SubmitNewQueue from "./components/SubmitNewQueue";
 
 type Queue = {
     id: number;
@@ -69,6 +71,7 @@ function QueueManagement({
 
 
             console.log("Queue submitted:", response.data);
+            alert("Queue submitted successfully!");
             setPatientId(null);
             setIsPriority(false);
             setServiceId(null);
@@ -92,76 +95,34 @@ function QueueManagement({
                 Queue Management
             </h1>
 
-            <div className="rounded-xl bg-white p-6 shadow-md">
-                <form onSubmit={submitQueue} className="space-y-4">
-                    <p className="text-sm text-gray-600">
-                        if you have already been admitted before pleas einsert your
-                        pateint ID
-                    </p>
-
-                    <div className="grid gap-4 md:grid-cols-3">
-                        <input
-                            className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
-                            placeholder="Patient ID"
-                            value={patientId ?? ""}
-                            onChange={(e) => {
-                                setPatientId(
-                                    e.target.value === "" ? null : e.target.value
-                                );
-                            }}
-                        />
-
-                        <select
-                            className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
-                            value={serviceId ?? ""}
-                            onChange={(e) => {
-                                setServiceId(e.target.value);
-                                setServiceName(e.target.selectedOptions[0].text);
-                                // setServiceType(e.target.selectedOptions[0].getAttribute("data-service-type"));
-                            }}
-                        >
-                            <option value="">Select a service</option>
-
-                            {services.map((service) => (
-                                <option
-                                    key={service.service_id}
-                                    value={service.service_id}
-                                >
-                                    {service.service_name} {service.service_type}
-                                </option>
-                            ))}
-                        </select>
-
-                        <div className="flex items-center gap-3">
-                            <input
-                                type="checkbox"
-                                checked={isPriority}
-                                onChange={(e) => setIsPriority(e.target.checked)}
-                            />
-                            <span>Priority Patient</span>
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="rounded-lg bg-red-800 px-5 py-2 font-medium text-white transition cursor-pointer hover:bg-red-900"
-                    >
-                        Submit
-                    </button>
-                </form>
-            </div>
-
+            <SubmitNewQueue
+                services={services}
+                patientId={patientId}
+                setPatientId={setPatientId}
+                submitQueue={submitQueue}
+                setServeQueueId={setServiceId}
+                setServiceName={setServiceName}
+                serviceId={serviceId}
+                isPriority={isPriority}
+                setIsPriority={setIsPriority}
+                setServiceId={setServiceId}
+            />
             <div className="mt-8 flex flex-col gap-6">
-                <Queues
+                <NowServing
+                    queues={queues}
+                    loadData={loadData}
+                />
+                <LabAndConsuQueues
                     queues={queues}
                     queuesType="consultation"
                     loadData={loadData}
                 />
 
-                <Queues
+                <LabAndConsuQueues
                     queues={queues}
                     queuesType="laboratory"
                     loadData={loadData}
+
                 />
             </div>
         </main>

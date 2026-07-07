@@ -84,31 +84,40 @@ export async function updatePatient(req: Request, res: Response) {
 
 export async function serveQueueEntry(req: Request, res: Response) {
   try {
-    const { queue_id, queue_number, service_type } = req.body;
+    const { queue_id } = req.body;
 
-    if (!queue_id || queue_number === undefined || !service_type) {
+    if (!queue_id) {
       return res.status(400).json({
-        message: "queue_id, queue_number and service_type are required.",
+        message: "queue_id is required.",
       });
     }
 
-    const existingQueueEntry = await sql`
-      UPDATE queue_entries
-      SET
-        status = 'serving',
-        queue_number = 0
-      WHERE
-        queue_id = ${queue_id}
-        AND service_type = ${service_type}
-      RETURNING *;
+    // Get the queue entry first
+    const queue = await sql`
+      SELECT queue_number, service_type
+      FROM queue_entries
+      WHERE queue_id = ${queue_id};
     `;
 
-    if (existingQueueEntry.length === 0) {
+    if (queue.length === 0) {
       return res.status(404).json({
         message: "Queue entry not found.",
       });
     }
 
+    const { queue_number, service_type } = queue[0];
+
+    // Mark it as serving
+    const existingQueueEntry = await sql`
+      UPDATE queue_entries
+      SET
+        status = 'serving',
+        queue_number = 0
+      WHERE queue_id = ${queue_id}
+      RETURNING *;
+    `;
+
+    // Shift everyone behind it
     const updateQueueBehind = await sql`
       UPDATE queue_entries
       SET queue_number = queue_number - 1

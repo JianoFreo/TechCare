@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import api from "../../../../lib/axios";
 
 type QueueItem = {
@@ -19,7 +20,7 @@ type QueuesProps = {
     queuesType: "consultation" | "laboratory";
     loadData: () => Promise<void>;
 };
-function Queues({ queues, queuesType, loadData }: QueuesProps) {
+function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
     const [queueIdToServe, setQueueIdToServe] = useState<string | null>(null)
     const [queueNumberToServe, setQueueNumberToServe] = useState<number | null>(null)
     const [queueServiceTypeToServe, setQueueServiceTypeToServe] = useState<string | null>(null)
@@ -30,25 +31,15 @@ function Queues({ queues, queuesType, loadData }: QueuesProps) {
     //         service_type: queueServiceTypeToServe
     //     });
     // }
-
-    async function handleServeQueue(
+    const handleServeQueue = async (
         queueId: string,
-        queueNumber: number,
-        serviceType: string
-    ) {
+    ) => {
         try {
             const response = await api.put("/api/fdstaff/queues", {
                 queue_id: queueId,
-                queue_number: queueNumber,
-                service_type: serviceType,
             });
 
-            console.log(
-                "Queue served:",
-                queueId,
-                queueNumber,
-                serviceType
-            );
+            console.log("Queue served:", queueId);
             console.log("Response:", response.data);
 
             await loadData();
@@ -58,6 +49,9 @@ function Queues({ queues, queuesType, loadData }: QueuesProps) {
             alert("Failed to serve queue.");
         }
     }
+    // useEffect(() => {
+    //     loadData();
+    // }, [loadData]);
     return (
         <div className="rounded-xl bg-white p-4 shadow-md">
             <h1 className="mb-4 text-xl font-bold">
@@ -94,12 +88,11 @@ function Queues({ queues, queuesType, loadData }: QueuesProps) {
                             </th>
                         </tr>
                     </thead>
-
+                    
                     <tbody className="divide-y divide-gray-200 bg-white">
                         {queues.map(
                             (queueItem) =>
-                                queueItem.service_type ===
-                                queuesType && (
+                                queueItem.service_type === queuesType && queueItem.status === "waiting" && (
                                     <tr
                                         key={queueItem.queue_id}
                                         className="hover:bg-gray-50"
@@ -128,31 +121,21 @@ function Queues({ queues, queuesType, loadData }: QueuesProps) {
                                             {queueItem.status}
                                         </td>
                                         <td className="px-3 py-2 text-sm">
-                                            {queueItem.status === "serving" ? (
-                                                <button>service done</button>
-                                            ) :
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        className="border"
-                                                        onClick={() => {
-                                                            handleServeQueue(
-                                                                queueItem.queue_id,
-                                                                queueItem.queue_number,
-                                                                queueItem.service_type
-                                                            );
-                                                        }}
-                                                    >
-                                                        serve
-                                                    </button>
-                                                    <button
-                                                        className="border"
+                                            <div className="flex gap-2">
+                                                <button
+                                                    className="border  cursor-pointer p-1"
+                                                    onClick={() => { handleServeQueue(queueItem.queue_id) }}
+                                                >
+                                                    serve
+                                                </button>
+                                                <button
+                                                    className="border cursor-pointer p-1"
 
-                                                        onClick={() => setQueueIdToServe(queueItem.queue_id)}
-                                                    >
-                                                        skip
-                                                    </button>
-                                                </div>
-                                            }
+                                                    onClick={() => setQueueIdToServe(queueItem.queue_id)}
+                                                >
+                                                    skip
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 )
@@ -163,4 +146,4 @@ function Queues({ queues, queuesType, loadData }: QueuesProps) {
         </div>
     )
 }
-export default Queues;
+export default LabAndConsuQueues;
