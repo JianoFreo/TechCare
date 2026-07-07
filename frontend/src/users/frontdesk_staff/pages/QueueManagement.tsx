@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 
 import api from "../../../lib/axios";
 import Header from "../components/Header";
+import Queues from "./components/Queues";
 
 type Queue = {
+    id: number;
     queue_id: string;
     patient_id: string;
     patient_name: string;
@@ -150,154 +152,15 @@ function QueueManagement({
             </div>
 
             <div className="mt-8 flex flex-col gap-6">
-                {/* Consultation Queue */}
-                <div className="rounded-xl bg-white p-4 shadow-md">
-                    <h1 className="mb-4 text-xl font-bold">
-                        Consultation Queue
-                    </h1>
+                <Queues
+                    queues={queues}
+                    queuesType="consultation"
+                />
 
-                    <div className="max-h-80 overflow-y-auto rounded-lg border">
-                        <table className="w-full table-auto divide-y divide-gray-200">
-                            <thead className="sticky top-0 bg-gray-50">
-                                <tr>
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Queue #
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Queue ID
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Patient ID
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Patient Name
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Service
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Patient status
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Status
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody className="divide-y divide-gray-200 bg-white">
-                                {queues.map(
-                                    (queueItem) =>
-                                        queueItem.service_type ===
-                                        "consultation" && (
-                                            <tr
-                                                key={queueItem.queue_id}
-                                                className="hover:bg-gray-50"
-                                            >
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.queue_number}
-                                                </td>
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.queue_id}
-                                                </td>
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.patient_id ||
-                                                        "Not registered"}
-                                                </td>
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.patient_name ||
-                                                        "Not registered"}
-                                                </td>
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.service_name}
-                                                </td>
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.is_priority ? "Priority" : "Regular"}
-                                                </td>
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.status}
-                                                </td>
-                                            </tr>
-                                        )
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {/* Laboratory Queue */}
-                <div className="rounded-xl bg-white p-4 shadow-md">
-                    <h1 className="mb-4 text-xl font-bold">
-                        Laboratory Queue
-                    </h1>
-
-                    <div className="max-h-80 overflow-y-auto rounded-lg border">
-                        <table className="w-full table-auto divide-y divide-gray-200">
-                            <thead className="sticky top-0 bg-gray-50">
-                                <tr>
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Queue #
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Queue ID
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Patient ID
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Patient Name
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Service
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Patient status
-                                    </th>
-                                    
-                                    <th className="px-3 py-2 text-left text-sm">
-                                        Queue Status
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody className="divide-y divide-gray-200 bg-white">
-                                {queues.map(
-                                    (queueItem) =>
-                                        queueItem.service_type ===
-                                        "laboratory" && (
-                                            <tr
-                                                key={queueItem.queue_id}
-                                                className="hover:bg-gray-50"
-                                            >
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.queue_number}
-                                                </td>
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.queue_id}
-                                                </td>
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.patient_id ||
-                                                        "Not registered"}
-                                                </td>
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.patient_name ||
-                                                        "Not registered"}
-                                                </td>
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.service_name}
-                                                </td>
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.is_priority ? "Priority" : "Regular"}
-                                                </td>
-                                                <td className="px-3 py-2 text-sm">
-                                                    {queueItem.status}
-                                                </td>
-                                            </tr>
-                                        )
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <Queues
+                    queues={queues}
+                    queuesType="laboratory"
+                />
             </div>
         </main>
     );

@@ -91,7 +91,7 @@ export async function updatePatient(req: Request, res: Response) {
 
 export async function callQueueEntry(req: Request, res: Response) {
     try {  
-        const { queue_id, queue_number,  } = req.body;
+        const { queue_id, queue_number } = req.body;
 
         const existingQueueEntry = await sql`
             UPDATE queue_entries
