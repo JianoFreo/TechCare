@@ -155,11 +155,13 @@ function QueueManagement({
                 <Queues
                     queues={queues}
                     queuesType="consultation"
+                    loadData={loadData}
                 />
 
                 <Queues
                     queues={queues}
                     queuesType="laboratory"
+                    loadData={loadData}
                 />
             </div>
         </main>

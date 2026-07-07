@@ -80,7 +80,11 @@ export async function getAllBilling(req: Request, res: Response) {
 export async function getAllQueueEntries(req: Request, res: Response) { // get /api/fdstaff/queues
   // get /api/fdstaff/queue
   try {
-    const queueEntries = await sql`SELECT * FROM queue_entries`;
+    const queueEntries = await sql`
+    SELECT * 
+    FROM queue_entries
+    ORDER BY queue_number ASC
+    `;
     if (!queueEntries) {
       res.json({ message: "there are no queue entries" });
     }
