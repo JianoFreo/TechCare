@@ -56,9 +56,8 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
     return (
         <div className="rounded-xl bg-white p-4 shadow-md">
             <h1 className="mb-4 text-xl font-bold">
-                Consultation Queue
+                {queuesType.toUpperCase()} QUEUE
             </h1>
-
             <div className="max-h-80 overflow-y-auto rounded-lg border">
                 <table className="w-full table-auto divide-y divide-gray-200">
                     <thead className="sticky top-0 bg-gray-50">

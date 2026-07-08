@@ -2,7 +2,7 @@
 type SideBarProps = {
     open: boolean;
     page: string;
-    setPage: React.Dispatch<React.SetStateAction<string>>;
+    setPage: (page: string) => void;
 };
 
 function SideBar({ open, page, setPage }: SideBarProps) {

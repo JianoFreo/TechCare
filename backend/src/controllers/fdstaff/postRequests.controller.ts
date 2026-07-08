@@ -45,6 +45,23 @@ export async function addPatient(req: Request, res: Response) {
         .status(400)
         .json({ message: "At least one image is required" });
     }
+    // check if patiengt exists
+
+    const existingPatient = await sql`
+      SELECT *
+      FROM patients
+      WHERE last_name = ${last_name}
+        AND first_name = ${first_name}
+        AND date_of_birth = ${date_of_birth}
+        AND contact_number = ${contact_number}
+        AND email = ${email}
+    `;
+    if (existingPatient.length > 0) {
+      return res.status(400).json({
+        message: "A patient with the same name, contact number, email, and date of birth already exists.",
+      });
+    }
+
     const patientId = await generatePatientId();
     const uploadPromise = await cloudinary.uploader.upload(req.file.path, {
       folder: "products",

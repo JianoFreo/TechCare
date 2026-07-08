@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useSearchParams } from "react-router";
 import UserManagement from "./pages/UserManagement";
 import AdminDashboard from "./pages/AdminDashboard";
 import SideBar from "./components/SideBar";
@@ -44,7 +45,13 @@ function Admin() {
     const [services, setServices] = useState<Service[]>([]);
     const [activities, setActivities] = useState<Activities[]>([])  // Acitivities[] this means that this object structure can be a lot of objects // array
     const [open, setOpen] = useState(true);
-    const [page, setPage] = useState("dashboard");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const page = searchParams.get("page") ?? "dashboard"
+    function setPage(newPage:string){
+        setSearchParams({page:newPage})
+    }
+
+
     const loadData = useCallback(async () => {
         try {
             const serviceResponse = await api.get("/api/admin/services");

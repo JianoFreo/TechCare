@@ -18,7 +18,15 @@ function FrontdeskStaff() {
 
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const page = searchParams.get("page") ?? "dashboard";
+    const page = searchParams.get("page") ?? "dashboard"; // this  looks at the URL
+    // "Look at the URL and check if there is a page value. 
+    // If there is one, use it. If there is no page value, use dashboard as the default."
+
+    // searchParams.get("page")       // Get the value of "page"
+    // searchParams.has("page")       // Check if "page" exists
+    // searchParams.set("page", "billing") // Set a value (used internally)
+    // searchParams.delete("page")    // Remove a parameter
+    // searchParams.entries()         // Get all key-value pairs
 
     function setPage(newPage: string) {
         setSearchParams({ page: newPage });
@@ -76,6 +84,7 @@ function FrontdeskStaff() {
 
             {page === "queue-management" && (
                 <QueueManagement
+                    patients={patients}
                     services={services}
                     queues={queues}
                     open={open}

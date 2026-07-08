@@ -75,6 +75,8 @@ function PatientRecords({
                             <th className="px-4 py-3 text-left">
                                 Emergency Contact
                             </th>
+                            <th className="px-4 py-3 text-left">Actions</th>
+
                         </tr>
                     </thead>
 
@@ -123,6 +125,14 @@ function PatientRecords({
 
                                 <td className="px-4 py-3">
                                     {patient.emergency_contact}
+                                </td>
+                                <td className="px-4 py-3 flex gap-2">
+                                    <button className="border-2 p-1">
+                                        Edit
+                                    </button>
+                                    <button className="border-2 p-1">
+                                        Delete
+                                    </button>
                                 </td>
                             </tr>
                         ))}
