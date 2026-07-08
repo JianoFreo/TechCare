@@ -92,7 +92,7 @@ export async function serveQueueEntry(req: Request, res: Response) {
       });
     }
 
-    // Get the queue entry first
+    // Get the queue entry first the queuenumvber and quee service type
     const queue = await sql`
       SELECT queue_number, service_type
       FROM queue_entries
@@ -104,10 +104,10 @@ export async function serveQueueEntry(req: Request, res: Response) {
         message: "Queue entry not found.",
       });
     }
-
+    
     const { queue_number, service_type } = queue[0];
 
-    // Mark it as serving
+    // Mark the queue ids status to serving
     const existingQueueEntry = await sql`
       UPDATE queue_entries
       SET

@@ -49,7 +49,7 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
             console.error(error);
             alert("Failed to serve queue.");
         }
-    }
+    }}
 
     const handleSkipQueue = async (
         queueId: string,
@@ -151,7 +151,7 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
                                                 <button
                                                     className="border cursor-pointer p-1"
 
-                                                    onClick={() => { handleSkipQueue(queueItem.queue_id) })}
+                                                    onClick={() => { handleSkipQueue(queueItem.queue_id) }}
                                                 >
                                                 skip
                                             </button>
