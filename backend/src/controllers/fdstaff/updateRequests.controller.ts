@@ -141,3 +141,16 @@ export async function serveQueueEntry(req: Request, res: Response) {
     });
   }
 }
+
+
+export async function skipQueueEntry(req: Request, res: Response) {
+  try {
+    const { queue_id } = req.body
+    const response = await sql`
+    SELECT service_
+
+    `
+  } catch (error) {
+    res.status(500).json({ message: " Error on the skip Queue controller " })
+  }
+}

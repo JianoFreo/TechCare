@@ -50,6 +50,25 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
             alert("Failed to serve queue.");
         }
     }
+
+    const handleSkipQueue = async (
+        queueId: string,
+    ) => {
+        try {
+            const response = await api.patch("/api/fdstaff/queues", {
+                queue_id: queueId,
+            });
+
+            console.log("Queue served: ", queueId);
+            console.log("Response: ", response.data);
+
+            await loadData();
+            alert("Queue skipeed successfully!");
+        } catch (error) {
+            console.error(error);
+            alert("Failed to serve queue.");
+        }
+    }
     // useEffect(() => {
     //     loadData();
     // }, [loadData]);
@@ -89,7 +108,7 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
                             </th>
                         </tr>
                     </thead>
-                    
+
                     <tbody className="divide-y divide-gray-200 bg-white">
                         {queues.map(
                             (queueItem) =>
@@ -132,19 +151,19 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
                                                 <button
                                                     className="border cursor-pointer p-1"
 
-                                                    onClick={() => setQueueIdToServe(queueItem.queue_id)}
+                                                    onClick={() => { handleSkipQueue(queueItem.queue_id) })}
                                                 >
-                                                    skip
-                                                </button>
-                                            </div>
-                                        </td>
+                                                skip
+                                            </button>
+                                        </div>
+                                    </td>
                                     </tr>
-                                )
+                    )
                         )}
-                    </tbody>
-                </table>
-            </div>
+                </tbody>
+            </table>
         </div>
+        </div >
     )
 }
 export default LabAndConsuQueues;
