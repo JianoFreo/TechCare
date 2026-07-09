@@ -49,7 +49,7 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
             console.error(error);
             alert("Failed to serve queue.");
         }
-    }
+    }}
 
     const handleSkipQueue = async (
         queueId: string,
