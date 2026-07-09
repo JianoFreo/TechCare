@@ -53,13 +53,11 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
 
     const handleSkipQueue = async (
         queueId: string,
-    ) => {
+    ) => { 
         try {
-            const response = await api.patch("/api/fdstaff/queues", {
-                queue_id: queueId,
-            });
+            const response = await api.delete(`/api/fdstaff/queues/${queueId}`);
 
-            console.log("Queue served: ", queueId);
+            console.log("Queue skipped: ", queueId);
             console.log("Response: ", response.data);
 
             await loadData();

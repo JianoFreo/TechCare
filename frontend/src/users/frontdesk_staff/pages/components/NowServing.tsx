@@ -18,11 +18,9 @@ type QueuesProps = {
     loadData: () => Promise<void>;
 };
 function NowServing({ queues, loadData }: QueuesProps) {
-    async function handelServiceDone(queueId: string) {
+    async function handleServiceDone(queueId: string) {
         try {
-            const response = await api.put("/api/fdstaff/queues", {
-                queue_id: queueId,
-            });
+            const response = await api.delete(`/api/fdstaff/queues/${queueId}`);
             alert("Service done successfully!" + response.data.message);
             loadData();
         } catch (error) {
@@ -88,7 +86,7 @@ function NowServing({ queues, loadData }: QueuesProps) {
                                     </td>
                                     <td className="px-3 py-2 text-sm">
                                         <button
-                                            onClick={() => handelServiceDone(queueItem.queue_id)}
+                                            onClick={() => handleServiceDone(queueItem.queue_id)}
                                             className="border cursor-pointer p-1">
                                             service done
                                         </button>
