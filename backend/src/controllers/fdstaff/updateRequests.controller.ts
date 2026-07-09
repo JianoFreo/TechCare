@@ -148,10 +148,11 @@ export async function skipQueueEntry(req: Request, res: Response) {
     // Get the queue_id of the patient who wants to skip.
     const { queue_id } = req.params;
 
-    // Find the patient's current queue number.
-    // We need this so we know who is immediately behind them.
+    // Find the patient's current queue number and service type.
+    // We need the service_type so we only touch the same queue,
+    // and the queue_number so we know who is immediately behind them.
     const queue = await sql`
-      SELECT queue_number
+      SELECT queue_number, service_type
       FROM queue_entries
       WHERE queue_id = ${queue_id};
     `;
@@ -163,7 +164,7 @@ export async function skipQueueEntry(req: Request, res: Response) {
       });
     }
 
-    const currentQueueNumber = queue[0].queue_number;
+    const { queue_number: currentQueueNumber, service_type } = queue[0];
 
     // Move the patient behind forward by one position.
     //
@@ -172,10 +173,18 @@ export async function skipQueueEntry(req: Request, res: Response) {
     // David = #4
     //
     // David becomes #3.
+    //
+    // Scoped to the same service_type and status = 'waiting' so this
+    // doesn't accidentally shift patients in other queues (e.g. Lab)
+    // or already-served/cancelled entries that happen to share the
+    // same queue_number.
     await sql`
       UPDATE queue_entries
       SET queue_number = queue_number - 1
-      WHERE queue_number = ${currentQueueNumber + 1};
+      WHERE
+        queue_number = ${currentQueueNumber + 1}
+        AND service_type = ${service_type}
+        AND status = 'waiting';
     `;
 
     // Move the skipped patient back by one position.
