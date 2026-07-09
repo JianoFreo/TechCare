@@ -114,10 +114,11 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
                                 queueItem.status === "waiting" && (
                                     <tr
                                         key={queueItem.queue_id}
-                                        className={`hover:bg-gray-50 ${queueItem.queue_number === 1
-                                            ? "bg-green-100 font-semibold"
-                                            : ""
-                                            }`}
+                                        className={`${
+                                            queueItem.queue_number === 1
+                                                ? "bg-green-100 font-semibold hover:bg-green-200"
+                                                : "hover:bg-gray-100"
+                                        }`}
                                     >
                                         <td className="px-3 py-2 text-sm">
 
