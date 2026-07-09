@@ -1,5 +1,7 @@
 // import { useState } from "react";
+import { useState } from "react";
 import Header from "../components/Header";
+import EditPatientRecord from "../components/EditPatientRecord"; // adjust path to wherever the file lives
 
 type Patient = {
     id: number;
@@ -16,10 +18,10 @@ type Patient = {
     image_url?: string;
     created_at: string;
     updated_at: string;
-};
+}[];
 
 type PatientRecordProps = {
-    patients: Patient[];
+    patients: Patient;
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     loadData: () => Promise<void>;
@@ -31,6 +33,8 @@ function PatientRecords({
     setOpen,
     loadData,
 }: PatientRecordProps) {
+    const [editingPatient, setEditingPatient] = useState<Patient[number] | null>(null);
+
     function calculateAge(dateOfBirth: string): number {
         const birthDate = new Date(dateOfBirth);
         const today = new Date();
@@ -127,7 +131,10 @@ function PatientRecords({
                                     {patient.emergency_contact}
                                 </td>
                                 <td className="px-4 py-3 flex gap-2">
-                                    <button className="border-2 p-1">
+                                    <button
+                                        className="border-2 p-1"
+                                        onClick={() => setEditingPatient(patient)}
+                                    >
                                         Edit
                                     </button>
                                     <button className="border-2 p-1">
@@ -150,6 +157,13 @@ function PatientRecords({
                     </tbody>
                 </table>
             </div>
+
+            {editingPatient && (
+                <EditPatientRecord
+                    {...editingPatient}
+                    onClose={() => setEditingPatient(null)}
+                />
+            )}
         </main>
     );
 }
