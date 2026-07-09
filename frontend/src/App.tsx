@@ -4,7 +4,7 @@ import SignupPage from './auth/SignupPage'
 import Admin from './users/admin/Admin'
 import DoctorDashboard from './users/doctor/DoctorDashboard'
 import FrontdeskStaff from './users/frontdesk_staff/FrontdeskStaff'
-import LabstaffDashboard from './users/laboratory_staff/LabstaffDashbaord'
+import LabstaffDashboard from './users/laboratory_staff/pages/LabstaffDashbaord'
 import PatientInformation from './users/patient/PatientInformation'
 import QueueTracking from './queue/QueueTracking'
 function App() {

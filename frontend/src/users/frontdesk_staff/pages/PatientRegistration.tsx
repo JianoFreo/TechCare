@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Header from "../components/Header";
 import api from "../../../lib/axios";
-import IdCard from "./components/IdCard";
+import IdCard from "../components/IdCard";
 // type Patient = {
 //     patient_id: string;
 //     first_name: string;

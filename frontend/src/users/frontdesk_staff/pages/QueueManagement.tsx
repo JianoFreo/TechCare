@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 
 import api from "../../../lib/axios";
 import Header from "../components/Header";
-import LabAndConsuQueues from "./components/LabAndConsuQueues";
-import NowServing from "./components/NowServing";
-import SubmitNewQueue from "./components/SubmitNewQueue";
+import LabAndConsuQueues from "../components/LabAndConsuQueues";
+import NowServing from "../components/NowServing";
+import SubmitNewQueue from "../components/SubmitNewQueue";
 
 type Queue = {
     id: number;
