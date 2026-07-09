@@ -49,7 +49,7 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
             console.error(error);
             alert("Failed to serve queue.");
         }
-    }}
+    }
 
     const handleSkipQueue = async (
         queueId: string,
@@ -63,10 +63,10 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
             console.log("Response: ", response.data);
 
             await loadData();
-            alert("Queue skipeed successfully!");
+            alert("Queue skipped successfully!");
         } catch (error) {
             console.error(error);
-            alert("Failed to serve queue.");
+            alert("Failed to skip queue.");
         }
     }
     // useEffect(() => {

@@ -111,6 +111,7 @@ function PatientRegistration({
             setAddress("");
             setEmergency_contact("");
             setImage(null);
+            await loadData(); // Refresh the patient list after successful registration
             // setImages([]);  // if you are going to upload multiple files
         } catch (error) {
             console.error(error);
