@@ -10,6 +10,7 @@ import {
   addQueueEntry,
 } from "../controllers/fdstaff/postRequests.controller.js";
 import { serveQueueEntry, skipQueueEntry } from "../controllers/fdstaff/updateRequests.controller.js";
+import { deleteQueue } from "../controllers/fdstaff/deleteRequest.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { Router } from "express";
 
@@ -34,4 +35,6 @@ router.post("/queues", addQueueEntry);
 //UPDATE requests
 router.put("/queues", serveQueueEntry);
 router.patch("/queues", skipQueueEntry);
+// DELETE requests
+router.delete("/queues/:queue_id", deleteQueue); 
 export default router;

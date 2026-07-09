@@ -1,6 +1,7 @@
 import { sql } from "../../config/db.js";
-import { json, Request, Response } from "express";
 import { calculateAge } from "../../utils/calculateAge.js";
+import { json, Request, response, Response } from "express";
+
 export async function updatePatient(req: Request, res: Response) {
   // PUT /api/fdstaff/patients/:patient_id
 
@@ -142,15 +143,60 @@ export async function serveQueueEntry(req: Request, res: Response) {
   }
 }
 
-
 export async function skipQueueEntry(req: Request, res: Response) {
   try {
-    const { queue_id } = req.body
-    const response = await sql`
-    SELECT service_
+    // Get the queue_id of the patient who wants to skip.
+    const { queue_id } = req.body;
 
-    `
+    // Find the patient's current queue number.
+    // We need this so we know who is immediately behind them.
+    const queue = await sql`
+      SELECT queue_number
+      FROM queue_entries
+      WHERE queue_id = ${queue_id};
+    `;
+
+    // Stop if the queue entry doesn't exist.
+    if (queue.length === 0) {
+      return res.status(404).json({
+        message: "Queue entry not found.",
+      });
+    }
+
+    const currentQueueNumber = queue[0].queue_number;
+
+    // Move the patient behind forward by one position.
+    //
+    // Example:
+    // Charlie = #3
+    // David = #4
+    //
+    // David becomes #3.
+    await sql`
+      UPDATE queue_entries
+      SET queue_number = queue_number - 1
+      WHERE queue_number = ${currentQueueNumber + 1};
+    `;
+
+    // Move the skipped patient back by one position.
+    //
+    // Charlie becomes #4.
+    const updatedQueue = await sql`
+      UPDATE queue_entries
+      SET queue_number = ${currentQueueNumber + 1}
+      WHERE queue_id = ${queue_id}
+      RETURNING *;
+    `;
+
+    return res.status(200).json({
+      message: "Queue skipped successfully.",
+      queue: updatedQueue[0],
+    });
   } catch (error) {
-    res.status(500).json({ message: " Error on the skip Queue controller " })
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Error in skipQueueEntry controller.",
+    });
   }
 }

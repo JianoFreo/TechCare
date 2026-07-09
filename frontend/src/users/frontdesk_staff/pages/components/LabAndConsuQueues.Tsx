@@ -25,7 +25,7 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
     const [queueIdToServe, setQueueIdToServe] = useState<string | null>(null)
     const [queueNumberToServe, setQueueNumberToServe] = useState<number | null>(null)
     const [queueServiceTypeToServe, setQueueServiceTypeToServe] = useState<string | null>(null)
-    // function updateQueueStatusToServe(){
+    // function updateQueueStatusToServe(){ 
     //     const response = api.put(`/fdstaff/queues/`, {
     //         queue_id: queueIdToServe,
     //         queue_number: queueNumberToServe,
@@ -151,7 +151,7 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
                                                 <button
                                                     className="border cursor-pointer p-1"
 
-                                                    onClick={() => { handleSkipQueue(queueItem.queue_id) })}
+                                                    onClick={() => { handleSkipQueue(queueItem.queue_id) }}
                                                 >
                                                 skip
                                             </button>

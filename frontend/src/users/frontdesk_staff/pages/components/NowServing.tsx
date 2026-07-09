@@ -1,3 +1,5 @@
+import api from "../../../../lib/axios";
+
 type QueueItem = {
     id: number;
     queue_id: string;
@@ -16,14 +18,25 @@ type QueuesProps = {
     loadData: () => Promise<void>;
 };
 function NowServing({ queues, loadData }: QueuesProps) {
+    async function handelServiceDone(queueId: string) {
+        try {
+            const response = await api.put("/api/fdstaff/queues", {
+                queue_id: queueId,
+            });
+            alert("Service done successfully!" + response.data.message);
+            loadData();
+        } catch (error) {
+            console.error(error);
+            alert("Failed to mark service as done.");
+        }
+    }
     return (
         <div className="max-h-80 overflow-y-auto rounded-lg border">
+            <h1 className="text-xl font-bold p-3"> Active  Sessions</h1>
             <table className="w-full table-auto divide-y divide-gray-200">
                 <thead className="sticky top-0 bg-gray-50">
                     <tr>
-                        <th className="px-3 py-2 text-left text-sm">
-                            Queue #
-                        </th>
+
                         <th className="px-3 py-2 text-left text-sm">
                             Queue ID
                         </th>
@@ -40,15 +53,13 @@ function NowServing({ queues, loadData }: QueuesProps) {
                             Patient status
                         </th>
                         <th className="px-3 py-2 text-left text-sm">
-                            Status
-                        </th>
-                        <th className="px-3 py-2 text-left text-sm">
                             ACTIONS
                         </th>
                     </tr>
                 </thead>
 
                 <tbody className="divide-y divide-gray-200 bg-white">
+
                     {queues.map(
                         (queueItem) =>
                             queueItem.status ===
@@ -57,9 +68,7 @@ function NowServing({ queues, loadData }: QueuesProps) {
                                     key={queueItem.queue_id}
                                     className="hover:bg-gray-50"
                                 >
-                                    <td className="px-3 py-2 text-sm">
-                                        {queueItem.queue_number}
-                                    </td>
+
                                     <td className="px-3 py-2 text-sm">
                                         {queueItem.queue_id}
                                     </td>
@@ -78,10 +87,8 @@ function NowServing({ queues, loadData }: QueuesProps) {
                                         {queueItem.is_priority ? "Priority" : "Regular"}
                                     </td>
                                     <td className="px-3 py-2 text-sm">
-                                        {queueItem.status}
-                                    </td>
-                                    <td className="px-3 py-2 text-sm">
                                         <button
+                                            onClick={() => handelServiceDone(queueItem.queue_id)}
                                             className="border cursor-pointer p-1">
                                             service done
                                         </button>
