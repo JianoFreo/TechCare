@@ -146,7 +146,7 @@ export async function serveQueueEntry(req: Request, res: Response) {
 export async function skipQueueEntry(req: Request, res: Response) {
   try {
     // Get the queue_id of the patient who wants to skip.
-    const { queue_id } = req.body;
+    const { queue_id } = req.params;
 
     // Find the patient's current queue number.
     // We need this so we know who is immediately behind them.

@@ -34,7 +34,7 @@ router.post("/billing", addBills);
 router.post("/queues", addQueueEntry);
 //UPDATE requests
 router.put("/queues", serveQueueEntry);
-router.patch("/queues", skipQueueEntry);
+router.patch("/queues/:queue_id", skipQueueEntry);
 // DELETE requests
 router.delete("/queues/:queue_id", deleteQueue); 
 export default router;

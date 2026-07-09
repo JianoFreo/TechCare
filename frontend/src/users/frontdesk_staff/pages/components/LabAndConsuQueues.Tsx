@@ -53,9 +53,9 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
 
     const handleSkipQueue = async (
         queueId: string,
-    ) => { 
+    ) => {
         try {
-            const response = await api.delete(`/api/fdstaff/queues/${queueId}`); // the req.params is required for delete method
+            const response = await api.patch(`/api/fdstaff/queues/${queueId}`); // the req.params is required for delete method
 
             console.log("Queue skipped: ", queueId);
             console.log("Response: ", response.data);
@@ -110,57 +110,75 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
                     <tbody className="divide-y divide-gray-200 bg-white">
                         {queues.map(
                             (queueItem) =>
-                                queueItem.service_type === queuesType && queueItem.status === "waiting" && (
+                                queueItem.service_type === queuesType &&
+                                queueItem.status === "waiting" && (
                                     <tr
                                         key={queueItem.queue_id}
-                                        className="hover:bg-gray-50"
+                                        className={`hover:bg-gray-50 ${queueItem.queue_number === 1
+                                            ? "bg-green-100 font-semibold"
+                                            : ""
+                                            }`}
                                     >
                                         <td className="px-3 py-2 text-sm">
+
                                             {queueItem.queue_number}
                                         </td>
+
                                         <td className="px-3 py-2 text-sm">
                                             {queueItem.queue_id}
                                         </td>
+
                                         <td className="px-3 py-2 text-sm">
-                                            {queueItem.patient_id ||
-                                                "Not registered"}
+                                            {queueItem.patient_id || "Not registered"}
                                         </td>
+
                                         <td className="px-3 py-2 text-sm">
-                                            {queueItem.patient_name ||
-                                                "Not registered"}
+                                            {queueItem.patient_name || "Not registered"}
                                         </td>
+
                                         <td className="px-3 py-2 text-sm">
                                             {queueItem.service_name}
                                         </td>
+
                                         <td className="px-3 py-2 text-sm">
                                             {queueItem.is_priority ? "Priority" : "Regular"}
                                         </td>
+
                                         <td className="px-3 py-2 text-sm">
-                                            {queueItem.status}
+                                            {queueItem.queue_number === 1 ? (
+                                                <span className="mr-2 text-green-800"> Next in line</span>
+                                            ) : (
+                                                queueItem.status
+                                            )}
                                         </td>
+
                                         <td className="px-3 py-2 text-sm">
                                             <div className="flex gap-2">
                                                 <button
-                                                    className="border  cursor-pointer p-1"
-                                                    onClick={() => { handleServeQueue(queueItem.queue_id) }}
+                                                    className="border cursor-pointer p-1"
+                                                    onClick={() =>
+                                                        handleServeQueue(queueItem.queue_id)
+                                                    }
                                                 >
-                                                    serve
+                                                    Serve
                                                 </button>
+
                                                 <button
                                                     className="border cursor-pointer p-1"
-
-                                                    onClick={() => { handleSkipQueue(queueItem.queue_id) }}
+                                                    onClick={() =>
+                                                        handleSkipQueue(queueItem.queue_id)
+                                                    }
                                                 >
-                                                skip
-                                            </button>
-                                        </div>
-                                    </td>
+                                                    Skip
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
-                    )
+                                )
                         )}
-                </tbody>
-            </table>
-        </div>
+                    </tbody>
+                </table>
+            </div>
         </div >
     )
 }
