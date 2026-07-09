@@ -55,7 +55,7 @@ function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
         queueId: string,
     ) => { 
         try {
-            const response = await api.delete(`/api/fdstaff/queues/${queueId}`);
+            const response = await api.delete(`/api/fdstaff/queues/${queueId}`); // the req.params is required for delete method
 
             console.log("Queue skipped: ", queueId);
             console.log("Response: ", response.data);
