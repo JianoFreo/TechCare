@@ -22,9 +22,9 @@ type QueuesProps = {
 };
 
 function LabAndConsuQueues({ queues, queuesType, loadData }: QueuesProps) {
-    const [queueIdToServe, setQueueIdToServe] = useState<string | null>(null)
-    const [queueNumberToServe, setQueueNumberToServe] = useState<number | null>(null)
-    const [queueServiceTypeToServe, setQueueServiceTypeToServe] = useState<string | null>(null)
+    // const [queueIdToServe, setQueueIdToServe] = useState<string | null>(null)
+    // const [queueNumberToServe, setQueueNumberToServe] = useState<number | null>(null)
+    // const [queueServiceTypeToServe, setQueueServiceTypeToServe] = useState<string | null>(null)
     // function updateQueueStatusToServe(){ 
     //     const response = api.put(`/fdstaff/queues/`, {
     //         queue_id: queueIdToServe,
