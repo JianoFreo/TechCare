@@ -77,11 +77,8 @@ function EditPatientRecord({
       if (image) {
         formData.append('image', image);
       }
-      const response = await api.patch(`/api/fdstaff/patients/${selectedPatient?.patient_id}`, formData);
-      if (response.status !== 200) {
-        throw new Error('Failed to update patient record');
-
-      }
+      const response = await api.put(`/api/fdstaff/patients/${selectedPatient?.patient_id}`, formData);
+      alert(response.data.message);
       await loadData();
       onClose();
     } catch (err) {

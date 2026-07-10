@@ -6,7 +6,6 @@ import IdCard from "../components/IdCard";
 //     patient_id: string;
 //     first_name: string;
 //     last_name: string;
-//     middle_initial?: string;
 //     date_of_birth: string;
 //     sex: string;
 //     contact_number: string;
