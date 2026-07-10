@@ -33,7 +33,6 @@ function UpdateUserModal({ selectedUser, onClose, loadData }: Props) {
         if (email.trim()) data.email = email;
         if (contactNumber.trim()) data.contact_number = contactNumber;
         if (fullName.trim()) data.full_name = fullName;
-
         if (password && password !== confirmPassword) {
             alert("your passswords do no match ")
         } else {

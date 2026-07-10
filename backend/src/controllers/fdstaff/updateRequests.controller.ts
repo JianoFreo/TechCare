@@ -2,6 +2,11 @@ import { sql } from "../../config/db.js";
 import { calculateAge } from "../../utils/calculateAge.js";
 import { json, Request, response, Response } from "express";
 
+import cloudinary from "../../config/cloudinary.js";
+import { sql } from "../../config/db.js";
+import { calculateAge } from "../../utils/calculateAge.js";
+import { Request, Response } from "express";
+
 export async function updatePatient(req: Request, res: Response) {
   // PUT /api/fdstaff/patients/:patient_id
 
@@ -26,7 +31,7 @@ export async function updatePatient(req: Request, res: Response) {
     }
 
     const existingPatient = await sql`
-            SELECT patient_id
+            SELECT patient_id, image_url
             FROM patients
             WHERE patient_id = ${patient_id}
         `;
@@ -35,6 +40,17 @@ export async function updatePatient(req: Request, res: Response) {
       return res.status(404).json({
         message: "Patient not found.",
       });
+    }
+
+    // Only replace image_url if a new file was actually uploaded;
+    // otherwise keep whatever is already on the record.
+    let imageUrl = existingPatient[0].image_url;
+
+    if (req.file) {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "products",
+      });
+      imageUrl = uploadResult.secure_url;
     }
 
     const [updatedPatient] = await sql`
@@ -48,7 +64,8 @@ export async function updatePatient(req: Request, res: Response) {
                 email = ${email},
                 address = ${address},
                 emergency_contact = ${emergency_contact},
-                updated_at = CURRENT_TIMESTAMP
+                updated_at = CURRENT_TIMESTAMP,
+                image_url = ${imageUrl}
             WHERE patient_id = ${patient_id}
             RETURNING *;
         `;
@@ -58,22 +75,6 @@ export async function updatePatient(req: Request, res: Response) {
       message: "Patient updated successfully.",
       patient: { ...updatedPatient, age },
     });
-    // {
-    //     "message": "Patient updated successfully.",
-    //     "patient": {
-    //         "patient_id": "P-2026-0628-001",
-    //         "last_name": "Doe",
-    //         "first_name": "John",
-    //         "date_of_birth": "1990-01-01",
-    //         "sex": "Male",
-    //         "contact_number": "1234567890",
-    //         "email": "john.doe@example.com",
-    //         "address": "123 Main St",
-    //         "emergency_contact": "Jane Doe",
-    //         "created_at": "2026-06-28T20:19:10.904Z",
-    //         "updated_at": "2026-06-28T20:19:10.904Z"
-    //     }
-    // }
   } catch (error) {
     console.error(error);
 
@@ -82,7 +83,6 @@ export async function updatePatient(req: Request, res: Response) {
     });
   }
 }
-
 export async function serveQueueEntry(req: Request, res: Response) {
   try {
     const { queue_id } = req.body;
@@ -105,7 +105,7 @@ export async function serveQueueEntry(req: Request, res: Response) {
         message: "Queue entry not found.",
       });
     }
-    
+
     const { queue_number, service_type } = queue[0];
 
     // Mark the queue ids status to serving

@@ -1,12 +1,13 @@
 // import { useState } from "react";
+import { useState } from "react";
 import Header from "../components/Header";
+import EditPatientRecord from "../components/EditPatientRecord"; // adjust path to wherever the file lives
 
 type Patient = {
     id: number;
     patient_id: string;
     first_name: string;
     last_name: string;
-    middle_initial?: string;
     date_of_birth: string;
     sex: string;
     contact_number: string;
@@ -16,10 +17,10 @@ type Patient = {
     image_url?: string;
     created_at: string;
     updated_at: string;
-};
+}[];
 
 type PatientRecordProps = {
-    patients: Patient[];
+    patients: Patient;
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     loadData: () => Promise<void>;
@@ -31,12 +32,12 @@ function PatientRecords({
     setOpen,
     loadData,
 }: PatientRecordProps) {
+    const [selectedPatient, setSelectedPatient] = useState<Patient[number] | null>(null);
+    const [showEditPatient, setShowEditPatient] = useState(false);
     function calculateAge(dateOfBirth: string): number {
         const birthDate = new Date(dateOfBirth);
         const today = new Date();
-
         let age = today.getFullYear() - birthDate.getFullYear();
-
         const hasHadBirthdayThisYear =
             today.getMonth() > birthDate.getMonth() ||
             (today.getMonth() === birthDate.getMonth() &&
@@ -99,9 +100,6 @@ function PatientRecords({
 
                                 <td className="px-4 py-3">
                                     {patient.first_name}{" "}
-                                    {patient.middle_initial
-                                        ? `${patient.middle_initial}. `
-                                        : ""}
                                     {patient.last_name}
                                 </td>
 
@@ -127,7 +125,13 @@ function PatientRecords({
                                     {patient.emergency_contact}
                                 </td>
                                 <td className="px-4 py-3 flex gap-2">
-                                    <button className="border-2 p-1">
+                                    <button
+                                        className="border-2 p-1"
+                                        onClick={() => {
+                                            setSelectedPatient(patient);
+                                            setShowEditPatient(true);
+                                        }}
+                                    >
                                         Edit
                                     </button>
                                     <button className="border-2 p-1">
@@ -150,6 +154,14 @@ function PatientRecords({
                     </tbody>
                 </table>
             </div>
+
+            {showEditPatient && (
+                <EditPatientRecord
+                    selectedPatient={selectedPatient}
+                    onClose={() => setShowEditPatient(false)}
+                    loadData={loadData}
+                />
+            )}
         </main>
     );
 }
