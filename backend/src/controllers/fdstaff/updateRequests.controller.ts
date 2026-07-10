@@ -105,7 +105,7 @@ export async function serveQueueEntry(req: Request, res: Response) {
         message: "Queue entry not found.",
       });
     }
-    
+
     const { queue_number, service_type } = queue[0];
 
     // Mark the queue ids status to serving
@@ -209,3 +209,4 @@ export async function skipQueueEntry(req: Request, res: Response) {
     });
   }
 }
+

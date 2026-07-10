@@ -9,10 +9,11 @@ import {
   addPatient,
   addQueueEntry,
 } from "../controllers/fdstaff/postRequests.controller.js";
-import { serveQueueEntry, skipQueueEntry } from "../controllers/fdstaff/updateRequests.controller.js";
+import { serveQueueEntry, skipQueueEntry, updatePatient } from "../controllers/fdstaff/updateRequests.controller.js";
 import { deleteQueue } from "../controllers/fdstaff/deleteRequest.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { Router } from "express";
+import { uploadImage } from "../controllers/test.controller.js";
 
 const router = Router();
 
@@ -33,8 +34,10 @@ router.post("/patients", upload.single("image"), addPatient);
 router.post("/billing", addBills);
 router.post("/queues", addQueueEntry);
 //UPDATE requests
-router.put("/queues", serveQueueEntry);
+router.put("/queues/:queue_id", serveQueueEntry);
 router.patch("/queues/:queue_id", skipQueueEntry);
+router.put("/patients/:patient_id", upload.single("image"), updatePatient);
 // DELETE requests
 router.delete("/queues/:queue_id", deleteQueue); 
 export default router;
+  

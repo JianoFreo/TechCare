@@ -8,7 +8,6 @@ type Patient = {
     patient_id: string;
     first_name: string;
     last_name: string;
-    middle_initial?: string;
     date_of_birth: string;
     sex: string;
     contact_number: string;
@@ -33,14 +32,12 @@ function PatientRecords({
     setOpen,
     loadData,
 }: PatientRecordProps) {
-    const [editingPatient, setEditingPatient] = useState<Patient[number] | null>(null);
-
+    const [selectedPatient, setSelectedPatient] = useState<Patient[number] | null>(null);
+    const [showEditPatient, setShowEditPatient] = useState(false);
     function calculateAge(dateOfBirth: string): number {
         const birthDate = new Date(dateOfBirth);
         const today = new Date();
-
         let age = today.getFullYear() - birthDate.getFullYear();
-
         const hasHadBirthdayThisYear =
             today.getMonth() > birthDate.getMonth() ||
             (today.getMonth() === birthDate.getMonth() &&
@@ -103,9 +100,6 @@ function PatientRecords({
 
                                 <td className="px-4 py-3">
                                     {patient.first_name}{" "}
-                                    {patient.middle_initial
-                                        ? `${patient.middle_initial}. `
-                                        : ""}
                                     {patient.last_name}
                                 </td>
 
@@ -133,7 +127,10 @@ function PatientRecords({
                                 <td className="px-4 py-3 flex gap-2">
                                     <button
                                         className="border-2 p-1"
-                                        onClick={() => setEditingPatient(patient)}
+                                        onClick={() => {
+                                            setSelectedPatient(patient);
+                                            setShowEditPatient(true);
+                                        }}
                                     >
                                         Edit
                                     </button>
@@ -158,10 +155,11 @@ function PatientRecords({
                 </table>
             </div>
 
-            {editingPatient && (
+            {showEditPatient && (
                 <EditPatientRecord
-                    {...editingPatient}
-                    onClose={() => setEditingPatient(null)}
+                    selectedPatient={selectedPatient}
+                    onClose={() => setShowEditPatient(false)}
+                    loadData={loadData}
                 />
             )}
         </main>

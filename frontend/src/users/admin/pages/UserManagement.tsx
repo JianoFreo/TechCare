@@ -31,7 +31,7 @@ function UserManagement({
     const [showAddUser, setShowAddUser] = useState(false);
     const [showUpdateUser, setShowUpdateUser] = useState(false);
     const [search, setSearch] = useState("");
-    const [selectedUser, setSelectedUser] = useState<User>(users[0]); 
+    const [selectedUser, setSelectedUser] = useState<User>(users[0]);
     useEffect(() => {
         loadData();
     }, [loadData]);
@@ -113,11 +113,12 @@ function UserManagement({
                                 <td className="border p-3">
                                     <div className="flex justify-center items-center gap-2">
                                         <button className="bg-gray-200 px-4 py-2 hover:bg-gray-400"
-                                            onClick={() => { setSelectedUser(user); setShowUpdateUser(true) }}>
+                                            onClick={() => {
+                                                setSelectedUser(user);
+                                                setShowUpdateUser(true)
+                                            }}>
                                             Edit
                                         </button>
-
-
                                     </div>
                                 </td>
                             </tr>
