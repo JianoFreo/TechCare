@@ -48,6 +48,7 @@ export async function deletePatient(req: Request, res: Response) {
         // If nothing was returned, no patient with that ID existed.
         if (deletedPatient.length === 0) {
             return res.status(404).json({
+                message: "Patient not found",
                 error: "Patient not found",
             });
         }
@@ -59,6 +60,7 @@ export async function deletePatient(req: Request, res: Response) {
         console.error(error);
 
         return res.status(500).json({
+            message: "Error deleting patient",
             error: "Error deleting patient",
         });
     }
