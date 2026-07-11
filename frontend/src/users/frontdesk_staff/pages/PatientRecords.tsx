@@ -1,7 +1,11 @@
 // import { useState } from "react";
 import { useState } from "react";
+
+import api from "../../../lib/axios";
+import EditPatientRecord from "../components/EditPatientRecord";
 import Header from "../components/Header";
-import EditPatientRecord from "../components/EditPatientRecord"; // adjust path to wherever the file lives
+
+// adjust path to wherever the file lives
 
 type Patient = {
     id: number;
@@ -49,7 +53,21 @@ function PatientRecords({
 
         return age;
     }
+    async function handleDelete(patientId: string) {
+        const confirmDelete = window.confirm(
+            "Are you sure you want to delete this patient record?"
+        );
 
+        if (confirmDelete) {
+            try {
+                const response = await api.delete(`/api/fdstaff/patients/${patientId}`);
+                alert(response.data.message);
+                loadData(); // Refresh the data after deletion
+            } catch (error) {
+                console.error("Error deleting patient record:", error);
+            }
+        }
+    }
     return (
         <main className="flex-1 min-w-0 p-6">
             <Header
@@ -126,7 +144,7 @@ function PatientRecords({
                                 </td>
                                 <td className="px-4 py-3 flex gap-2">
                                     <button
-                                        className="border-2 p-1"
+                                        className="border-2 p-1 cursor-pointer hover:bg-gray-200"
                                         onClick={() => {
                                             setSelectedPatient(patient);
                                             setShowEditPatient(true);
@@ -134,7 +152,9 @@ function PatientRecords({
                                     >
                                         Edit
                                     </button>
-                                    <button className="border-2 p-1">
+                                    <button
+                                        onClick={() => handleDelete(patient.patient_id)}
+                                        className="border-2 p-1 cursor-pointer hover:bg-gray-200">
                                         Delete
                                     </button>
                                 </td>
