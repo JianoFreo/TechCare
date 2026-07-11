@@ -1,19 +1,11 @@
 import { getAllservices } from "../controllers/admin/getRequests.controller.js";
-import {
-  getAllBilling,
-  getAllPatients,
-  getAllQueueEntries,
-} from "../controllers/fdstaff/getRequests.controller.js";
-import {
-  addBills,
-  addPatient,
-  addQueueEntry,
-} from "../controllers/fdstaff/postRequests.controller.js";
+import { deletePatient, deleteQueue } from "../controllers/fdstaff/deleteRequest.controller.js";
+import { getAllBilling, getAllPatients, getAllQueueEntries } from "../controllers/fdstaff/getRequests.controller.js";
+import { addBills, addPatient, addQueueEntry } from "../controllers/fdstaff/postRequests.controller.js";
 import { serveQueueEntry, skipQueueEntry, updatePatient } from "../controllers/fdstaff/updateRequests.controller.js";
-import { deleteQueue } from "../controllers/fdstaff/deleteRequest.controller.js";
+import { uploadImage } from "../controllers/test.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { Router } from "express";
-import { uploadImage } from "../controllers/test.controller.js";
 
 const router = Router();
 
@@ -39,5 +31,6 @@ router.patch("/queues/:queue_id", skipQueueEntry);
 router.put("/patients/:patient_id", upload.single("image"), updatePatient);
 // DELETE requests
 router.delete("/queues/:queue_id", deleteQueue); 
+router.delete("/patients/:patient_id", deletePatient); 
 export default router;
   
