@@ -1,11 +1,7 @@
-import { sql } from "../../config/db.js";
-import { calculateAge } from "../../utils/calculateAge.js";
-import { json, Request, response, Response } from "express";
-
 import cloudinary from "../../config/cloudinary.js";
 import { sql } from "../../config/db.js";
 import { calculateAge } from "../../utils/calculateAge.js";
-import { Request, Response } from "express";
+import { json, Request, response, Response } from "express";
 
 export async function updatePatient(req: Request, res: Response) {
   // PUT /api/fdstaff/patients/:patient_id
