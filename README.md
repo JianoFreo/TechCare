@@ -31,8 +31,10 @@ get http://localhost:3000/api/admin
 ```
 ---
 
-temporary deployment ng api sa render
-
-    https://techcare-hui6.onrender.com
+https://techcare-hui6.onrender.com
 
 you can test it on the provided endpoints
+
+future important upgrade:
+
+websockets/SSE
