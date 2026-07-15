@@ -1,11 +1,15 @@
 backend variables
 ```js
-PORT=3000
-DATABASE_URL=api key ng postgresql sa neon
-NODE_ENV=development pero sa production dapat production
-UPSTASH_REDIS_REST_URL=your_upstash_redis_rest_url
-UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_rest_token
-EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key ==> temporary kasi dapat sa frontend to
+DATABASE_URL=neondb
+NODE_ENV=development
+PORT=5000
+JWT_REFRESH_TOKEN=refresh_token
+JWT_SECRET=secret_token 
+JWT_EXPIRES_IN=1d
+REFRESH_TOKEN_SECRET=secret_refresh_token
+CLOUDINARY_CLOUD_NAME=yourcloudname
+CLOUDINARY_API_KEY=123445678
+CLOUDINARY_API_SECRET=APISECRET
 ```
 
 to test ---> write to terminal
