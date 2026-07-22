@@ -1,3 +1,47 @@
+---
+name: skills
+description: Understands the TechCare Clinic Management System architecture, backend, frontend, database, and development workflow.
+---
+
+This skill helps an AI assistant understand the TechCare Clinic Management System.
+
+It explains:
+
+- System architecture
+- Frontend architecture
+- Backend architecture
+- Database schema
+- Authentication
+- Queue management
+- Laboratory workflow
+- Billing
+- API endpoints
+- File structure
+- Coding conventions
+
+---
+
+# Architecture
+
+TechCare follows a three-tier architecture.
+┌──────────────────────────┐
+│       React Frontend     │
+│ Next.js / Tailwind CSS   │
+└─────────────┬────────────┘
+              │ REST API
+              ▼
+┌──────────────────────────┐
+│ Express.js Backend       │
+│ Controllers              │
+│ Middleware               │
+│ Services                 │
+└─────────────┬────────────┘
+              │ SQL
+              ▼
+┌──────────────────────────┐
+│ PostgreSQL (Neon)        │
+└──────────────────────────┘
+
 # TechCare Architecture Documentation
 
 > Auto-generated high-level documentation from the project structure.
