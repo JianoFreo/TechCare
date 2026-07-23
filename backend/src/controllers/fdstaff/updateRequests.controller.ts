@@ -81,7 +81,7 @@ export async function updatePatient(req: Request, res: Response) {
 }
 export async function serveQueueEntry(req: Request, res: Response) {
   try {
-    const { queue_id } = req.body;
+    const { queue_id } = req.params;
 
     if (!queue_id) {
       return res.status(400).json({
