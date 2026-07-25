@@ -40,6 +40,7 @@ function PatientRegistration({
     const [emergency_contact, setEmergency_contact] = useState("");
     const [image, setImage] = useState<File | null>(null);
     const [preview, setPreview] = useState<string>("");
+    const [loading, setLoading] = useState(false);
 
     function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -75,6 +76,7 @@ function PatientRegistration({
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        setLoading(true);
 
         const formData = new FormData();
 
@@ -115,6 +117,8 @@ function PatientRegistration({
         } catch (error) {
             console.error(error);
             alert("Error registering patient: " + (error as { response?: { data?: { message?: string } } }).response?.data?.message);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -222,8 +226,9 @@ function PatientRegistration({
                     <button
                         type="submit"
                         className="bg-blue-500 text-white p-2 rounded"
+                        disabled={loading}
                     >
-                        Register Patient
+                        {loading ? "Registering..." : "Register Patient"}
                     </button>
                 </form>
 
