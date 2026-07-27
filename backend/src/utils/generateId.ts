@@ -68,24 +68,24 @@ export async function generateServiceId() {
   const month = String(now.getMonth() + 1).padStart(2, "0");
 
   const prefix = `${year}-${month}`;
-const usersCreatedThisMonth = await sql`
+  const usersCreatedThisMonth = await sql`
   SELECT service_id
   FROM services
   WHERE service_id LIKE ${`S-${prefix}-%`}
   ORDER BY service_id DESC
   LIMIT 1
 `;
-// or to get the data instead of prefix
-// const usersCreatedThisMonth = await sql`
-//   SELECT service_id
-//   FROM services
-//   WHERE EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)
-//     AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
-//   ORDER BY service_id DESC
-// `;
+  // or to get the data instead of prefix
+  // const usersCreatedThisMonth = await sql`
+  //   SELECT service_id
+  //   FROM services
+  //   WHERE EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)
+  //     AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
+  //   ORDER BY service_id DESC
+  // `;
 
-////=========================================
-// V this is a better approch becaus eof timezone issue but lets just use the one that calculates the actual data now for simplified
+  ////=========================================
+  // V this is a better approch becaus eof timezone issue but lets just use the one that calculates the actual data now for simplified
   //   const usersCreatedToday = await sql`
   //   SELECT service_id
   //   FROM services
@@ -136,6 +136,30 @@ export async function generateActivityId() {
   return `ACT-${prefix}-${sequence}`;
 }
 
+export async function generateLaboratoryRequestID() {
+  const now = new Date();
+
+  const year = String(now.getFullYear()).slice(-2);
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  const prefix = `${year}-${month}${day}`;
+  const labRequestsCreatedToday = await sql`
+        SELECT request_id
+        FROM lab_requests
+        WHERE DATE(requested_at) = CURRENT_DATE
+        ORDER BY request_id DESC
+      `;
+
+  let nextNumber = 1;
+
+  if (labRequestsCreatedToday.length > 0) {
+    nextNumber = Number(labRequestsCreatedToday[0].request_id.slice(-4)) + 1;
+  }
+  const sequence = String(nextNumber).padStart(4, "0");
+  return `LR-${prefix}-${sequence}`;
+}
+
 /////////=================================== QUQUE ID GENERATOR =========================================
 export async function generateConsultationQueueId() {
   const queue = await sql`
@@ -173,14 +197,14 @@ export async function generateLaboratoryQueueId() {
 }
 //LAB-0017
 
-export async function generateQueueNumberConsultation(){
+export async function generateQueueNumberConsultation() {
   const queue = await sql`
     SELECT queue_number
     FROM queue_entries
     WHERE service_type = 'consultation'
     ORDER BY queue_number DESC
     LIMIT 1
-    `
+    `;
   let nextNumber = 1;
   const last = queue[0]?.queue_number;
 
@@ -189,16 +213,15 @@ export async function generateQueueNumberConsultation(){
   }
 
   return nextNumber;
-
 }
-export async function generateQueueNumberLaboratory(){
+export async function generateQueueNumberLaboratory() {
   const queue = await sql`
     SELECT queue_number
     FROM queue_entries
     WHERE service_type = 'laboratory'
     ORDER BY queue_number DESC
     LIMIT 1
-    `
+    `;
   let nextNumber = 1;
   const last = queue[0]?.queue_number;
 
@@ -207,6 +230,5 @@ export async function generateQueueNumberLaboratory(){
   }
 
   return nextNumber;
-
 }
 ///=======================================================================================

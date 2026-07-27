@@ -158,3 +158,24 @@ export async function getAllservices(req: Request, res: Response) { // get /api/
   }
 }
 
+export async function getLaboratoryRequest(req: Request, res: Response){
+    try {
+
+    const {patient_id} = req.params
+
+    const lab_reqs = await sql`
+        SELECT request_id, consultation_id, patient_id, doctor_id, test_type, requested_at
+        FROM lab_requests
+        WHERE patient_id = ${patient_id}
+    `
+    ;
+    if (!lab_reqs) {
+      res.json({ message: "there are no laboratory requests" });
+    }
+    res.status(200).json({ lab_reqs });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}

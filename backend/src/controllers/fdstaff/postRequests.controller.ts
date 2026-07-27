@@ -8,6 +8,7 @@ import {
   generateConsultationQueueId,
   generateLaboratoryQueueId,
   generatePatientId,
+  generateLaboratoryRequestID,
   generateQueueNumberConsultation,
   generateQueueNumberLaboratory,
 } from "../../utils/generateId.js";
@@ -58,7 +59,8 @@ export async function addPatient(req: Request, res: Response) {
     `;
     if (existingPatient.length > 0) {
       return res.status(400).json({
-        message: "A patient with the same name, contact number, email, and date of birth already exists.",
+        message:
+          "A patient with the same name, contact number, email, and date of birth already exists.",
       });
     }
 
@@ -445,6 +447,41 @@ export async function addQueueEntry(req: Request, res: Response) {
     console.log(error);
     res.status(500).json({
       message: "Internal server error",
+    });
+  }
+}
+
+export async function addLaboratoryRequest(req: Request, res: Response) {
+  try {
+    const { patient_id, test_type } = req.body;
+
+    if (!patient_id || !test_type) {
+      return res.status(400).json({
+        message: "Patient ID, Doctor ID, and Test type is required!",
+      });
+    }
+    const labreq_id = await generateLaboratoryRequestID();
+    const response = await sql`
+    INSERT INTO lab_requests(
+      request_id,
+      patient_id,
+      test_type
+    )
+      VALUES(
+      ${labreq_id},
+      ${patient_id},
+      ${test_type}
+    ) RETURNING *
+    `;
+    return res.status(201).json({
+      message: "Laboratory request added succesfully.",
+      labrequest: response,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Internal server error.",
     });
   }
 }

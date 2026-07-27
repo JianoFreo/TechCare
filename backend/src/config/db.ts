@@ -82,7 +82,7 @@ export async function connectNeon(): Promise<void> {
         service_id   VARCHAR(255) NOT NULL REFERENCES services(service_id),
         service_name VARCHAR(255) NOT NULL,
         service_type VARCHAR(255) NOT NULL,
-        is_priority  BOOLEAN     NOT NULL DEFAULT FALSE,
+        is_priority  BOOLEAN     NOT NULL DEFAULT false,
         status       VARCHAR(20) NOT NULL DEFAULT 'waiting',
         created_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -138,10 +138,11 @@ export async function connectNeon(): Promise<void> {
         request_id      VARCHAR(255) UNIQUE NOT NULL,
         consultation_id VARCHAR(255) REFERENCES consultations(consultation_id),
         patient_id      VARCHAR(255)     NOT NULL REFERENCES patients(patient_id),
-        doctor_id       VARCHAR(255) NOT NULL REFERENCES users(user_id),
+        doctor_id       VARCHAR(255) REFERENCES users(user_id),
         test_type       VARCHAR(200) NOT NULL,
         results         JSONB,
         status          VARCHAR(20)  NOT NULL DEFAULT 'Pending',
+        is_paid         BOOLEAN      NOT NULL DEFAULT FALSE,
         requested_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
       )`;
