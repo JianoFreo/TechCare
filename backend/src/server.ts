@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import multer from "multer";
+import cors from "cors";                                    // ← added
 const upload = multer({
   dest: "uploads/",
 });
@@ -19,6 +20,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+app.use(cors({                                               // ← added
+  origin: "https://your-static-site.onrender.com",
+  credentials: true,
+}));
 
 app.use(express.json());
 
