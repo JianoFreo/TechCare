@@ -7,6 +7,7 @@ function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   
@@ -21,7 +22,7 @@ function LoginPage() {
     });
     console.log("Login response:", response.data);
     try {
-
+      setLoading(true);
       if (!response.data) {
         alert(response.data.message);
         setUsername("");
@@ -37,6 +38,8 @@ function LoginPage() {
       alert(response.data.message);
       setUsername("");
       setPassword("");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,8 +84,9 @@ function LoginPage() {
             <button
               onClick={login}
               className="w-full bg-gray-200 p-3 rounded hover:bg-gray-300 cursor-pointer"
+              disabled={loading}
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </button>
           </div>
 
