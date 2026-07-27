@@ -13,7 +13,7 @@ import { ENV } from "./config/env.js";
 import adminRoutes from "./routes/admin.route.js";
 import authRoutes from "./routes/auth.route.js";
 import testRoutes from "./routes/test.routes.js";
-import fdstaffRoutes from "./routes/fdstaff.route.js"
+import fdstaffRoutes from "./routes/fdstaff.route.js";
 
 // FIX __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
