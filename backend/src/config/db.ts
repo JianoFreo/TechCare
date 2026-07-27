@@ -82,7 +82,7 @@ export async function connectNeon(): Promise<void> {
         service_id   VARCHAR(255) NOT NULL REFERENCES services(service_id),
         service_name VARCHAR(255) NOT NULL,
         service_type VARCHAR(255) NOT NULL,
-        is_priority  BOOLEAN     NOT NULL DEFAULT false,
+        is_priority  BOOLEAN     NOT NULL DEFAULT FALSE,
         status       VARCHAR(20) NOT NULL DEFAULT 'waiting',
         created_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
