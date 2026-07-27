@@ -16,13 +16,14 @@ function LoginPage() {
       alert("Please fill in all fields.");
       return;
     }
-    const response = await api.post("/api/auth/login", {
+
+    try {
+      setLoading(true);
+          const response = await api.post("/api/auth/login", {
       username,
       password,
     });
     console.log("Login response:", response.data);
-    try {
-      setLoading(true);
       if (!response.data) {
         alert(response.data.message);
         setUsername("");
@@ -34,8 +35,9 @@ function LoginPage() {
         navigate(`/${response.data.user.role}`);
         console.log(localStorage.getItem("token"));
       }
-    } catch {
-      alert(response.data.message);
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("An error occurred while logging in.");
       setUsername("");
       setPassword("");
     } finally {
