@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import api from "../lib/axios";
 import LeftSideBackground from "./components/LeftSideBackground";
@@ -9,23 +9,37 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-
+  useEffect(() => {
+    const triggerServerWakeUp = async () => {
+      try {
+        const response = await api.get('/api/test/ping');
+        if (response.data.message) {
+          console.log('Server is awake and responding.');
+        } else {
+          console.error('Server responded with an error:', response.status);
+        }
+      } catch (error) {
+        console.error('Error while trying to wake up the server:', error);
+      }
+    };
+    triggerServerWakeUp();
+  }, []);
   const login = async () => {
-    try{
     if (!username || !password) {
       alert("Please fill in all fields.");
       return;
     }
     setLoading(true);
-    const response = await api.post("/api/auth/login", {
-      username,
-      password,
-    });
-    console.log("Login response:", response.data);
+    let response;
+
     try {
+      response = await api.post("/api/auth/login", {
+        username,
+        password,
+      });
+      console.log("Login response:", response.data);
       if (!response.data) {
-        alert(response.data.message);
+        alert(response?.data.message);
         setUsername("");
         setPassword("");
       }
@@ -36,18 +50,13 @@ function LoginPage() {
         console.log(localStorage.getItem("token"));
       }
     } catch {
-      alert(response.data.message);
+      alert(response?.data.message);
       setUsername("");
       setPassword("");
     } finally {
       setLoading(false);
     }
-  }catch (error) {
-    console.error("Login error:", error);
-    alert("An error occurred during login. Please try again.");
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen flex">
