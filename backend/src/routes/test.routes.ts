@@ -7,5 +7,8 @@ const router = Router();
 router.post("/sign-in", signIn);
 router.post("/", authenticateToken, getUser);
 router.get("/get-my-account", authenticateToken, getMyAccount);
+router.get("/ping", (req, res) => {
+  res.status(200).json({ message: "Service is awake and responding." });
+});
 // router.post("/upload-image", upload.single("image"), uploadImage);
 export default router;

@@ -8,7 +8,6 @@ import LabstaffDashboard from './users/laboratory_staff/pages/LabstaffDashbaord'
 import PatientInformation from './users/patient/PatientInformation'
 import QueueTracking from './queue/QueueTracking'
 function App() {
-
   return (
     <div>
       <Routes>
