@@ -208,12 +208,12 @@ export async function skipQueueEntry(req: Request, res: Response) {
 
 export async function confirmLabRequestPayment(req: Request, res: Response) {
   try {
-    const { labreq_id } = req.params;
+    const { request_id } = req.params;
 
     const updatedLabRequest = await sql`
     UPDATE lab_requests
     SET is_paid = true
-    WHERE request_id = ${labreq_id}
+    WHERE request_id = ${request_id}
     RETURNING *;
     `;
 
