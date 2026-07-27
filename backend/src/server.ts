@@ -22,7 +22,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 app.use(cors({                                               // ← added
-  origin: "https://your-static-site.onrender.com",
+  origin: "https://techcare-1.onrender.com",
   credentials: true,
 }));
 
