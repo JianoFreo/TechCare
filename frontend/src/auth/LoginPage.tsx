@@ -10,9 +10,8 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-
+  
   const login = async () => {
-    try{
     if (!username || !password) {
       alert("Please fill in all fields.");
       return;
@@ -24,6 +23,7 @@ function LoginPage() {
     });
     console.log("Login response:", response.data);
     try {
+
       if (!response.data) {
         alert(response.data.message);
         setUsername("");
@@ -42,12 +42,7 @@ function LoginPage() {
     } finally {
       setLoading(false);
     }
-  }catch (error) {
-    console.error("Login error:", error);
-    alert("An error occurred during login. Please try again.");
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen flex">
