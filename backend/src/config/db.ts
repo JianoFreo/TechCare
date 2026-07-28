@@ -141,7 +141,7 @@ export async function connectNeon(): Promise<void> {
         doctor_id       VARCHAR(255) REFERENCES users(user_id),
         test_type       VARCHAR(200) NOT NULL,
         results         JSONB,
-        status          VARCHAR(20)  NOT NULL DEFAULT 'Pending',
+        status          VARCHAR(20)  NOT NULL DEFAULT 'Requested',
         is_paid         BOOLEAN      NOT NULL DEFAULT FALSE,
         requested_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
