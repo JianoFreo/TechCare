@@ -1,5 +1,7 @@
 # TechCare Architecture Documentation
 
+# Live site : https://techcare-1.onrender.com/
+
 > Auto-generated high-level documentation from the project structure.
 
 ## Overview
@@ -187,8 +189,6 @@ and
 get http://localhost:3000/api/admin
 ```
 ---
-
-https://techcare-hui6.onrender.com
 
 you can test it on the provided endpoints
 
