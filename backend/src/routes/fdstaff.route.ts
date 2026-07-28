@@ -49,7 +49,7 @@ router.post("/laboratory-requests", addLaboratoryRequest);
 router.put("/queues/:queue_id", serveQueueEntry);
 router.patch("/queues/:queue_id", skipQueueEntry);
 router.put("/patients/:patient_id", upload.single("image"), updatePatient);
-router.patch("/laboratory-requests/:labreq_id", confirmLabRequestPayment);
+router.patch("/laboratory-requests/:request_id", confirmLabRequestPayment);
 // DELETE requests
 router.delete("/queues/:queue_id", deleteQueue);
 router.delete("/patients/:patient_id", deletePatient);

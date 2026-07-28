@@ -212,7 +212,8 @@ export async function confirmLabRequestPayment(req: Request, res: Response) {
 
     const updatedLabRequest = await sql`
     UPDATE lab_requests
-    SET is_paid = true
+    SET is_paid = true,
+        status = 'In Queue'
     WHERE request_id = ${request_id}
     RETURNING *;
     `;

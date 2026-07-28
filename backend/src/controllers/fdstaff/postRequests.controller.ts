@@ -460,22 +460,26 @@ export async function addLaboratoryRequest(req: Request, res: Response) {
         message: "Patient ID, Doctor ID, and Test type is required!",
       });
     }
-    const labreq_id = await generateLaboratoryRequestID();
+    const request_id = await generateLaboratoryRequestID();
     const response = await sql`
     INSERT INTO lab_requests(
       request_id,
       patient_id,
-      test_type
+      test_type,
+      status,
+      is_paid
     )
       VALUES(
-      ${labreq_id},
+      ${request_id},
       ${patient_id},
-      ${test_type}
+      ${test_type},
+      'In Queue',
+      TRUE
     ) RETURNING *
     `;
     return res.status(201).json({
       message: "Laboratory request added succesfully.",
-      labrequest: response,
+      request: response,
     });
   } catch (error) {
     console.error(error);
