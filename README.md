@@ -1,6 +1,7 @@
 # TechCare Architecture Documentation
 
-> Auto-generated high-level documentation from the project structure.
+# Live site : https://techcare-1.onrender.com/
+
 
 ## Overview
 TechCare is a full-stack clinic information system.
@@ -187,8 +188,6 @@ and
 get http://localhost:3000/api/admin
 ```
 ---
-
-https://techcare-hui6.onrender.com
 
 you can test it on the provided endpoints
 

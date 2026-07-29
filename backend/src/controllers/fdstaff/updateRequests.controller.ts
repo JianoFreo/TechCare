@@ -205,3 +205,34 @@ export async function skipQueueEntry(req: Request, res: Response) {
     });
   }
 }
+
+export async function confirmLabRequestPayment(req: Request, res: Response) {
+  try {
+    const { request_id } = req.params;
+
+    const updatedLabRequest = await sql`
+    UPDATE lab_requests
+    SET is_paid = true,
+        status = 'In Queue'
+    WHERE request_id = ${request_id}
+    RETURNING *;
+    `;
+
+    if (updatedLabRequest.length === 0) {
+      return res.status(404).json({
+        message: "Laboratory request not found.",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Laboratory request payment confirmed.",
+      request: updatedLabRequest,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Error in Confirming Laboratory Request Payment",
+    });
+  }
+}

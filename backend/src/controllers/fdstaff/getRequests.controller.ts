@@ -77,7 +77,8 @@ export async function getAllBilling(req: Request, res: Response) {
   }
 }
 
-export async function getAllQueueEntries(req: Request, res: Response) { // get /api/fdstaff/queues
+export async function getAllQueueEntries(req: Request, res: Response) {
+  // get /api/fdstaff/queues
   // get /api/fdstaff/queue
   try {
     const queueEntries = await sql`
@@ -117,44 +118,63 @@ export async function getAllQueueEntries(req: Request, res: Response) { // get /
     res.status(500).json({ error: "error on fetching queue entries" });
   }
 }
-export async function getAllservices(req: Request, res: Response) { // get /api/fdstaff/services
+export async function getAllservices(req: Request, res: Response) {
+  // get /api/fdstaff/services
   try {
     const services = await sql`
         SELECT service_id, service_name, price, service_type
         FROM services
         WHERE active = TRUE
-    `
-    ;
+    `;
     if (!services) {
       res.json({ message: "there are no services" });
     }
     res.status(200).json({ services });
 
-// {
-//   "services": [
-//   {
-//     "service_id": 1,
-//     "service_name": "Haircut",
-//     "price": "250.00",
-//     "discount_pct": "0.00",
-//     "deleted": false,
-//     "created_at": "2026-07-02T08:00:00.000Z",
-//     "updated_at": "2026-07-02T08:00:00.000Z"
-//   },
-//   {
-//     "service_id": 2,
-//     "service_name": "Hair Coloring",
-//     "price": "1200.00",
-//     "discount_pct": "10.00",
-//     "deleted": false,
-//     "created_at": "2026-07-02T08:05:00.000Z",
-//     "updated_at": "2026-07-02T08:05:00.000Z"
-//   }
-// ]
-// }
+    // {
+    //   "services": [
+    //   {
+    //     "service_id": 1,
+    //     "service_name": "Haircut",
+    //     "price": "250.00",
+    //     "discount_pct": "0.00",
+    //     "deleted": false,
+    //     "created_at": "2026-07-02T08:00:00.000Z",
+    //     "updated_at": "2026-07-02T08:00:00.000Z"
+    //   },
+    //   {
+    //     "service_id": 2,
+    //     "service_name": "Hair Coloring",
+    //     "price": "1200.00",
+    //     "discount_pct": "10.00",
+    //     "deleted": false,
+    //     "created_at": "2026-07-02T08:05:00.000Z",
+    //     "updated_at": "2026-07-02T08:05:00.000Z"
+    //   }
+    // ]
+    // }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
 
+export async function getLaboratoryRequest(req: Request, res: Response) {
+  try {
+    const { patient_id } = req.params;
+
+    const lab_reqs = await sql`
+        SELECT request_id, consultation_id, patient_id, doctor_id, test_type, requested_at
+        FROM lab_requests
+        WHERE patient_id = ${patient_id} AND status = 'Requested'
+        ORDER BY requested_at DESC;
+    `;
+    if (!lab_reqs) {
+      res.json({ message: "there are no laboratory requests" });
+    }
+    res.status(200).json({ lab_reqs });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}

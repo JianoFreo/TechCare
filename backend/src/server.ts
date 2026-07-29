@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import multer from "multer";
-import cors from "cors";                                    // ← added
+import cors from "cors"; // ← added
 const upload = multer({
   dest: "uploads/",
 });
@@ -13,7 +13,8 @@ import { ENV } from "./config/env.js";
 import adminRoutes from "./routes/admin.route.js";
 import authRoutes from "./routes/auth.route.js";
 import testRoutes from "./routes/test.routes.js";
-import fdstaffRoutes from "./routes/fdstaff.route.js"
+import fdstaffRoutes from "./routes/fdstaff.route.js";
+import labstaffRoutes from "./routes/labstaff.route.js";
 
 // FIX __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -33,6 +34,8 @@ app.use("/api/test", testRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/fdstaff", fdstaffRoutes);
+app.use("/api/labstaff", labstaffRoutes);
+
 // Test route
 const frontendPath = path.resolve(__dirname, "../../frontend/dist");
 
