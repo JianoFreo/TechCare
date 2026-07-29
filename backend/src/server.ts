@@ -20,9 +20,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-
+const cors_origins = ENV.CORS_ORIGIN.split(",").map((origin) => origin.trim()).filter(Boolean);
 app.use(cors({                                               // ← added
-  origin: "https://techcare-1.onrender.com",
+  origin: cors_origins,
   credentials: true,
 }));
 
