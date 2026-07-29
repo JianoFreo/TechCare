@@ -2,7 +2,6 @@
 
 # Live site : https://techcare-1.onrender.com/
 
-> Auto-generated high-level documentation from the project structure.
 
 ## Overview
 TechCare is a full-stack clinic information system.
