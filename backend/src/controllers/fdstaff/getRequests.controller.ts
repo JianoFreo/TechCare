@@ -166,7 +166,8 @@ export async function getLaboratoryRequest(req: Request, res: Response) {
     const lab_reqs = await sql`
         SELECT request_id, consultation_id, patient_id, doctor_id, test_type, requested_at
         FROM lab_requests
-        WHERE patient_id = ${patient_id}
+        WHERE patient_id = ${patient_id} AND status = 'Requested'
+        ORDER BY requested_at DESC;
     `;
     if (!lab_reqs) {
       res.json({ message: "there are no laboratory requests" });
