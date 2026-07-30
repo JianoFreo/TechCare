@@ -1,7 +1,6 @@
 import React from "react";
 
 type LabRequest = {
-  id: number;
   request_id: string;
   consultation_id: string | null;
   patient_id: string;
@@ -14,6 +13,9 @@ type LabRequest = {
 };
 
 type RequestTableProps = {
+  setRequestIdCard: React.Dispatch<React.SetStateAction<string | null>>;
+  setPatientIdCard: React.Dispatch<React.SetStateAction<string | null>>;
+  setOpenInformationCard: React.Dispatch<React.SetStateAction<boolean>>;
   requests: LabRequest[];
   status: RequestStatus;
   loading: boolean;
@@ -22,13 +24,25 @@ type RequestTableProps = {
 
 type RequestStatus = "In Queue" | "In Progress" | "Completed";
 
-function RequestTable({ requests, status, loading, error }: RequestTableProps) {
+function RequestTable({
+  setRequestIdCard,
+  setPatientIdCard,
+  setOpenInformationCard,
+  requests,
+  status,
+  loading,
+  error,
+}: RequestTableProps) {
   const buttonText: Record<RequestStatus, string> = {
     "In Queue": "Accept",
     "In Progress": "Mark as done",
     Completed: "Input Results",
   };
-
+  const handleCardClick = (request_id: string, patient_id: string) => {
+    setOpenInformationCard(true);
+    setRequestIdCard(request_id);
+    setPatientIdCard(patient_id);
+  };
   const label = buttonText[status];
 
   return (
@@ -70,17 +84,37 @@ function RequestTable({ requests, status, loading, error }: RequestTableProps) {
               {requests
                 .filter((request) => request.status === status)
                 .map((request) => (
-                  <tr key={request.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-center">
+                  <tr key={request.request_id} className="hover:bg-gray-50">
+                    <td
+                      className="px-4 py-3 text-center cursor-pointer"
+                      onClick={() =>
+                        handleCardClick(request.request_id, request.patient_id)
+                      }
+                    >
                       {request.request_id}
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td
+                      className="px-4 py-3 text-center cursor-pointer"
+                      onClick={() =>
+                        handleCardClick(request.request_id, request.patient_id)
+                      }
+                    >
                       {request.patient_id}
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td
+                      className="px-4 py-3 text-center cursor-pointer"
+                      onClick={() =>
+                        handleCardClick(request.request_id, request.patient_id)
+                      }
+                    >
                       {request.doctor_id ?? "N/A"}
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td
+                      className="px-4 py-3 text-center cursor-pointer"
+                      onClick={() =>
+                        handleCardClick(request.request_id, request.patient_id)
+                      }
+                    >
                       {request.test_type}
                     </td>
                     <td className="px-4 py-3 text-center flex justify-center gap-2">

@@ -1,9 +1,9 @@
 ﻿import { useState } from "react";
 import Header from "../components/Header";
 import RequestTable from "../components/RequestTable";
+import InformationCard from "../components/InformationCard";
 
 type LabRequest = {
-  id: number;
   request_id: string;
   consultation_id: string | null;
   patient_id: string;
@@ -33,6 +33,8 @@ function LaboratoryRequests({
   loadData,
 }: LaboratoryRequestsProps) {
   const [openInformationCard, setOpenInformationCard] = useState(false);
+  const [requestIdCard, setRequestIdCard] = useState<string | null>(null);
+  const [patientIdCard, setPatientIdCard] = useState<string | null>(null);
 
   return (
     <main className="flex-1 min-w-0 p-6 bg-gray-100">
@@ -58,10 +60,13 @@ function LaboratoryRequests({
           </h2>
         </div>
       </div>
-      <div className="overflow-x-auto flex flex-col space-y-6">
+      <div className="overflow-x-auto flex flex-col space-y-6 z-0">
         <div className="px-4 py-3 rounded-lg shadow-md bg-white">
           <h1 className="text-xl font-semibold mb-2">In Progress</h1>
           <RequestTable
+            setOpenInformationCard={setOpenInformationCard}
+            setPatientIdCard={setPatientIdCard}
+            setRequestIdCard={setRequestIdCard}
             requests={requests}
             status="In Progress"
             error={error}
@@ -71,6 +76,9 @@ function LaboratoryRequests({
         <div className="px-4 py-3 rounded-lg shadow-md bg-white">
           <h1 className="text-xl font-semibold mb-2">In Queue</h1>
           <RequestTable
+            setOpenInformationCard={setOpenInformationCard}
+            setPatientIdCard={setPatientIdCard}
+            setRequestIdCard={setRequestIdCard}
             requests={requests}
             status="In Queue"
             error={error}
@@ -80,12 +88,22 @@ function LaboratoryRequests({
         <div className="px-4 py-3 rounded-lg shadow-md bg-white">
           <h1 className="text-xl font-semibold mb-2">Completed</h1>
           <RequestTable
+            setOpenInformationCard={setOpenInformationCard}
+            setPatientIdCard={setPatientIdCard}
+            setRequestIdCard={setRequestIdCard}
             requests={requests}
             status="Completed"
             error={error}
             loading={loading}
           />
         </div>
+        {openInformationCard && (
+          <InformationCard
+            onClose={() => setOpenInformationCard(false)}
+            request_id={requestIdCard}
+            patient_id={patientIdCard}
+          />
+        )}
       </div>
     </main>
   );
