@@ -65,7 +65,7 @@ export async function updateQueueStatus(req: Request, res: Response) {
       request: updatedQueueStatus,
     });
   } catch (error) {
-    console.error;
+    console.error("Unable to update queue status", error);
     res.status(500).json({
       message: "Internal Server Error",
     });
