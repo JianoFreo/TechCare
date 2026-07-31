@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from '../../../lib/axios';
+import api from "../../../lib/axios";
 type Patient = {
   id: number;
   patient_id: string;
@@ -47,59 +47,34 @@ function InformationCard({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    console.log(request_id);
-    console.log(patient_id);
-
-    if (!request_id) return;
+    if (!request_id || !patient_id) return;
 
     let ignore = false;
 
     async function fetchData() {
       setLoading(true);
+      setError("");
+
       try {
-        if (!patient_id) {
-          throw new Error("Missing patient id");
-        }
-
-        // const [patientRes, labRes] = await Promise.all([
-        //   fetch(`/api/labstaff/patients/${patient_id}`),
-        //   fetch(`/api/labstaff/laboratory-requests/${request_id}`),
-        // ]);
-
-        const patientRes =  await api.get(`/labstaff/patients/${patient_id}`);
-        const labRes = await api.get(`/labstaff/laboratory-requests/${request_id}`);
-
-        if (!patientRes.ok) {
-          const body = await patientRes.json();
-          throw new Error(
-            body?.message || "Unable to fetch patient information.",
-          );
-        }
-        if (!labRes.ok) {
-          const body = await labRes.json();
-          throw new Error(
-            body?.message || "Unable to fetch laboratory request details.",
-          );
-        }
-
-        const [patientData, labData] = await Promise.all([
-          patientRes.json(),
-          labRes.json(),
-        ]);
+        const patientRes = await api.get(`api/labstaff/patients/${patient_id}`);
+        const labRes = await api.get(
+          `api/labstaff/laboratory-requests/${request_id}`,
+        );
+        console.log(patientRes);
 
         if (!ignore) {
-          setPatient(patientData);
-          setLabRequest(labData);
+          setPatient(patientRes.data);
+          setLabRequest(labRes.data);
         }
+
+        console.log(patient);
       } catch (err) {
         const message =
           (err as { message?: string })?.message ||
           "Unable to fetch laboratory request details.";
-        setError(message);
+        if (!ignore) setError(message);
       } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
+        if (!ignore) setLoading(false);
       }
     }
 
