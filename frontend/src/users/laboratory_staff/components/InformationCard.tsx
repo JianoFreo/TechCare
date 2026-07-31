@@ -60,14 +60,11 @@ function InformationCard({
         const labRes = await api.get(
           `api/labstaff/laboratory-requests/${request_id}`,
         );
-        console.log(patientRes);
 
         if (!ignore) {
           setPatient(patientRes.data);
           setLabRequest(labRes.data);
         }
-
-        console.log(patient);
       } catch (err) {
         const message =
           (err as { message?: string })?.message ||
