@@ -167,6 +167,8 @@ export async function getLaboratoryRequest(req: Request, res: Response) {
         SELECT request_id, consultation_id, patient_id, doctor_id, test_type, requested_at
         FROM lab_requests
         WHERE patient_id = ${patient_id} AND status = 'Requested'
+        AND requested_at >= CURRENT_DATE
+        AND requested_at < CURRENT_DATE + INTERVAL '1 day'
         ORDER BY requested_at DESC;
     `;
     if (!lab_reqs) {
