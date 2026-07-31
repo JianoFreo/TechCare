@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-
+import api from "../../../api";
 type Patient = {
   id: number;
   patient_id: string;
@@ -61,10 +61,13 @@ function InformationCard({
           throw new Error("Missing patient id");
         }
 
-        const [patientRes, labRes] = await Promise.all([
-          fetch(`/api/labstaff/patients/${patient_id}`),
-          fetch(`/api/labstaff/laboratory-requests/${request_id}`),
-        ]);
+        // const [patientRes, labRes] = await Promise.all([
+        //   fetch(`/api/labstaff/patients/${patient_id}`),
+        //   fetch(`/api/labstaff/laboratory-requests/${request_id}`),
+        // ]);
+
+        const patientRes =  await api.get(`/labstaff/patients/${patient_id}`);
+        const labRes = await api.get(`/labstaff/laboratory-requests/${request_id}`);
 
         if (!patientRes.ok) {
           const body = await patientRes.json();
