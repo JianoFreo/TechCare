@@ -44,7 +44,7 @@ export async function updateQueueStatus(req: Request, res: Response) {
 
     if (!queue_id) {
       return res.status(400).json({
-        message: "Status and Request ID are required!",
+        message: "Queue ID is required!",
       });
     }
     const updatedQueueStatus = await sql`
@@ -56,12 +56,12 @@ export async function updateQueueStatus(req: Request, res: Response) {
 
     if (updatedQueueStatus.length === 0) {
       return res.status(400).json({
-        message: "Laboratory request doesn't exist.",
+        message: "Queue entry doesn't exist.",
       });
     }
 
     return res.status(200).json({
-      message: `Laboratory request status changed to serving.`,
+      message: "Queue entry status changed to serving.",
       request: updatedQueueStatus,
     });
   } catch (error) {
