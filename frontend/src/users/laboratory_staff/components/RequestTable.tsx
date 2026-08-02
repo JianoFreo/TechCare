@@ -90,37 +90,32 @@ function RequestTable({
                   <tr key={request.request_id} className="hover:bg-gray-50">
                     <td
                       className="px-4 py-3 text-center cursor-pointer"
-                      onClick={() =>
-                        handleCardClick(request.request_id, request.patient_id)
-                      }
                     >
                       {request.request_id}
                     </td>
                     <td
                       className="px-4 py-3 text-center cursor-pointer"
-                      onClick={() =>
-                        handleCardClick(request.request_id, request.patient_id)
-                      }
                     >
                       {request.patient_id}
                     </td>
                     <td
                       className="px-4 py-3 text-center cursor-pointer"
-                      onClick={() =>
-                        handleCardClick(request.request_id, request.patient_id)
-                      }
                     >
                       {request.doctor_id ?? "N/A"}
                     </td>
                     <td
                       className="px-4 py-3 text-center cursor-pointer"
-                      onClick={() =>
-                        handleCardClick(request.request_id, request.patient_id)
-                      }
                     >
                       {request.test_type}
                     </td>
                     <td className="px-4 py-3 text-center flex justify-center gap-2">
+                      <button className="cursor-pointer px-2 py-1 border-[1px] border-gray-400 transition-all duration-300 hover:scale-105 hover:bg-gray-200"
+                        onClick={() =>
+                          handleCardClick(request.request_id, request.patient_id)
+                        }
+                      >
+                        View
+                      </button>
                       <button className="cursor-pointer px-2 py-1 border-[1px] border-gray-400 transition-all duration-300 hover:scale-105 hover:bg-gray-200">
                         {label}
                       </button>
