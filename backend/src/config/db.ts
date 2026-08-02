@@ -278,42 +278,57 @@ export async function connectNeon(): Promise<void> {
 //   await syncSchema(["users"]);        // sync just one table
 // -----------------------------------------------------------------------
 export async function syncSchema(onlyTables?: string[]): Promise<void> {
-  const targets = onlyTables
-    ? TABLES.filter((t) => onlyTables.includes(t.table))
+  const tablesToSync = onlyTables
+    ? TABLES.filter((tableDefinition) =>
+        onlyTables.includes(tableDefinition.table),
+      )
     : TABLES;
 
-  for (const { table, createSQL, columns } of targets) {
+  for (const tableDefinition of tablesToSync) {
+    const {
+      table: tableName,
+      createSQL,
+      columns: desiredColumns,
+    } = tableDefinition;
+
     await sql.query(createSQL);
 
-    const actual = (await sql`
+    const existingColumnRows = (await sql`
       SELECT column_name
       FROM information_schema.columns
-      WHERE table_schema = 'public' AND table_name = ${table}
+      WHERE table_schema = 'public' AND table_name = ${tableName}
     `) as { column_name: string }[];
-    const actualNames = actual.map((r) => r.column_name);
-
-    const missing = Object.keys(columns).filter(
-      (c) => !actualNames.includes(c),
+    const existingColumnNames = existingColumnRows.map(
+      (row) => row.column_name,
     );
-    const extra = actualNames.filter((c) => !(c in columns));
 
-    for (const col of missing) {
-      console.log(`[schema-sync] ${table}: adding column "${col}"`);
+    const columnsToAdd = Object.keys(desiredColumns).filter(
+      (columnName) => !existingColumnNames.includes(columnName),
+    );
+    const columnsToDrop = existingColumnNames.filter(
+      (columnName) => !(columnName in desiredColumns),
+    );
+
+    for (const columnName of columnsToAdd) {
+      console.log(`[schema-sync] ${tableName}: adding column "${columnName}"`);
       await sql.query(
-        `ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${col} ${columns[col]}`,
+        `ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS ${columnName} ${desiredColumns[columnName]}`,
       );
     }
-    for (const col of extra) {
-      console.log(`[schema-sync] ${table}: dropping column "${col}"`);
-      await sql.query(`ALTER TABLE ${table} DROP COLUMN IF EXISTS ${col}`);
+    for (const columnName of columnsToDrop) {
+      console.log(
+        `[schema-sync] ${tableName}: dropping column "${columnName}"`,
+      );
+      await sql.query(
+        `ALTER TABLE ${tableName} DROP COLUMN IF EXISTS ${columnName}`,
+      );
     }
 
-    if (missing.length === 0 && extra.length === 0) {
-      console.log(`[schema-sync] ${table}: already in sync`);
+    if (columnsToAdd.length === 0 && columnsToDrop.length === 0) {
+      console.log(`[schema-sync] ${tableName}: already in sync`);
     }
   }
 }
-
 
 // To change columns, do this:
 
