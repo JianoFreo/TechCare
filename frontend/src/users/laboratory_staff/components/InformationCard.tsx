@@ -32,14 +32,14 @@ type LabRequest = {
 
 type InformationCardProps = {
   onClose: () => void;
-  request_id: string | null;
-  patient_id: string | null;
+  requestIdCard: string | null;
+  patientIdCard: string | null;
 };
 
 function InformationCard({
   onClose,
-  request_id,
-  patient_id,
+  requestIdCard,
+  patientIdCard,
 }: InformationCardProps) {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [labRequest, setLabRequest] = useState<LabRequest | null>(null);
@@ -47,7 +47,7 @@ function InformationCard({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!request_id || !patient_id) return;
+    if (!requestIdCard || !patientIdCard) return;
 
     let ignore = false;
 
@@ -56,9 +56,9 @@ function InformationCard({
       setError("");
 
       try {
-        const patientRes = await api.get(`api/labstaff/patients/${patient_id}`);
+        const patientRes = await api.get(`api/labstaff/patients/${patientIdCard}`);
         const labRes = await api.get(
-          `api/labstaff/laboratory-requests/${request_id}`,
+          `api/labstaff/laboratory-requests/${requestIdCard}`,
         );
 
         if (!ignore) {
@@ -80,7 +80,7 @@ function InformationCard({
     return () => {
       ignore = true;
     };
-  }, [request_id, patient_id]);
+  }, [requestIdCard, patientIdCard]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
