@@ -100,8 +100,8 @@ function LaboratoryRequests({
         {openInformationCard && (
           <InformationCard
             onClose={() => setOpenInformationCard(false)}
-            request_id={requestIdCard}
-            patient_id={patientIdCard}
+            requestIdCard={requestIdCard}
+            patientIdCard={patientIdCard}
           />
         )}
       </div>
