@@ -43,7 +43,6 @@ function RequestTable({
     setRequestIdCard(request_id);
     setPatientIdCard(patient_id);
   };
-  const label = buttonText[status];
 
   return (
     <>
@@ -117,7 +116,7 @@ function RequestTable({
                         View
                       </button>
                       <button className="cursor-pointer px-2 py-1 border-[1px] border-gray-400 transition-all duration-300 hover:scale-105 hover:bg-gray-200">
-                        {label}
+                        {buttonText[status]}
                       </button>
                       {status === "In Queue" ? (
                         <button className="cursor-pointer px-2 py-1 border-[1px] border-gray-400 transition-all duration-300 hover:scale-105 hover:bg-gray-200">
