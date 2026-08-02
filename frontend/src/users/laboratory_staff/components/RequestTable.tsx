@@ -56,8 +56,11 @@ function RequestTable({
         <div className="rounded-xl border border-gray-200 bg-gray-100 p-4 text-sm">
           Loading {status} laboratory requests...
         </div>
-      ) : requests.length === 0 ? (
-        <div>No laboratory requests found.</div>
+      ) : requests.filter((request) => request.status === status).length ===
+        0 ? (
+        <div className="rounded-xl border border-gray-200 bg-gray-100 p-4 text-sm">
+          No laboratory requests found.
+        </div>
       ) : (
         <div className="overflow-y-auto rounded-md border border-gray-200">
           <table className="w-full table-fixed overflow-y-auto divide-y divide-gray-200">
