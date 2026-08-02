@@ -1,7 +1,7 @@
 import { sql } from "../../config/db.js";
 import { json, Request, Response } from "express";
 
-export async function getAllLaboratoryRequests(req: Request, res: Response) {
+export async function getAllLaboratoryPaid(req: Request, res: Response) {
   try {
     const labRequests = await sql`
         SELECT request_id, patient_id, doctor_id, test_type, status, requested_at, updated_at
@@ -28,7 +28,7 @@ export async function getLaboratoryRequest(req: Request, res: Response) {
     const { request_id } = req.params;
     const [lab_req] = await sql`
         SELECT request_id, consultation_id, patient_id, doctor_id, test_type,
-               results, status, requested_at, updated_at
+        results, status, requested_at, updated_at
         FROM lab_requests
         WHERE request_id = ${request_id}
     `;

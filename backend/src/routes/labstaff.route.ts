@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  getAllLaboratoryRequests,
+  getAllLaboratoryPaid,
   getPatientInfo,
   getLaboratoryRequest,
 } from "../controllers/labstaff/getRequests.controller.js";
@@ -11,7 +11,7 @@ import {
 const router = Router();
 
 // GET ROUTES
-router.get("/laboratory-requests", getAllLaboratoryRequests);
+router.get("/laboratory-requests", getAllLaboratoryPaid);
 router.get("/laboratory-requests/:request_id", getLaboratoryRequest);
 router.get("/patients/:patient_id", getPatientInfo);
 
