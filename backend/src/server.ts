@@ -8,7 +8,7 @@ const upload = multer({
 
 // import { initializeWebSocket } from "./websocket.js";
 import { fileURLToPath } from "url";
-import { connectNeon } from "./config/db.js";
+import { connectNeon, syncSchema } from "./config/db.js";
 import { ENV } from "./config/env.js";
 import adminRoutes from "./routes/admin.route.js";
 import authRoutes from "./routes/auth.route.js";
@@ -47,9 +47,18 @@ app.use((req, res) => {
 
 // IMPORTANT: Render needs process.env.PORT
 
-connectNeon().then(() => {
-  const server = app.listen(ENV.PORT, () => {
-    console.log(`Server is up and running on http://localhost:${ENV.PORT}`);
-  });
-  // initializeWebSocket(server);
-});
+async function initializeServer() {
+  try {
+    await connectNeon();
+    // await syncSchema();  // only turn this on if you want the scheme to sync the database
+    const server = app.listen(ENV.PORT, () => {
+      console.log(`Server is up and running on http://localhost:${ENV.PORT}`);
+    });
+    // initializeWebSocket(server);
+  } catch (error) {
+    console.error("Error initializing server:", error);
+    process.exit(1);
+  } 
+}
+
+await initializeServer();
