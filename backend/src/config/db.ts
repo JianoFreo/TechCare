@@ -297,7 +297,10 @@ export async function syncSchema(onlyTables?: string[]): Promise<void> {
       SELECT column_name
       FROM information_schema.columns
       WHERE table_schema = 'public' AND table_name = ${tableName}
-    `) as { column_name: string }[];
+    `) as { column_name: string }[]; 
+    // asks Postgres "what columns does the users table actually have right now?" — 
+    // that's how syncSchema() finds out what's really in the DB, 
+    // so it can compare that against your desiredColumns object and figure out what to add or drop.
     const existingColumnNames = existingColumnRows.map(
       (row) => row.column_name,
     );
