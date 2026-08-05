@@ -19,6 +19,22 @@ interface ProtectedRouteProps {
  * navigates to its URL directly.
  */
 function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+  // Only enforce this guard in production (mirrors ENV.IS_PRODUCTION on
+  // the backend). In dev, let every route through unrestricted so local
+  // testing doesn't require logging in as every role.
+  //
+  // IMPORTANT: this does NOT relax anything on the backend — every
+  // /api/* route must keep checking the token/role itself regardless of
+  // this flag, since this only ever controls what the frontend renders.
+  if (!import.meta.env.PROD) {
+    // import.meta.env.PROD is true automatically whenever the app is built with vite build (which npm run build does), 
+    // and false under vite dev — no env var setup needed on your end at all. 
+    // That's the whole point of using it over a custom var: 
+    // it can't be misconfigured the way MODE/IS_PRODUCTION was on the backend, 
+    // because Vite sets it for you based on the actual build command.
+    return <>{children}</>;
+  }
+
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
 
