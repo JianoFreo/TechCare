@@ -5,7 +5,7 @@ import doctorMiddleware from '../middlewares/doctor.middleware.js';
 const router = Router();
 
 
-if (ENV.MODE === 'production') {
+if (ENV.MODE === 'is_production') {
     router.use(authMiddleware, doctorMiddleware);
     console.log('Doctor routes enabled');
 }

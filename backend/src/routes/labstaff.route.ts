@@ -11,7 +11,7 @@ import {
 import authMiddleware from "../middlewares/auth.middleware.js";
 import labstaffMiddleware from "../middlewares/labstaff.middleware.js";
 const router = Router();
-if (process.env.MODE === "production") {
+if (process.env.MODE === "is_production") {
   router.use(authMiddleware, labstaffMiddleware);
   console.log("Lab Staff routes enabled");
 }
