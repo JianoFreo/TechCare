@@ -1,3 +1,5 @@
+import { Router } from "express";
+import { ENV } from "../config/env.js";
 import { getAllservices } from "../controllers/admin/getRequests.controller.js";
 import {
   deletePatient,
@@ -23,9 +25,16 @@ import {
 } from "../controllers/fdstaff/updateRequests.controller.js";
 import { uploadImage } from "../controllers/test.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
-import { Router } from "express";
+import authMiddleware from "../middlewares/auth.middleware.js";
+import fdstaffMiddleware from "../middlewares/fdstaff.middleware.js";
 
 const router = Router();
+
+if (ENV.MODE === "production") {
+  router.use(authMiddleware, fdstaffMiddleware);
+  console.log("FD Staff routes enabled");
+}
+
 
 // GET requests
 router.get("/patients", getAllPatients);

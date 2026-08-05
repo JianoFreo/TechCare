@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { ENV } from "../config/env.js";
 import {
   getAllUsers,
   getAllservices,
@@ -15,8 +16,10 @@ import authMiddleware from "../middlewares/auth.middleware.js";
 import adminMiddleware from "../middlewares/admin.middleware.js";
 const router = Router();
 
-// router.use(authMiddleware, adminMiddleware);
-
+if (ENV.MODE === "production") {
+  router.use(authMiddleware, adminMiddleware);
+  console.log("Admin routes enabled");
+}
 
 router.get("/services", getAllservices);
 router.get("/activity", getMyActivities);

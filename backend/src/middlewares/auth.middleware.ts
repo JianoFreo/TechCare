@@ -2,7 +2,7 @@ import { sql } from "../config/db.js";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-export async function authMiddleware(
+async function authMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
