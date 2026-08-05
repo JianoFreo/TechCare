@@ -7,6 +7,7 @@ import FrontdeskStaff from "./users/frontdesk_staff/FrontdeskStaff";
 import PatientInformation from "./users/patient/PatientInformation";
 import QueueTracking from "./queue/QueueTracking";
 import LaboratoryStaff from "./users/laboratory_staff/LaboratoryStaff";
+import ProtectedRoute from "./lib/ProtectedRoute";
 function App() {
   return (
     <div>
@@ -15,11 +16,47 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/sign-up" element={<SignupPage />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/doctor" element={<DoctorDashboard />} />
-        <Route path="/patient" element={<PatientInformation />} />
-        <Route path="/laboratory-staff" element={<LaboratoryStaff />} />
-        <Route path="/frontdesk-staff" element={<FrontdeskStaff />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Admin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor"
+          element={
+            <ProtectedRoute allowedRoles={["doctor"]}>
+              <DoctorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient"
+          element={
+            <ProtectedRoute allowedRoles={["patient"]}>
+              <PatientInformation />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/laboratory-staff"
+          element={
+            <ProtectedRoute allowedRoles={["laboratory-staff"]}>
+              <LaboratoryStaff />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/frontdesk-staff"
+          element={
+            <ProtectedRoute allowedRoles={["frontdesk-staff"]}>
+              <FrontdeskStaff />
+            </ProtectedRoute>
+          }
+        />
+        {/* Public-facing display, intentionally not gated */}
         <Route path="/queue-tracking" element={<QueueTracking />} />
       </Routes>
     </div>
