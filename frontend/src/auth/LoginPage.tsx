@@ -45,8 +45,10 @@ function LoginPage() {
       }
       else {
         const token = response.data.token;
+        const role = response.data.user.role;
         localStorage.setItem("token", token);
-        navigate(`/${response.data.user.role}`);
+        localStorage.setItem("role", role);
+        navigate(`/${role}`);
         console.log(localStorage.getItem("token"));
       }
     } catch {
