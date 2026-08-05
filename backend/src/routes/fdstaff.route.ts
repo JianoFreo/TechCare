@@ -30,7 +30,7 @@ import fdstaffMiddleware from "../middlewares/fdstaff.middleware.js";
 
 const router = Router();
 
-if (ENV.MODE === "is_production") {
+if (ENV.IS_PRODUCTION) {
   router.use(authMiddleware, fdstaffMiddleware);
   console.log("FD Staff routes enabled");
 }

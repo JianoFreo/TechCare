@@ -10,8 +10,9 @@ import {
 } from "../controllers/labstaff/updateRequest.controller.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import labstaffMiddleware from "../middlewares/labstaff.middleware.js";
+import { ENV } from "../config/env.js";
 const router = Router();
-if (process.env.MODE === "is_production") {
+if (ENV.IS_PRODUCTION) {
   router.use(authMiddleware, labstaffMiddleware);
   console.log("Lab Staff routes enabled");
 }

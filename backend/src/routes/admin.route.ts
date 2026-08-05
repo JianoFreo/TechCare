@@ -16,7 +16,7 @@ import authMiddleware from "../middlewares/auth.middleware.js";
 import adminMiddleware from "../middlewares/admin.middleware.js";
 const router = Router();
 
-if (ENV.MODE === "is_production") {
+if (ENV.IS_PRODUCTION) {
   router.use(authMiddleware, adminMiddleware);
   console.log("Admin routes enabled");
 }

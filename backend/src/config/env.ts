@@ -16,5 +16,5 @@ export const ENV = {
 
   CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:5173,https://techcare-1.onrender.com",
 
-  MODE: process.env.MODE || "development",
+  IS_PRODUCTION: process.env.IS_PRODUCTION || false,
 };
