@@ -37,7 +37,7 @@ function LoginPage() {
         username,
         password,
       });
-      console.log("Login response:", response.data.message);
+      console.log("Login response:", response.data);
       if (!response.data) {
         alert(response?.data.message);
         setUsername("");
