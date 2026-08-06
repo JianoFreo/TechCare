@@ -27,7 +27,7 @@ export async function login(req: Request, res: Response) {
     }
     const token = jwt.sign({user_id: user.user_id}, ENV.JWT_SECRET, {expiresIn : "5min"}); // it goingg to make a token out of user id
     // this has to be an object because jwt.sign expects an object as the first argument, not a string. So we wrap user.user_id in an object with a key of user_id.
-    const refreshToken = jwt.sign({user_id: user.user_id}, ENV.REFRESH_TOKEN_SECRET, {expiresIn : "1d"}); // it goingg to make a token out of user id
+    const refreshToken = jwt.sign({user_id: user.user_id}, ENV.JWT_REFRESH_TOKEN, {expiresIn : "1d"}); // it goingg to make a token out of user id
 
 
     
