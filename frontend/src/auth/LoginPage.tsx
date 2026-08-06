@@ -50,8 +50,8 @@ function LoginPage() {
         navigate(`/${role}`);
         console.log(localStorage.getItem("token"));
       }
-    } catch (err: any) {
-      alert(err?.response?.data?.message || err?.message || "Login failed");
+    } catch (err: unknown) {
+      alert((err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (err as { message?: string })?.message || "Login failed");
       setUsername("");
       setPassword("");
     } finally {
