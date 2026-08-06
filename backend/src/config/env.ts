@@ -8,7 +8,7 @@ export const ENV = {
 
   JWT_SECRET: process.env.JWT_SECRET || "",
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "1d",
-  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "",
+  JWT_REFRESH_TOKEN: process.env.JWT_REFRESH_TOKEN || "",
 
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
