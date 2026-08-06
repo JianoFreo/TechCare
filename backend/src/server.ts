@@ -50,7 +50,11 @@ app.use((req, res) => {
 async function initializeServer() {
   try {
     await connectNeon();
-    // await syncSchema();  // only turn this on if you want the scheme to sync the database // dont turn this one while editing the db
+
+    if (ENV.IS_PRODUCTION) {
+      console.log("IS_PRODUCTION:", ENV.IS_PRODUCTION, typeof ENV.IS_PRODUCTION);
+      await syncSchema();  // only turn this on if you want the scheme to sync the database // dont turn this one while editing the db
+    }
     const server = app.listen(ENV.PORT, () => {
       console.log(`Server is up and running on http://localhost:${ENV.PORT}`);
     });
