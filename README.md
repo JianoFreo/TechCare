@@ -117,6 +117,7 @@ CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
 CORS_ORIGIN=http://localhost:5173,https://techcare-1.onrender.com
+IS_PRODUCTION=false or pag prod true
 ```
 
 On Render, set the same keys individually in the service's **Environment** dashboard (not a committed `.env` file) — use unquoted values, no trailing whitespace, and use different `JWT_SECRET`/`REFRESH_TOKEN_SECRET` values than local dev.
