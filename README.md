@@ -104,7 +104,7 @@ Backend (`backend/.env`, not committed):
 
 ```
 PORT=5000
-MODE=development            # or "production" — this is what IS_PRODUCTION actually checks
+MODE=development           
 
 DATABASE_URL=your_neon_connection_string
 
