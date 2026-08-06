@@ -31,18 +31,18 @@ function LoginPage() {
     }
 
     setLoading(true);
-    let response;
 
     try {
-      response = await api.post("/api/auth/login", {
+      const response = await api.post("/api/auth/login", {
         username,
         password,
       });
 
+      console.log("RESPONSE:", response);
+      console.log("DATA:", response.data);
+
       if (response.data.message !== "Login successful") {
         alert(response.data.message);
-        setUsername("");
-        setPassword("");
         return;
       }
 
@@ -53,10 +53,9 @@ function LoginPage() {
       localStorage.setItem("role", role);
 
       navigate(`/${role}`);
-    } catch {
-      alert(response?.data?.message || "Unable to connect to the server.");
-      setUsername("");
-      setPassword("");
+    } catch (error) {
+      console.error("ACTUAL ERROR:", error);
+      alert("Login failed.");
     } finally {
       setLoading(false);
     }
