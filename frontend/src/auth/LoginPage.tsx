@@ -37,9 +37,9 @@ function LoginPage() {
         username,
         password,
       });
-      console.log("Login response:", response?.data);
-      if (!response?.data) {
-        alert(response?.data?.message || "Login failed");
+      console.log("Login response:", response.data);
+      if (!response.data) {
+        alert(response?.data.message);
         setUsername("");
         setPassword("");
       } else {
@@ -50,8 +50,8 @@ function LoginPage() {
         navigate(`/${role}`);
         console.log(localStorage.getItem("token"));
       }
-    } catch (err: unknown) {
-      alert((err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (err as { message?: string })?.message || "Login failed");
+    } catch {
+      alert(response?.data.message);
       setUsername("");
       setPassword("");
     } finally {
