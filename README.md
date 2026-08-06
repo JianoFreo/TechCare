@@ -155,12 +155,3 @@ curl http://localhost:5000/api/test/ping
 
 Then use Postman (or curl) with a `Bearer <token>` header from `/api/auth/login` to hit role-specific endpoints.
 
-## Known Gaps / Future Work
-
-- `doctor.route.ts` and `patient.route.ts` are stubs — not wired up yet.
-- No API documentation, sequence/ER diagrams, or full endpoint reference.
-- No automated tests.
-- `ws` dependency and `initializeWebSocket` are present but commented out/unused in `server.ts`.
-- `.github/` workflow(s) — check `.github/workflows` for current CI, none of it is described here.
-
-For a much deeper, code-verified reference (schema details, per-controller notes, known bugs and their fixes, conventions), see `SKILL.md` in the repo root.
