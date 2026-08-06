@@ -24,42 +24,42 @@ function LoginPage() {
     };
     triggerServerWakeUp();
   }, []);
-  const login = async () => {
-    if (!username || !password) {
-      alert("Please fill in all fields.");
+const login = async () => {
+  if (!username || !password) {
+    alert("Please fill in all fields.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const response = await api.post("/api/auth/login", {
+      username,
+      password,
+    });
+
+    console.log("RESPONSE:", response);
+    console.log("DATA:", response.data);
+
+    if (response.data.message !== "Login successful") {
+      alert(response.data.message);
       return;
     }
 
-    setLoading(true);
+    const token = response.data.token;
+    const role = response.data.user.role;
 
-    try {
-      const response = await api.post("/api/auth/login", {
-        username,
-        password,
-      });
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", role);
 
-      console.log("RESPONSE:", response);
-      console.log("DATA:", response.data);
-
-      if (response.data.message !== "Login successful") {
-        alert(response.data.message);
-        return;
-      }
-
-      const token = response.data.token;
-      const role = response.data.user.role;
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-
-      navigate(`/${role}`);
-    } catch (error) {
-      console.error("ACTUAL ERROR:", error);
-      alert("Login failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    navigate(`/${role}`);
+  } catch (error) {
+    console.error("ACTUAL ERROR:", error);
+    alert("Login failed.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex">
