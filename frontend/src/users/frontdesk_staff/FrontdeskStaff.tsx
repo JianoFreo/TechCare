@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 
 import api from "../../lib/axios";
@@ -31,20 +31,25 @@ function FrontdeskStaff() {
     function setPage(newPage: string) {
         setSearchParams({ page: newPage });
     }
-
     const loadData = useCallback(async () => {
         try {
-            const serviceResoponse = await api.get("/api/fdstaff/services");
+            const serviceResponse = await api.get("/api/fdstaff/services");
             const patientsResponse = await api.get("/api/fdstaff/patients");
             const queuesResponse = await api.get("/api/fdstaff/queues");
 
-            setServices(serviceResoponse.data.services);
+            setServices(serviceResponse.data.services);
             setPatients(patientsResponse.data.patients);
             setQueues(queuesResponse.data.queueEntries);
         } catch (error) {
             console.log("Error fetching queue entries data:", error);
         }
     }, []);
+
+    useEffect(() => {
+        (async () => {
+            await loadData();
+        })();
+    }, [loadData]);
 
     return (
         <div className="flex min-h-screen">
