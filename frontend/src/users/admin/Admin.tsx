@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import UserManagement from "./pages/UserManagement";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -47,8 +47,8 @@ function Admin() {
     const [open, setOpen] = useState(true);
     const [searchParams, setSearchParams] = useSearchParams();
     const page = searchParams.get("page") ?? "dashboard"
-    function setPage(newPage:string){
-        setSearchParams({page:newPage})
+    function setPage(newPage: string) {
+        setSearchParams({ page: newPage })
     }
 
 
@@ -66,11 +66,17 @@ function Admin() {
             console.log("services data:", userResponse.data);
 
             setUsers(userResponse.data.users);
-             console.log("Users data:", userResponse.data.users);
+            console.log("Users data:", userResponse.data.users);
         } catch (error) {
             console.log("Error fetching services:", error);
         }
     }, []);
+    useEffect(() => {
+        (async () => {
+            await loadData();
+        })();
+    }, [loadData]);
+
 
     return (
         <div className="flex min-h-screen">
