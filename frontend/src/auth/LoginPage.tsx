@@ -29,29 +29,30 @@ function LoginPage() {
       alert("Please fill in all fields.");
       return;
     }
+
     setLoading(true);
-    let response;
 
     try {
-      response = await api.post("/api/auth/login", {
+      const response = await api.post("/api/auth/login", {
         username,
         password,
       });
-      console.log("Login response:", response.data);
-      if (!response.data) {
-        alert(response?.data.message);
+
+      const { message, token, user } = response.data;
+
+      if (message !== "Login successful") {
+        alert(message);
         setUsername("");
         setPassword("");
-      } else {
-        const token = response.data.token;
-        const role = response.data.user.role;
-        localStorage.setItem("token", token);
-        localStorage.setItem("role", role);
-        navigate(`/${role}`);
-        console.log(localStorage.getItem("token"));
+        return;
       }
-    } catch {
-      alert(response?.data.message);
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", user.role);
+
+      navigate(`/${user.role}`);
+    } catch (error: unknown) {
+      alert(error.response?.data?.message || "Unable to connect to the server.");
       setUsername("");
       setPassword("");
     } finally {
