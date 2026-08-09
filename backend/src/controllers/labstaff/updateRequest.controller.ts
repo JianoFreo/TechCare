@@ -4,20 +4,39 @@ import { json, Request, Response } from "express";
 export async function updateLabRequestStatus(req: Request, res: Response) {
   try {
     const { request_id } = req.params;
-    const { status } = req.body;
+    const { status,results } = req.body;
 
-    if (!status || !request_id) {
+    if (!request_id) {
       return res.status(400).json({
-        message: "Status and Request ID are required!",
+        message: "Request ID are required!",
       });
     }
 
+     if (!status) {
+      return res.status(400).json({
+        message: "Status is required!",
+      });
+    }
+
+
     const updatedLabRequestStatus = await sql`
         UPDATE lab_requests
-        SET status = ${status}
+        SET 
+          status = ${status},
+          results = ${results ? JSON.stringify(results) : null},
+          updates_at = NOW()
         WHERE request_id = ${request_id} AND
               is_paid = TRUE
-        RETURNING *;
+        RETURNING 
+        request_id,
+        consultation_id,
+        patient_id,
+        doctor_id,
+        test_type,
+        results,
+        status,
+        requested_at,
+        updated_at;
     `;
 
     if (updatedLabRequestStatus.length === 0) {
@@ -28,11 +47,13 @@ export async function updateLabRequestStatus(req: Request, res: Response) {
 
     return res.status(200).json({
       message: `Laboratory request status changed to ${status}.`,
-      request: updatedLabRequestStatus,
+      request: updatedLabRequestStatus[0],
     });
   } catch (error) {
-    console.error;
-    res.status(500).json({
+    console.error("Unable to update laboratory request", error);
+
+
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }
