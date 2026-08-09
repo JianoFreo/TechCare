@@ -54,6 +54,8 @@ async function initializeServer() {
     if (ENV.IS_PRODUCTION) {
       console.log("IS_PRODUCTION:", ENV.IS_PRODUCTION, typeof ENV.IS_PRODUCTION);
       await syncSchema();  // only turn this on if you want the scheme to sync the database // dont turn this one while editing the db
+
+      // if you ever want to sync the database while in devq then just change your .env file to have IS_PRODUCTION=true and then run the servera again
     }
     const server = app.listen(ENV.PORT, () => {
       console.log(`Server is up and running on http://localhost:${ENV.PORT}`);
