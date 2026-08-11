@@ -12,6 +12,7 @@ import {
   addActivity,
 } from "../controllers/admin/postRequests.controller.js";
 import { updateUser } from "../controllers/admin/updateRequests.controller.js";
+import { upload } from "../middlewares/multer.middleware.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import adminMiddleware from "../middlewares/admin.middleware.js";
 const router = Router();
@@ -25,7 +26,7 @@ router.get("/services", getAllservices);
 router.get("/activity", getMyActivities);
 router.get("/activities", getAllActivities);
 router.get("/users", getAllUsers);
-router.post("/add-user", addUser);
+router.post("/add-user", upload.single("image"), addUser);
 router.post("/services", addService);
 router.patch("/users/:user_id", updateUser);
 router.post("/activities", addActivity);

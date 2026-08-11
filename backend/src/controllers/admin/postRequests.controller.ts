@@ -1,4 +1,5 @@
 import { sql } from "../../config/db.js";
+import cloudinary from "../../config/cloudinary.js";
 import bcrypt from "bcryptjs";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
@@ -49,6 +50,13 @@ export async function addUser(req: Request, res: Response) {
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
+
+    // if (!req.file) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "At least one image is required" });
+    // }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     // const signUpResult = await sql`
     //     INSERT INTO pending_users (username, password, role)
@@ -63,13 +71,72 @@ export async function addUser(req: Request, res: Response) {
       return res.status(200).json({ message: "User already exists" });
     }
     const userId = await generateUserId();
+    // const uploadPromise = await cloudinary.uploader.upload(req.file.path, {
+    //   folder: "products",
+    // });
+    // const imageUrl = uploadPromise.secure_url;
+    // // if you are going to upload multipple files
+    // // let imageUrls: string[] = [];
+
+    // // if (req.files) {
+    // //     const files = req.files as Express.Multer.File[];
+
+    // //     const uploadedImages = await Promise.all(
+    // //         files.map((file) =>
+    // //             cloudinary.uploader.upload(file.path, {
+    // //                 folder: "TechCare/patients",
+    // //             })
+    // //         )
+    // //     );
+
+    // //     imageUrls = uploadedImages.map((image) => image.secure_url);
+    // // }
     const signUpResult = await sql`
-        INSERT INTO users (user_id, username, password_hash, first_name, middle_name, last_name, suffix, sex,  
-        email, contact_number, emergency_contact_name, emergency_contact, address, birthdate,
-        role, department, employment_status, date_hired, shift_start, shift_end, profile_photo) 
-        VALUES (${userId}, ${username}, ${hashedPassword}, ${first_name}, ${middle_name}, ${last_name}, ${suffix},
-        ${sex}, ${email}, ${contact_number}, ${emergency_contact_name}, ${emergency_contact}, ${address}, ${birthdate},
-        ${role}, ${department}, ${employment_status}, ${date_hired}, ${shift_start}, ${shift_end}, ${profile_photo}) 
+        INSERT INTO users (
+            user_id, 
+            username, 
+            password_hash, 
+            first_name, 
+            middle_name, 
+            last_name, 
+            suffix, 
+            sex,  
+            email, 
+            contact_number, 
+            emergency_contact_name, 
+            emergency_contact, 
+            address, 
+            birthdate,
+            role, 
+            department, 
+            employment_status, 
+            date_hired, 
+            shift_start, 
+            shift_end, 
+            profile_photo
+        ) 
+        VALUES (
+            ${userId}, 
+            ${username}, 
+            ${hashedPassword}, 
+            ${first_name}, 
+            ${middle_name}, 
+            ${last_name}, 
+            ${suffix},
+            ${sex}, 
+            ${email}, 
+            ${contact_number}, 
+            ${emergency_contact_name}, 
+            ${emergency_contact}, 
+            ${address}, 
+            ${birthdate},
+            ${role}, 
+            ${department}, 
+            ${employment_status}, 
+            ${date_hired}, 
+            ${shift_start}, 
+            ${shift_end}, 
+            ${profile_photo}) 
         RETURNING *
     `;
     console.log("INSERT RESULT:", signUpResult);
