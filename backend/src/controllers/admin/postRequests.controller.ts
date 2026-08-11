@@ -13,13 +13,37 @@ import {
 export async function addUser(req: Request, res: Response) {
   // post /api/admin/users
   try {
-    const { username, password, role, full_name, email, contact_number } =
-      req.body;
+    const {
+      username,
+      password,
+      first_name,
+      middle_name,
+      last_name,
+      suffix,
+      sex,
+      email,
+      contact_number,
+      emergency_contact_name,
+      emergency_contact,
+      address,
+      birthdate,
+      role,
+      department,
+      employment_status,
+      date_hired,
+      shift_start,
+      shift_end,
+      profile_photo,
+    } = req.body;
     if (
       !username ||
       !password ||
+      !first_name ||
+      !last_name ||
+      !sex ||
+      !birthdate ||
       !role ||
-      !full_name ||
+      !date_hired ||
       !email ||
       !contact_number
     ) {
@@ -40,8 +64,12 @@ export async function addUser(req: Request, res: Response) {
     }
     const userId = await generateUserId();
     const signUpResult = await sql`
-        INSERT INTO users (user_id, username, password, role, full_name, email, contact_number) 
-        VALUES (${userId}, ${username}, ${hashedPassword}, ${role}, ${full_name}, ${email}, ${contact_number}) 
+        INSERT INTO users (user_id, username, password_hash, first_name, middle_name, last_name, suffix, sex,  
+        email, contact_number, emergency_contact_name, emergency_contact, address, birthdate,
+        role, department, employment_status, date_hired, shift_start, shift_end, profile_photo) 
+        VALUES (${userId}, ${username}, ${hashedPassword}, ${first_name}, ${middle_name}, ${last_name}, ${suffix},
+        ${sex}, ${email}, ${contact_number}, ${emergency_contact_name}, ${emergency_contact}, ${address}, ${birthdate},
+        ${role}, ${department}, ${employment_status}, ${date_hired}, ${shift_start}, ${shift_end}, ${profile_photo}) 
         RETURNING *
     `;
     console.log("INSERT RESULT:", signUpResult);
@@ -56,14 +84,21 @@ export async function addUser(req: Request, res: Response) {
       .status(201)
       .json({ user: signUpResult[0], message: "Sign up successful!", token });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: " Error on uplaoding new user" });
   }
 }
+
 export async function addService(req: Request, res: Response) {
   // post /api/admin/services
   try {
     const { service_name, price, service_type } = req.body;
-    if (!service_name || price === undefined || price === null || !service_type) {
+    if (
+      !service_name ||
+      price === undefined ||
+      price === null ||
+      !service_type
+    ) {
       return res.status(400).json({ message: "All fields are required" });
     } else if (isNaN(price)) {
       return res.status(400).json({ message: "Price must be a number" });
