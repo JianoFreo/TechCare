@@ -44,9 +44,9 @@ const TABLES: {
       department              VARCHAR(100),
       employment_status       VARCHAR(50),
       date_hired              DATE NOT NULL,
-      shift_start             TIME NOT NULL,
-      shift_end               TIME NOT NULL,
-      last_login              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      shift_start             TIME NOT NULL DEFAULT '08:00:00',
+      shift_end               TIME NOT NULL DEFAULT '17:00:00',
+      last_login              TIMESTAMP,
       account_status          BOOLEAN NOT NULL DEFAULT TRUE,
       profile_photo           TEXT,
       created_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -72,9 +72,9 @@ const TABLES: {
       department: "VARCHAR(100)",
       employment_status: "VARCHAR(50)",
       date_hired: "DATE NOT NULL",
-      shift_start: "TIME NOT NULL",
-      shift_end: "TIME NOT NULL",
-      last_login: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+      shift_start: "TIME NOT NULL DEFAULT '08:00:00'",
+      shift_end: "TIME NOT NULL DEFAULT '17:00:00'",
+      last_login: "TIMESTAMP",
       account_status: "BOOLEAN NOT NULL DEFAULT TRUE",
       profile_photo: "TEXT",
       created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
@@ -87,7 +87,7 @@ const TABLES: {
       id                      SERIAL PRIMARY KEY,
       patient_id              VARCHAR(255) UNIQUE NOT NULL,
       username                VARCHAR(255) NOT NULL,
-      password                VARCHAR(255) NOT NULL,
+      password_hash                VARCHAR(255) NOT NULL,
       first_name              VARCHAR(255) NOT NULL,
       middle_name             VARCHAR(255),
       last_name               VARCHAR(255) NOT NULL,
@@ -108,7 +108,7 @@ const TABLES: {
       id: "SERIAL PRIMARY KEY",
       patient_id: "VARCHAR(255) UNIQUE NOT NULL",
       username: "VARCHAR(255) NOT NULL",
-      password: "VARCHAR(255) NOT NULL",
+      password_hash: "VARCHAR(255) NOT NULL",
       first_name: "VARCHAR(255) NOT NULL",
       middle_name: "VARCHAR(255)",
       last_name: "VARCHAR(255) NOT NULL",
@@ -430,7 +430,6 @@ const TABLES: {
     },
   },
 ];
-
 
 // -----------------------------------------------------------------------
 // connectNeon: original behavior only. Just creates tables that don't
