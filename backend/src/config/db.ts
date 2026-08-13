@@ -307,8 +307,9 @@ const TABLES: {
     createSQL: `CREATE TABLE IF NOT EXISTS request_items (
       id              SERIAL PRIMARY KEY,
       lab_item_id     VARCHAR(255) UNIQUE NOT NULL,
-      request_id  VARCHAR(255) NOT NULL REFERENCES laboratory_requests(request_id),
+      request_id      VARCHAR(255) NOT NULL REFERENCES laboratory_requests(request_id),
       service_id      VARCHAR(255) NOT NULL REFERENCES services(service_id),
+      queue_id        VARCHAR(255) NOT NULL REFERENCES queue_entries(queue_id),
       status          VARCHAR(50) NOT NULL DEFAULT 'Requested'
     )`,
     columns: {
