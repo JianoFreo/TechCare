@@ -2,11 +2,32 @@ import { sql } from "../../config/db.js";
 import bcrypt from "bcryptjs";
 import { NextFunction, Request, Response } from "express";
 
-export async function updateUser(req: Request, res: Response) { //patch /api/admin/users/:user_id
+export async function updateUser(req: Request, res: Response) {
+  //patch /api/admin/users/:user_id
   try {
     const { user_id } = req.params;
-    const { username, password, role, full_name, email, contact_number } =
-      req.body;
+    const {
+      username,
+      password,
+      first_name,
+      middle_name,
+      last_name,
+      suffix,
+      sex,
+      email,
+      contact_number,
+      emergency_contact_name,
+      emergency_contact,
+      address,
+      birthdate,
+      role,
+      department,
+      employment_status,
+      account_status,
+      date_hired,
+      shift_start,
+      shift_end,
+    } = req.body;
 
     let hashedPassword = null;
 
@@ -18,11 +39,25 @@ export async function updateUser(req: Request, res: Response) { //patch /api/adm
       UPDATE users
       SET
         username = COALESCE(${username}, username),
-        password = COALESCE(${hashedPassword}, password),
+        password_hash = COALESCE(${hashedPassword}, password_hash),
+        first_name = COALESCE(${first_name}, first_name),
+        middle_name = COALESCE(${middle_name}, middle_name),
+        last_name = COALESCE(${last_name}, last_name),
+        suffix = COALESCE(${suffix}, suffix),
+        sex = COALESCE(${sex}, sex),
         role = COALESCE(${role}, role),
-        full_name = COALESCE(${full_name}, full_name),
         email = COALESCE(${email}, email),
-        contact_number = COALESCE(${contact_number}, contact_number)
+        contact_number = COALESCE(${contact_number}, contact_number),
+        emergency_contact_name =  COALESCE(${emergency_contact_name}, emergency_contact_name),
+        emergency_contact = COALESCE(${emergency_contact}, emergency_contact),
+        address = COALESCE(${address}, address),
+        birthdate = COALESCE(${birthdate}, birthdate),
+        department = COALESCE(${department}, department),
+        employment_status = COALESCE(${employment_status}, employment_status),
+        account_status = COALESCE(${account_status}, account_status),
+        date_hired = COALESCE(${date_hired}, date_hired),
+        shift_start = COALESCE(${shift_start}, shift_start),
+        shift_end = COALESCE(${shift_end}, shift_end)
       WHERE user_id = ${user_id}
       RETURNING *;
     `;
