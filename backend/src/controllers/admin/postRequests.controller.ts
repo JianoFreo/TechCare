@@ -43,6 +43,7 @@ export async function addUser(req: Request, res: Response) {
       !last_name ||
       !sex ||
       !birthdate ||
+      !address ||
       !role ||
       !date_hired ||
       !email ||
@@ -120,23 +121,23 @@ export async function addUser(req: Request, res: Response) {
             ${username}, 
             ${hashedPassword}, 
             ${first_name}, 
-            ${middle_name}, 
+            ${middle_name ?? null}, 
             ${last_name}, 
-            ${suffix},
+            ${suffix ?? null},
             ${sex}, 
             ${email}, 
             ${contact_number}, 
-            ${emergency_contact_name}, 
-            ${emergency_contact}, 
+            ${emergency_contact_name ?? null}, 
+            ${emergency_contact ?? null}, 
             ${address}, 
             ${birthdate},
             ${role}, 
-            ${department}, 
-            ${employment_status}, 
+            ${department ?? null}, 
+            ${employment_status ?? null}, 
             ${date_hired}, 
-            ${shift_start}, 
-            ${shift_end}, 
-            ${profile_photo}) 
+            ${shift_start ?? "08:00:00"}, 
+            ${shift_end ?? "17:00:00"}, 
+            ${profile_photo ?? null}) 
         RETURNING *
     `;
     console.log("INSERT RESULT:", signUpResult);

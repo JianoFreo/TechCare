@@ -44,6 +44,7 @@ export async function addPatient(req: Request, res: Response) {
       !last_name ||
       !birthdate ||
       !sex ||
+      !address ||
       !email ||
       !contact_number ||
       !civil_status
@@ -107,7 +108,7 @@ export async function addPatient(req: Request, res: Response) {
                 ${suffix ?? null},
                 ${sex},
                 ${email},
-                ${address ?? null},
+                ${address},
                 ${contact_number},
                 ${civil_status ?? "Single"},
                 ${blood_type ?? null},
