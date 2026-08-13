@@ -34,7 +34,6 @@ export async function addUser(req: Request, res: Response) {
       date_hired,
       shift_start,
       shift_end,
-      profile_photo,
     } = req.body;
     if (
       !username ||
@@ -52,11 +51,11 @@ export async function addUser(req: Request, res: Response) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // if (!req.file) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: "At least one image is required" });
-    // }
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ message: "At least one image is required" });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     // const signUpResult = await sql`
@@ -72,26 +71,26 @@ export async function addUser(req: Request, res: Response) {
       return res.status(200).json({ message: "User already exists" });
     }
     const userId = await generateUserId();
-    // const uploadPromise = await cloudinary.uploader.upload(req.file.path, {
-    //   folder: "products",
-    // });
-    // const imageUrl = uploadPromise.secure_url;
-    // // if you are going to upload multipple files
-    // // let imageUrls: string[] = [];
+    const uploadPromise = await cloudinary.uploader.upload(req.file.path, {
+      folder: "techcare/user_photos",
+    });
+    const profile_photo = uploadPromise.secure_url;
+    // if you are going to upload multipple files
+    // let imageUrls: string[] = [];
 
-    // // if (req.files) {
-    // //     const files = req.files as Express.Multer.File[];
+    // if (req.files) {
+    //     const files = req.files as Express.Multer.File[];
 
-    // //     const uploadedImages = await Promise.all(
-    // //         files.map((file) =>
-    // //             cloudinary.uploader.upload(file.path, {
-    // //                 folder: "TechCare/patients",
-    // //             })
-    // //         )
-    // //     );
+    //     const uploadedImages = await Promise.all(
+    //         files.map((file) =>
+    //             cloudinary.uploader.upload(file.path, {
+    //                 folder: "TechCare/patients",
+    //             })
+    //         )
+    //     );
 
-    // //     imageUrls = uploadedImages.map((image) => image.secure_url);
-    // // }
+    //     imageUrls = uploadedImages.map((image) => image.secure_url);
+    // }
     const signUpResult = await sql`
         INSERT INTO users (
             user_id, 
