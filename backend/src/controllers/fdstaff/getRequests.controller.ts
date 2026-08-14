@@ -122,7 +122,7 @@ export async function getAllservices(req: Request, res: Response) {
   // get /api/fdstaff/services
   try {
     const services = await sql`
-        SELECT service_id, service_name, price, service_type
+        SELECT service_id, service_name, price, service_type, room
         FROM services
         WHERE active = TRUE
     `;
