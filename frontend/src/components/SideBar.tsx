@@ -2,7 +2,7 @@ type SideBarProps = {
     open: boolean;
     page: string;
     setPage: (page: string) => void;
-    navItems: { page: string; label: string }[];
+    navItems: { page: string; label: string; icon: React.ReactNode }[];
 };
 
 
@@ -27,13 +27,16 @@ function SideBar({ open, page, setPage, navItems }: SideBarProps) {
                         {navItems.map((item) => (
                             <a
                                 key={item.page}
-                                className={`hover:font-bold border-2 rounded-[20px] p-5 ${page === item.page
+                                className={`hover:font-bold border-1 rounded-[20px] p-5 ${page === item.page
                                         ? "bg-red-800 text-white border-red-800"
                                         : ""
                                     }`}
                                 onClick={() => setPage(item.page)}
                             >
+                                <div className="flex items-center gap-3">
+                                {item.icon  }
                                 {item.label}
+                                </div>
                             </a>
                         ))}
                     </nav>

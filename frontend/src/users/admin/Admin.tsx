@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
-import UserManagement from "./pages/UserManagement";
+import {
+    LayoutGrid,
+    Users,
+    BadgeDollarSign,
+    Activity,
+} from "lucide-react";import UserManagement from "./pages/UserManagement";
 import AdminDashboard from "./pages/AdminDashboard";
 import SideBar from "../../components/SideBar";
 import ServicePricingManagement from "./pages/ServicePricing";
@@ -52,24 +57,27 @@ function Admin() {
         setSearchParams({ page: newPage })
     }
     const navItems = [
-        {
-            page: "dashboard",
-            label: "Dashboard",
-        },
-        {
-            page: "user-management",
-            label: "User Management",
-        },
-        {
-            page: "service-pricing",
-            label: "Service Pricing",
-        },
-        {
-            page: "activity-monitoring",
-            label: "Activity Monitoring",
-        },
-    ];
-
+    {
+        page: "dashboard",
+        label: "Dashboard",
+        icon: <LayoutGrid size={20} />,
+    },
+    {
+        page: "user-management",
+        label: "User Management",
+        icon: <Users size={20} />,
+    },
+    {
+        page: "service-pricing",
+        label: "Service Pricing",
+        icon: <BadgeDollarSign size={20} />,
+    },
+    {
+        page: "activity-monitoring",
+        label: "Activity Monitoring",
+        icon: <Activity size={20} />,
+    },
+];
     const loadData = useCallback(async () => {
         try {
             setLoading(true);
