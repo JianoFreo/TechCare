@@ -35,7 +35,6 @@ if (ENV.IS_PRODUCTION) {
   console.log("FD Staff routes enabled");
 }
 
-
 // GET requests
 router.get("/patients", getAllPatients);
 router.get("/billing", getAllBilling);
