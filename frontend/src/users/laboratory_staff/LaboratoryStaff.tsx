@@ -73,7 +73,14 @@ function LaboratoryStaff() {
         />
       )}
 
-      {page === "laboratory-results" && <LaboratoryResults />}
+      {page === "laboratory-results" && <LaboratoryResults
+         open={open}
+          setOpen={setOpen}
+          requests={labRequests}
+          loading={loading}
+          error={error}
+          loadData={() => loadData()}
+          />}
     </div>
   );
 }

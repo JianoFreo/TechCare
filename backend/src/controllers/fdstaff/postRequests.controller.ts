@@ -1,5 +1,4 @@
 import { sql } from "../../config/db.js";
-import { ENV } from "../../config/env.js";
 import bcrypt from "bcryptjs";
 import { calculateAge } from "../../utils/calculateAge.js";
 import { Request, Response } from "express";
@@ -10,6 +9,7 @@ import {
   generateLaboratoryRequestID,
   generateQueueNumberConsultation,
   generateQueueNumberLaboratory,
+  generateLaboratoryItemID,
 } from "../../utils/generateId.js";
 export async function addPatient(req: Request, res: Response) {
   // POST /api/fdstaff/patients
@@ -358,12 +358,12 @@ export async function addBills(req: Request, res: Response) {
 export async function addQueueEntry(req: Request, res: Response) {
   try {
     // Get the data sent by the frontend
-    const { patient_id, service_id, service_name, is_priority } = req.body;
+    const { patient_id, service_id, is_priority } = req.body;
 
     // Make sure a service was selected
-    if (!service_id) {
+    if (!service_id || !patient_id) {
       return res.status(400).json({
-        message: "service_id and service_type are required.",
+        message: "service_id and patient_id are required.",
       });
     }
 
@@ -381,39 +381,19 @@ export async function addQueueEntry(req: Request, res: Response) {
     let queueNumber;
 
     // Generate consultation queue ID and number
-    if (serviceType[0].service_type === "consultation") {
+    if (
+      serviceType[0].service_type.split(" ")[0].toLowerCase() === "consultation"
+    ) {
       queueId = await generateConsultationQueueId();
       queueNumber = await generateQueueNumberConsultation(); // Exammple return : CONS-0017
     }
 
     // Generate laboratory queue ID and number
-    if (serviceType[0].service_type === "laboratory") {
+    if (
+      serviceType[0].service_type.split(" ")[0].toLowerCase() === "laboratory"
+    ) {
       queueId = await generateLaboratoryQueueId();
       queueNumber = await generateQueueNumberLaboratory(); // Example return: LAB-0017
-    }
-
-    // Default patient name for walk-in patients
-    let patientName = null;
-
-    // If a patient ID was entered, verify that it exists
-    if (patient_id) {
-      patientName = await sql`
-        SELECT last_name, first_name
-        FROM patients
-        WHERE patient_id = ${patient_id}
-      `;
-
-      // If no patient matches the entered ID,
-      // return a 404 error
-      if (patientName.length === 0) {
-        return res
-          .status(404)
-          .json({ message: "The patient ID you entered doesn't exist." });
-      }
-
-      // Convert the patient's first and last name
-      // into a single display string
-      patientName = patientName[0].last_name + ", " + patientName[0].first_name;
     }
 
     // Insert the new queue entry into the database
@@ -421,22 +401,18 @@ export async function addQueueEntry(req: Request, res: Response) {
       INSERT INTO queue_entries (
         queue_id,
         patient_id,
-        patient_name,
         queue_number,
         service_id,
-        service_name,
-        service_type,
-        is_priority
+        is_priority,
+        status
       )
       VALUES (
         ${queueId},
         ${patient_id},
-        ${patientName},
         ${queueNumber},
         ${service_id},
-        ${service_name},
-        ${serviceType[0].service_type},
-        ${is_priority}
+        ${is_priority},
+        'Waiting'
       )
       RETURNING *;
     `;
@@ -457,33 +433,66 @@ export async function addQueueEntry(req: Request, res: Response) {
 
 export async function addLaboratoryRequest(req: Request, res: Response) {
   try {
-    const { patient_id, test_type } = req.body;
+    const { patient_id, services } = req.body;
 
-    if (!patient_id || !test_type) {
+    if (!patient_id || !Array.isArray(services) || services.length === 0) {
       return res.status(400).json({
-        message: "Patient ID, Doctor ID, and Test type is required!",
+        message:
+          "Patient ID is required and at least one service must be provided.",
       });
     }
+
     const request_id = await generateLaboratoryRequestID();
-    const response = await sql`
-    INSERT INTO lab_requests(
-      request_id,
-      patient_id,
-      test_type,
-      status,
-      is_paid
-    )
-      VALUES(
-      ${request_id},
-      ${patient_id},
-      ${test_type},
-      'In Queue',
-      TRUE
-    ) RETURNING *
+
+    const laboratory_request_result = await sql`
+      INSERT INTO laboratory_requests (
+        request_id,
+        patient_id,
+        is_paid
+      )
+      VALUES (
+        ${request_id},
+        ${patient_id},
+        TRUE
+      )
+      RETURNING *
     `;
+
+    if (laboratory_request_result.length === 0) {
+      return res.status(400).json({
+        message: "Failed adding laboratory request header.",
+      });
+    }
+
+    const laboratory_item_result = await Promise.all(
+      services.map(async (service: { service_id: string }) => {
+        const service_id = service.service_id;
+        const lab_item_id = await generateLaboratoryItemID();
+
+        const insertedItem = await sql`
+          INSERT INTO request_items (
+            lab_item_id,
+            request_id,
+            service_id,
+            status
+          )
+          VALUES (
+            ${lab_item_id},
+            ${request_id},
+            ${service_id},
+            'Requested'
+          )
+          RETURNING *
+        `;
+
+        return insertedItem[0];
+      }),
+    );
+
     return res.status(201).json({
-      message: "Laboratory request added succesfully.",
-      request: response,
+      message: "Laboratory request added successfully.",
+      request: laboratory_request_result,
+      items: laboratory_item_result,
     });
   } catch (error) {
     console.error(error);

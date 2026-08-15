@@ -58,6 +58,7 @@ export async function updateUser(req: Request, res: Response) {
         date_hired = COALESCE(${date_hired}, date_hired),
         shift_start = COALESCE(${shift_start}, shift_start),
         shift_end = COALESCE(${shift_end}, shift_end)
+        updated_at = CURRENT_TIMESTAMP,
       WHERE user_id = ${user_id}
       RETURNING *;
     `;
