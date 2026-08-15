@@ -2,6 +2,7 @@
 import Header from "../../../components/Header";
 import RequestTable from "../components/RequestTable";
 import InformationCard from "../components/InformationCard";
+import RequestSummary from "../components/RequestSummary";
 
 type LabRequest = {
   request_id: string;
@@ -37,7 +38,7 @@ function LaboratoryRequests({
   const [patientIdCard, setPatientIdCard] = useState<string | null>(null);
 
   return (
-    <main className="flex-1 min-w-0 p-6 bg-gray-100">
+    <main className="flex-1 min-w-0 bg-white">
       <Header
         page="Laboratory Requests"
         loading={loading}
@@ -45,22 +46,10 @@ function LaboratoryRequests({
         setOpen={setOpen}
         loadData={loadData}
       />
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex w-full justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900">
-              Request List
-            </h2>
-            <h4 className="text-gray-500">
-              Click laboratory request for more information
-            </h4>
-          </div>
-          <h2 className="text-lg font-semibold text-slate-900">
-            Date: {new Date().toLocaleDateString()}
-          </h2>
-        </div>
+      <div className="px-6 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <RequestSummary requests={requests} loading={loading} error={error} />
       </div>
-      <div className="overflow-x-auto flex flex-col space-y-6 z-0">
+      <div className="px-6 overflow-x-auto flex flex-col space-y-6 z-0">
         <div className="px-4 py-3 rounded-lg shadow-md bg-white">
           <h1 className="text-xl font-semibold mb-2">In Progress</h1>
           <RequestTable

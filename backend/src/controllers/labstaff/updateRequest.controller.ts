@@ -4,7 +4,7 @@ import { json, Request, Response } from "express";
 export async function updateLabRequestStatus(req: Request, res: Response) {
   try {
     const { request_id } = req.params;
-    const { status,results } = req.body;
+    const { status, results } = req.body;
 
     if (!request_id) {
       return res.status(400).json({
@@ -12,12 +12,11 @@ export async function updateLabRequestStatus(req: Request, res: Response) {
       });
     }
 
-     if (!status) {
+    if (!status) {
       return res.status(400).json({
         message: "Status is required!",
       });
     }
-
 
     const updatedLabRequestStatus = await sql`
         UPDATE lab_requests
@@ -51,7 +50,6 @@ export async function updateLabRequestStatus(req: Request, res: Response) {
     });
   } catch (error) {
     console.error("Unable to update laboratory request", error);
-
 
     return res.status(500).json({
       message: "Internal Server Error",
