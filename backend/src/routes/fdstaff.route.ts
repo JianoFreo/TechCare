@@ -23,7 +23,6 @@ import {
   skipQueueEntry,
   updatePatient,
 } from "../controllers/fdstaff/updateRequests.controller.js";
-import { upload } from "../middlewares/multer.middleware.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import fdstaffMiddleware from "../middlewares/fdstaff.middleware.js";
 
@@ -55,7 +54,7 @@ router.post("/laboratory-requests", addLaboratoryRequest);
 //UPDATE requests
 router.put("/queues/:queue_id", serveQueueEntry);
 router.patch("/queues/:queue_id", skipQueueEntry);
-router.put("/patients/:patient_id", upload.single("image"), updatePatient);
+router.put("/patients/:patient_id", updatePatient);
 router.patch("/laboratory-requests/:request_id", confirmLabRequestPayment);
 // DELETE requests
 router.delete("/queues/:queue_id", deleteQueue);
