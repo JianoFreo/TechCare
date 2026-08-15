@@ -5,12 +5,11 @@
 //   withCredentials: true,
 // });
 
-
-
 import axios from "axios";
+import { ENV } from "./env.config";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "", // on monolithic its undefined without beacsue  it has /api on VITE_API_BASE_URL so it redirects to the webs domain and adds /api on its. thats not the same on our static
+  baseURL: ENV.VITE_IS_DEVELOPMENT ? "http://localhost:5000" : ENV.VITE_API_BASE_URL, // on monolithic its undefined without beacsue  it has /api on VITE_API_BASE_URL so it redirects to the webs domain and adds /api on its. thats not the same on our static
     //   1. Local monolithic (npm run build && npm start, one server on :5000)
 
     // No VITE_API_BASE_URL set → baseURL = ""
@@ -35,9 +34,12 @@ const api = axios.create({
     // baseURL = "https://your-backend.onrender.com" (env var wins)
     // ✅ Works exactly like before
 });
+
+
+
 // ┌─────────┬──────────────────┬─────────────────────────────────────┬──────────────────────────────────────────────┬─────────────────────────────────────────────────────────────┬───────────────────┐
 // │ (index) │ deployment       │ baseURL                             │ axiosBehavior                                │ finalURL                                                    │ status            │
-// ├─────────┼──────────────────┼─────────────────────────────────────┼──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────┼───────────────────┤
+// ├─────────┼──────────────────┼─────────────────────────────────────┼──────────────────────────────────────────────┼────────────────────────────────────────———————————————┬———————————————┤
 // │ 0       │ 'Monolithic'     │ 'undefined'                         │ 'Falls back to the page's own origin'        │ 'https://techcare-hui6.onrender.com/api/admin/services'     │ '✅ Correct'      │
 // │ 1       │ 'Static (broken)'│ 'undefined or wrong'                │ 'Falls back to the page's own origin'        │ 'https://your-static-site.onrender.com/api/admin/services'  │ '❌ Wrong server' │
 // │ 2       │ 'Static (fixed)' │ 'https://techcare-hui6.onrender.com'│ 'Uses that explicitly'                       │ 'https://techcare-hui6.onrender.com/api/admin/services'     │ '✅ Correct'      │

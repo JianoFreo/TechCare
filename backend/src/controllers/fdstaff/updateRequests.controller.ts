@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import cloudinary from "../../config/cloudinary.js";
 import { sql } from "../../config/db.js";
 import { calculateAge } from "../../utils/calculateAge.js";
@@ -10,24 +11,31 @@ export async function updatePatient(req: Request, res: Response) {
     const { patient_id } = req.params;
 
     const {
-      last_name,
+      username,
+      password,
       first_name,
-      date_of_birth,
+      middle_name,
+      last_name,
+      suffix,
       sex,
-      contact_number,
       email,
       address,
+      contact_number,
+      civil_status,
+      blood_type,
+      birthdate,
+      emergency_contact_name,
       emergency_contact,
     } = req.body;
 
-    if (!last_name || !first_name || !date_of_birth || !sex) {
+    if (!patient_id) {
       return res.status(400).json({
-        message: "Required fields are missing.",
+        message: "Patient_id is missing.",
       });
     }
 
     const existingPatient = await sql`
-            SELECT patient_id, image_url
+            SELECT patient_id
             FROM patients
             WHERE patient_id = ${patient_id}
         `;
@@ -40,32 +48,44 @@ export async function updatePatient(req: Request, res: Response) {
 
     // Only replace image_url if a new file was actually uploaded;
     // otherwise keep whatever is already on the record.
-    let imageUrl = existingPatient[0].image_url;
+    // let imageUrl = existingPatient[0].image_url;
 
-    if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "products",
-      });
-      imageUrl = uploadResult.secure_url;
+    // if (req.file) {
+    //   const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+    //     folder: "products",
+    //   });
+    //   imageUrl = uploadResult.secure_url;
+    // }
+
+    let hashedPassword = null;
+
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
     }
 
     const [updatedPatient] = await sql`
             UPDATE patients
             SET
-                last_name = ${last_name},
-                first_name = ${first_name},
-                date_of_birth = ${date_of_birth},
-                sex = ${sex},
-                contact_number = ${contact_number},
-                email = ${email},
-                address = ${address},
-                emergency_contact = ${emergency_contact},
-                updated_at = CURRENT_TIMESTAMP,
-                image_url = ${imageUrl}
+                username = COALESCE(${username}, username),
+                password_hash = COALESCE(${hashedPassword}, password_hash),
+                first_name = COALESCE(${first_name}, first_name),
+                middle_name = COALESCE(${middle_name}, middle_name),
+                last_name = COALESCE(${last_name}, last_name),
+                suffix = COALESCE(${suffix}, suffix),
+                sex = COALESCE(${sex}, sex),
+                email = COALESCE(${email}, email),
+                address = COALESCE(${address}, address),
+                birthdate = COALESCE(${birthdate}, birthdate),
+                contact_number = COALESCE(${contact_number}, contact_number),
+                emergency_contact_name =  COALESCE(${emergency_contact_name}, emergency_contact_name),
+                emergency_contact = COALESCE(${emergency_contact}, emergency_contact),
+                civil_status = COALESCE(${civil_status}, civil_status),
+                blood_type = COALESCE(${blood_type}, blood_type),
+                updated_at = CURRENT_TIMESTAMP
             WHERE patient_id = ${patient_id}
             RETURNING *;
         `;
-    const age = calculateAge(updatedPatient.date_of_birth);
+    const age = calculateAge(updatedPatient.birthdate);
 
     return res.status(200).json({
       message: "Patient updated successfully.",

@@ -164,9 +164,8 @@ export async function getLaboratoryRequest(req: Request, res: Response) {
     const { patient_id } = req.params;
 
     const lab_reqs = await sql`
-        SELECT request_id, consultation_id, patient_id, doctor_id, test_type, requested_at
-        FROM lab_requests
-        WHERE patient_id = ${patient_id} AND status = 'Requested'
+        SELECT * FROM laboratory_requests
+        WHERE patient_id = ${patient_id} AND is_paid = 'FALSE
         AND requested_at >= CURRENT_DATE
         AND requested_at < CURRENT_DATE + INTERVAL '1 day'
         ORDER BY requested_at DESC;
