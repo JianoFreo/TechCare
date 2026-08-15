@@ -10,7 +10,30 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000", // on monolithic its undefined without beacsue  it has /api on VITE_API_BASE_URL so it redirects to the webs domain and adds /api on its. thats not the same on our static
+  baseURL: import.meta.env.VITE_API_BASE_URL || "", // on monolithic its undefined without beacsue  it has /api on VITE_API_BASE_URL so it redirects to the webs domain and adds /api on its. thats not the same on our static
+    //   1. Local monolithic (npm run build && npm start, one server on :5000)
+
+    // No VITE_API_BASE_URL set → baseURL = ""
+    // Browser loads page from http://localhost:5000, axios requests go to http://localhost:5000/api/... (relative → same origin)
+    // ✅ Works
+
+    // 2. Prod monolithic (deployed, one service)
+
+    // No VITE_API_BASE_URL set at build → baseURL = ""
+    // Browser loads page from https://techcare-hui6.onrender.com, axios requests go there too
+    // ✅ Works (this was the broken one before — it used to literally try localhost:5000 on a stranger's browser)
+
+    // 3. Local distributed (two terminals, backend on :5000, frontend dev server on :5173)
+
+    // You set VITE_API_BASE_URL=http://localhost:5000 in frontend/.env.local
+    // baseURL = "http://localhost:5000" (env var wins, fallback never used)
+    // ✅ Works exactly like before
+
+    // 4. Prod distributed (separate static frontend + separate backend)
+
+    // You set VITE_API_BASE_URL=https://your-backend.onrender.com at build time on the static host
+    // baseURL = "https://your-backend.onrender.com" (env var wins)
+    // ✅ Works exactly like before
 });
 // ┌─────────┬──────────────────┬─────────────────────────────────────┬──────────────────────────────────────────────┬─────────────────────────────────────────────────────────────┬───────────────────┐
 // │ (index) │ deployment       │ baseURL                             │ axiosBehavior                                │ finalURL                                                    │ status            │
