@@ -27,9 +27,9 @@ function SideBar({ open, page, setPage, navItems }: SideBarProps) {
                         {navItems.map((item) => (
                             <a
                                 key={item.page}
-                                className={`hover:font-bold border-2 p-5 ${page === item.page
-                                    ? "bg-red-800 text-white border-red-800"
-                                    : ""
+                                className={`hover:font-bold border-2 rounded-[20px] p-5 ${page === item.page
+                                        ? "bg-red-800 text-white border-red-800"
+                                        : ""
                                     }`}
                                 onClick={() => setPage(item.page)}
                             >
