@@ -23,7 +23,6 @@ import {
   skipQueueEntry,
   updatePatient,
 } from "../controllers/fdstaff/updateRequests.controller.js";
-import { uploadImage } from "../controllers/test.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import fdstaffMiddleware from "../middlewares/fdstaff.middleware.js";
@@ -43,7 +42,7 @@ router.get("/queues", getAllQueueEntries);
 router.get("/patients/:patient_id/laboratory-requests", getLaboratoryRequest);
 
 // POST requests
-router.post("/patients", upload.single("image"), addPatient);
+router.post("/patients", addPatient);
 //uploading multiple files
 // router.post(
 //   "/patients",
