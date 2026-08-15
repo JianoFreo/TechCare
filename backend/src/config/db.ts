@@ -55,13 +55,10 @@ const TABLES: {
     columns: {
       id: "SERIAL PRIMARY KEY",
       user_id: "VARCHAR(255) UNIQUE NOT NULL",
-      username: "VARCHAR(255) NOT NULL",
-      password_hash: "VARCHAR(255) NOT NULL",
-      first_name: "VARCHAR(255) NOT NULL",
-      middle_name: "VARCHAR(255)",
-      last_name: "VARCHAR(255) NOT NULL",
-      suffix: "VARCHAR(20)",
-      sex: "VARCHAR(20) NOT NULL",
+      username: "VARCHAR(255) NOT NULL UNIQUE",
+      password: "VARCHAR(255) NOT NULL",
+      role: "VARCHAR(50) NOT NULL",
+      full_name: "VARCHAR(255) NOT NULL",
       email: "VARCHAR(255) NOT NULL UNIQUE",
       contact_number: "VARCHAR(20) NOT NULL",
       emergency_contact_name: "VARCHAR(255)",
@@ -129,176 +126,112 @@ const TABLES: {
   {
     table: "services",
     createSQL: `CREATE TABLE IF NOT EXISTS services (
-      id            SERIAL PRIMARY KEY,
-      service_id    VARCHAR(255) UNIQUE NOT NULL,
-      service_name  VARCHAR(255) UNIQUE NOT NULL,
-      service_type  VARCHAR(50) NOT NULL,
-      price         NUMERIC(10,2) NOT NULL,
-      room          VARCHAR(50),
-      active        BOOLEAN NOT NULL DEFAULT TRUE,
-      created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      update_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      id           SERIAL PRIMARY KEY,
+      service_type VARCHAR(50)  NOT NULL,
+      service_id   VARCHAR(255) UNIQUE NOT NULL,
+      service_name VARCHAR(255) NOT NULL UNIQUE,
+      price        DECIMAL(10,2) NOT NULL,
+      active       BOOLEAN       NOT NULL DEFAULT TRUE,
+      created_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
     columns: {
       id: "SERIAL PRIMARY KEY",
-      service_id: "VARCHAR(255) UNIQUE NOT NULL",
-      service_name: "VARCHAR(255) UNIQUE NOT NULL",
       service_type: "VARCHAR(50) NOT NULL",
-      price: "NUMERIC(10,2) NOT NULL",
-      room: "VARCHAR(50) NOT NULL",
+      service_id: "VARCHAR(255) UNIQUE NOT NULL",
+      service_name: "VARCHAR(255) NOT NULL UNIQUE",
+      price: "DECIMAL(10,2) NOT NULL",
       active: "BOOLEAN NOT NULL DEFAULT TRUE",
-      created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
-      update_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
-    },
-  },
-  {
-    table: "packages",
-    createSQL: `CREATE TABLE IF NOT EXISTS packages(
-      id            SERIAL PRIMARY KEY,
-      package_id    VARCHAR(255) UNIQUE NOT NULL,
-      package_name  VARCHAR(255) UNIQUE NOT NULL,
-      price         NUMERIC(10,2) NOT NULL,
-      active        BOOLEAN NOT NULL DEFAULT TRUE,
-      created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      update_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`,
-    columns: {
-      id: "SERIAL PRIMARY KEY",
-      package_id: "VARCHAR(255) UNIQUE NOT NULL",
-      package_name: "VARCHAR(255) UNIQUE NOT NULL",
-      price: "NUMERIC(10,2) NOT NULL",
-      active: "BOOLEAN NOT NULL DEFAULT TRUE",
-      created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
-      update_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
-    },
-  },
-  {
-    table: "package_items",
-    createSQL: `CREATE TABLE IF NOT EXISTS package_items(
-      id            SERIAL PRIMARY KEY,
-      item_id       VARCHAR(255) UNIQUE NOT NULL,
-      package_id    VARCHAR(255) UNIQUE NOT NULL REFERENCES packages(package_id),
-      service_id    VARCHAR(255) UNIQUE NOT NULL REFERENCES services(service_id)
-    )`,
-    columns: {
-      id: "SERIAL PRIMARY KEY",
-      item_id: "VARCHAR(255) UNIQUE NOT NULL",
-      package_id:
-        "VARCHAR(255) UNIQUE NOT NULL REFERENCES packages(package_id)",
-      service_id:
-        "VARCHAR(255) UNIQUE NOT NULL REFERENCES services(service_id)",
-    },
-  },
-  {
-    table: "queue_entries",
-    createSQL: `CREATE TABLE IF NOT EXISTS queue_entries (
-      id            SERIAL PRIMARY KEY,
-      queue_id      VARCHAR(255) UNIQUE NOT NULL,
-      patient_id    VARCHAR(255) NOT NULL REFERENCES patients(patient_id),
-      queue_number  VARCHAR(50) NOT NULL,
-      service_id    VARCHAR(255) NOT NULL REFERENCES services(service_id),
-      is_priority   BOOLEAN NOT NULL,
-      status        VARCHAR(50) NOT NULL,
-      created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      update_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`,
-    columns: {
-      id: "SERIAL PRIMARY KEY",
-      queue_id: "VARCHAR(255) UNIQUE NOT NULL",
-      patient_id: "VARCHAR(255) REFERENCES patients(patient_id)",
-      queue_number: "VARCHAR(50)",
-      service_id: "VARCHAR(255) REFERENCES services(service_id)",
-      is_priority: "BOOLEAN NOT NULL",
-      status: "VARCHAR(50) NOT NULL",
-      created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
-      update_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
-    },
-  },
-  {
-    table: "consultations",
-    createSQL: `CREATE TABLE IF NOT EXISTS consultations (
-      id                 SERIAL PRIMARY KEY,
-      consultation_id    VARCHAR(255) UNIQUE NOT NULL,
-      patient_id         VARCHAR(255) NOT NULL REFERENCES patients(patient_id),
-      user_id            VARCHAR(255) NOT NULL REFERENCES users(user_id),
-      queue_id           VARCHAR(255) NOT NULL REFERENCES queue_entries(queue_id),
-      chief_complaint    VARCHAR(255),
-      diagnosis          VARCHAR(255),
-      blood_pressure     VARCHAR(20),
-      temperature        NUMERIC(4,1),
-      weight             NUMERIC(5,2),
-      height             NUMERIC(5,2),
-      notes              TEXT,
-      consultation_date  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`,
-    columns: {
-      id: "SERIAL PRIMARY KEY",
-      consultation_id: "VARCHAR(255) UNIQUE NOT NULL",
-      patient_id: "VARCHAR(255) NOT NULL REFERENCES patients(patient_id)",
-      user_id: "VARCHAR(255) NOT NULL REFERENCES users(user_id)",
-      queue_id: "VARCHAR(255) REFERENCES queue_entries(queue_id)",
-      chief_complaint: "VARCHAR(255)",
-      diagnosis: "VARCHAR(255)",
-      blood_pressure: "VARCHAR(20)",
-      temperature: "NUMERIC(4,1)",
-      weight: "NUMERIC(5,2)",
-      height: "NUMERIC(5,2)",
-      notes: "TEXT",
-      consultation_date: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
       created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
       updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
     },
   },
   {
-    table: "prescriptions",
-    createSQL: `CREATE TABLE IF NOT EXISTS prescriptions (
-      id               SERIAL PRIMARY KEY,
-      prescription_id  VARCHAR(255) UNIQUE NOT NULL,
-      consultation_id  VARCHAR(255) NOT NULL REFERENCES consultations(consultation_id),
-      patient_id       VARCHAR(255) NOT NULL REFERENCES patients(patient_id),
-      user_id          VARCHAR(255) NOT NULL REFERENCES users(user_id),
-      date_prescribed  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      notes            VARCHAR(255),
-      created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    table: "queue_entries",
+    createSQL: `CREATE TABLE IF NOT EXISTS queue_entries (
+      id           SERIAL PRIMARY KEY,
+      queue_id     VARCHAR(255) UNIQUE NOT NULL,
+      patient_id   VARCHAR(255)     REFERENCES patients(patient_id),
+      patient_name VARCHAR(255),
+      queue_number INTEGER     NOT NULL,
+      service_id   VARCHAR(255) NOT NULL REFERENCES services(service_id),
+      service_name VARCHAR(255) NOT NULL,
+      service_type VARCHAR(255) NOT NULL,
+      is_priority  BOOLEAN     NOT NULL DEFAULT FALSE,
+      status       VARCHAR(20) NOT NULL DEFAULT 'waiting',
+      created_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
     columns: {
       id: "SERIAL PRIMARY KEY",
-      prescription_id: "VARCHAR(255) UNIQUE NOT NULL",
-      consultation_id:
-        "VARCHAR(255) NOT NULL REFERENCES consultations(consultation_id)",
-      patient_id: "VARCHAR(255) NOT NULL REFERENCES patients(patient_id)",
-      user_id: "VARCHAR(255) NOT NULL REFERENCES users(user_id)",
-      date_prescribed: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
-      notes: "VARCHAR(255)",
+      queue_id: "VARCHAR(255) UNIQUE NOT NULL",
+      patient_id: "VARCHAR(255) REFERENCES patients(patient_id)",
+      patient_name: "VARCHAR(255)",
+      queue_number: "INTEGER NOT NULL",
+      service_id: "VARCHAR(255) NOT NULL REFERENCES services(service_id)",
+      service_name: "VARCHAR(255) NOT NULL",
+      service_type: "VARCHAR(255) NOT NULL",
+      is_priority: "BOOLEAN NOT NULL DEFAULT FALSE",
+      status: "VARCHAR(20) NOT NULL DEFAULT 'waiting'",
       created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+      updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
     },
   },
   {
-    table: "laboratory_requests",
-    createSQL: `CREATE TABLE IF NOT EXISTS laboratory_requests (
-      id               SERIAL PRIMARY KEY,
-      request_id       VARCHAR(255) UNIQUE NOT NULL,
-      patient_id       VARCHAR(255) NOT NULL REFERENCES patients(patient_id),
-      consultation_id  VARCHAR(255) REFERENCES consultations(consultation_id),
-      requested_by     VARCHAR(255) REFERENCES users(user_id),
-      performed_by     VARCHAR(255) REFERENCES users(user_id),
-      is_paid          BOOLEAN NOT NULL DEFAULT FALSE,
-      requested_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      completed_at     TIMESTAMP,
-      updated_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    table: "consultations",
+    createSQL: `CREATE TABLE IF NOT EXISTS consultations (
+      id SERIAL PRIMARY KEY,
+      consultation_id VARCHAR(255) UNIQUE NOT NULL,
+      patient_id      VARCHAR(255)     NOT NULL REFERENCES patients(patient_id),
+      doctor_id       VARCHAR(255)    NOT NULL REFERENCES users(user_id),
+      queue_id        VARCHAR(255)     UNIQUE   REFERENCES queue_entries(queue_id),
+      reason          VARCHAR(500),
+      findings        JSONB,
+      prescription    JSONB,
+      status          VARCHAR(20) NOT NULL DEFAULT 'Open',
+      consulted_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at      TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    columns: {
+      id: "SERIAL PRIMARY KEY",
+      consultation_id: "VARCHAR(255) UNIQUE NOT NULL",
+      patient_id: "VARCHAR(255) NOT NULL REFERENCES patients(patient_id)",
+      doctor_id: "VARCHAR(255) NOT NULL REFERENCES users(user_id)",
+      queue_id: "VARCHAR(255) UNIQUE REFERENCES queue_entries(queue_id)",
+      reason: "VARCHAR(500)",
+      findings: "JSONB",
+      prescription: "JSONB",
+      status: "VARCHAR(20) NOT NULL DEFAULT 'Open'",
+      consulted_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+      updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+    },
+  },
+  {
+    table: "lab_requests",
+    createSQL: `CREATE TABLE IF NOT EXISTS lab_requests (
+      id              SERIAL PRIMARY KEY,
+      request_id      VARCHAR(255) UNIQUE NOT NULL,
+      consultation_id VARCHAR(255) REFERENCES consultations(consultation_id),
+      patient_id      VARCHAR(255)     NOT NULL REFERENCES patients(patient_id),
+      doctor_id       VARCHAR(255) REFERENCES users(user_id),
+      test_type       VARCHAR(200) NOT NULL,
+      results         JSONB,
+      status          VARCHAR(20)  NOT NULL DEFAULT 'Requested',
+      is_paid         BOOLEAN      NOT NULL DEFAULT FALSE,
+      requested_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
     columns: {
       id: "SERIAL PRIMARY KEY",
       request_id: "VARCHAR(255) UNIQUE NOT NULL",
-      patient_id: "VARCHAR(255) NOT NULL REFERENCES patients(patient_id)",
       consultation_id: "VARCHAR(255) REFERENCES consultations(consultation_id)",
-      requested_by: "VARCHAR(255) REFERENCES users(user_id)",
-      performed_by: "VARCHAR(255) REFERENCES users(user_id)",
+      patient_id: "VARCHAR(255) NOT NULL REFERENCES patients(patient_id)",
+      doctor_id: "VARCHAR(255) REFERENCES users(user_id)",
+      test_type: "VARCHAR(200) NOT NULL",
+      results: "JSONB",
+      status: "VARCHAR(20) NOT NULL DEFAULT 'Requested'",
       is_paid: "BOOLEAN NOT NULL DEFAULT FALSE",
       requested_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
-      completed_at: "TIMESTAMP",
       updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
     },
   },
@@ -362,58 +295,33 @@ const TABLES: {
   },
   {
     table: "bills",
-    createSQL: `CREATE TABLE IF NOT EXISTS bills(
-      id                 SERIAL PRIMARY KEY,
-      bill_id            VARCHAR(255) UNIQUE NOT NULL,
-      patient_id         VARCHAR(255) NOT NULL REFERENCES patients(patient_id),
-      queue_id           VARCHAR(255) REFERENCES queue_entries(queue_id),
-      consultation_id    VARCHAR(255) REFERENCES consultations(consultation_id),
-      issued_by          VARCHAR(255) NOT NULL REFERENCES users(user_id),
-      subtotal           NUMERIC(10,2) NOT NULL,
-      discount_pct       NUMERIC(5,2),
-      total_amount       NUMERIC(10,2) NOT NULL,
-      status             VARCHAR(50) NOT NULL,
-      billed_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      receipt_issued_at  TIMESTAMP,
-      updated_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    createSQL: `CREATE TABLE IF NOT EXISTS bills (
+        id                 SERIAL PRIMARY KEY,
+        bill_id            VARCHAR(255) UNIQUE NOT NULL,
+        patient_id         VARCHAR(255)     NOT NULL REFERENCES patients(patient_id),
+        items              JSONB        NOT NULL,
+        discount_pct       DECIMAL(5,2)  NOT NULL DEFAULT 0,
+        total_amount       DECIMAL(10,2) NOT NULL DEFAULT 0,
+        payment_method     VARCHAR(30)   NOT NULL DEFAULT 'Cash',
+        status             VARCHAR(20)   NOT NULL DEFAULT 'Unpaid',
+        receipt_id         VARCHAR(50)   UNIQUE,
+        created_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        receipt_issued_at  TIMESTAMP,
+        billed_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
     columns: {
       id: "SERIAL PRIMARY KEY",
       bill_id: "VARCHAR(255) UNIQUE NOT NULL",
       patient_id: "VARCHAR(255) NOT NULL REFERENCES patients(patient_id)",
-      queue_id: "VARCHAR(255) REFERENCES queue_entries(queue_id)",
-      consultation_id: "VARCHAR(255) REFERENCES consultations(consultation_id)",
-      issued_by: "VARCHAR(255) NOT NULL REFERENCES users(user_id)",
-      subtotal: "NUMERIC(10,2) NOT NULL",
-      discount_pct: "NUMERIC(5,2)",
-      total_amount: "NUMERIC(10,2) NOT NULL",
-      status: "VARCHAR(50) NOT NULL",
-      billed_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
-      receipt_issued_at: "TIMESTAMP",
-      updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
-    },
-  },
-  {
-    table: "bill_items",
-    createSQL: `CREATE TABLE IF NOT EXISTS bill_items (
-      id            SERIAL PRIMARY KEY,
-      bill_item_id  VARCHAR(255) UNIQUE NOT NULL,
-      bill_id       VARCHAR(255) NOT NULL REFERENCES bills(bill_id),
-      service_id    VARCHAR(255) NOT NULL REFERENCES services(service_id), 
-      quantity      INTEGER NOT NULL,
-      unit_price    NUMERIC(10,2) NOT NULL,
-      subtotal      NUMERIC(10,2) NOT NULL,
-      created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`,
-    columns: {
-      id: "SERIAL PRIMARY KEY",
-      bill_item_id: "VARCHAR(255) UNIQUE NOT NULL",
-      bill_id: "VARCHAR(255) NOT NULL REFERENCES bills(bill_id)",
-      service_id: "VARCHAR(255) NOT NULL REFERENCES services(service_id)",
-      quantity: "INTEGER NOT NULL",
-      unit_price: "NUMERIC(10,2) NOT NULL",
-      subtotal: "NUMERIC(10,2) NOT NULL",
+      items: "JSONB NOT NULL",
+      discount_pct: "DECIMAL(5,2) NOT NULL DEFAULT 0",
+      total_amount: "DECIMAL(10,2) NOT NULL DEFAULT 0",
+      payment_method: "VARCHAR(30) NOT NULL DEFAULT 'Cash'",
+      status: "VARCHAR(20) NOT NULL DEFAULT 'Unpaid'",
+      receipt_id: "VARCHAR(50) UNIQUE",
       created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+      receipt_issued_at: "TIMESTAMP",
+      billed_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
     },
   },
   {
@@ -459,16 +367,9 @@ export async function connectNeon(): Promise<void> {
 // on demand, whenever you want the DB's actual columns brought in line
 // with the `columns` objects defined above (adds missing, drops extra).
 //
-// OVERRIDE BEHAVIOR: if a column being added is NOT NULL with no
-// DEFAULT, Postgres cannot add it to a table that already has rows
-// (every existing row would violate the constraint). Since data loss
-// is acceptable here, this function TRUNCATEs that table (CASCADE) right
-// before adding such a column, so the ALTER always succeeds.
-//
-// WARNING: TRUNCATE ... CASCADE wipes ALL rows in that table AND any
-// table that references it via foreign key (e.g. truncating `users`
-// also empties `consultations`, `prescriptions`, `bills`, etc.).
 // WARNING: dropping a column permanently deletes its data immediately.
+// WARNING: adding a NOT NULL column to a table with existing rows needs
+// a DEFAULT in its type string, or the ALTER will throw.
 //
 // Example ways to trigger it:
 //   import { syncSchema } from "./config/db.js";
@@ -598,7 +499,6 @@ export async function syncSchema(onlyTables?: string[]): Promise<void> {
 
   console.log("[schema-sync] database schema synchronized");
 }
-
 // To change columns, do this:
 
 // 1. **Edit two spots for the table you're changing**, inside the `TABLES` array:
