@@ -1,5 +1,4 @@
 import { sql } from "../../config/db.js";
-import { ENV } from "../../config/env.js";
 import bcrypt from "bcryptjs";
 import { calculateAge } from "../../utils/calculateAge.js";
 import { Request, Response } from "express";
@@ -395,29 +394,6 @@ export async function addQueueEntry(req: Request, res: Response) {
     ) {
       queueId = await generateLaboratoryQueueId();
       queueNumber = await generateQueueNumberLaboratory(); // Example return: LAB-0017
-    }
-
-    let patientName = null;
-
-    // If a patient ID was entered, verify that it exists
-    if (patient_id) {
-      patientName = await sql`
-        SELECT last_name, first_name
-        FROM patients
-        WHERE patient_id = ${patient_id}
-      `;
-
-      // If no patient matches the entered ID,
-      // return a 404 error
-      if (patientName.length === 0) {
-        return res
-          .status(404)
-          .json({ message: "The patient ID you entered doesn't exist." });
-      }
-
-      // Convert the patient's first and last name
-      // into a single display string
-      patientName = patientName[0].last_name + ", " + patientName[0].first_name;
     }
 
     // Insert the new queue entry into the database
