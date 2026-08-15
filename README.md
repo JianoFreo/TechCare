@@ -1,10 +1,10 @@
 # TechCare: CLOUD-BASED INTEGRATED INFORMATION SYSTEM FOR REYNA G. DIAGNOSTIC MEDICAL CLINIC
 Group Members:
-Dela Cruz, Marc Jodel
-De Guzman, Mike Cleo
-Geronga, Laurence Anthony
-Juan, Randy Jr.
-Matangob, Jiano Freo
+- Dela Cruz, Marc Jodel
+- De Guzman, Mike Cleo
+- Geronga, Laurence Anthony
+- Juan, Randy Jr.
+- Matangob, Jiano Freo
 
 A full-stack clinic management system: patient records, front-desk queueing, lab requests, billing, and admin/user management, split into role-based dashboards (Admin, Doctor, Front Desk, Lab Staff, Patient).
 
