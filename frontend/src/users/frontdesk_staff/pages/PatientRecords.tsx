@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import api from "../../../lib/axios";
 import EditPatientRecord from "../components/EditPatientRecord";
-import Header from "../components/Header";
+import Header from "../../../components/Header";
 
 // adjust path to wherever the file lives
 
@@ -28,6 +28,7 @@ type PatientRecordProps = {
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     loadData: () => Promise<void>;
+    loading: boolean;
 };
 
 function PatientRecords({
@@ -35,6 +36,7 @@ function PatientRecords({
     open,
     setOpen,
     loadData,
+    loading
 }: PatientRecordProps) {
     const [selectedPatient, setSelectedPatient] = useState<Patient[number] | null>(null);
     const [showEditPatient, setShowEditPatient] = useState(false);
@@ -71,6 +73,7 @@ function PatientRecords({
     return (
         <main className="flex-1 min-w-0 p-6">
             <Header
+                loading={loading}
                 open={open}
                 setOpen={setOpen}
                 loadData={loadData}

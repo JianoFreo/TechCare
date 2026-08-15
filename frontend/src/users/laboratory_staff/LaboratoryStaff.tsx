@@ -1,7 +1,7 @@
 ﻿import { useCallback, useEffect, useState } from "react";
 import api from "../../lib/axios";
 import LaboratoryRequests from "./pages/LaboratoryRequests";
-import SideBar from "./components/SideBar";
+import SideBar from "../../components/SideBar";
 import { useSearchParams } from "react-router";
 import LabstaffDashboard from "./pages/LabstaffDashbaord";
 import LaboratoryResults from "./pages/LaboratoryResults";
@@ -50,6 +50,20 @@ function LaboratoryStaff() {
       setLoading(false);
     }
   }, []);
+  const navItems = [
+    {
+      page: "dashboard",
+      label: "Dashboard",
+    },
+    {
+      page: "laboratory-requests",
+      label: "Laboratory Requests",
+    },
+    {
+      page: "laboratory-results",
+      label: "Laboratory Results",
+    },
+  ];
 
   useEffect(() => {
     (async () => {
@@ -59,7 +73,12 @@ function LaboratoryStaff() {
 
   return (
     <div className="flex min-h-screen cursor-default">
-      <SideBar open={open} page={page} setPage={setPage} />
+      <SideBar
+        open={open}
+        page={page}
+        setPage={setPage}
+        navItems={navItems}
+      />
       {page === "dashboard" && <LabstaffDashboard />}
 
       {page === "laboratory-requests" && (
@@ -74,13 +93,13 @@ function LaboratoryStaff() {
       )}
 
       {page === "laboratory-results" && <LaboratoryResults
-         open={open}
-          setOpen={setOpen}
-          requests={labRequests}
-          loading={loading}
-          error={error}
-          loadData={() => loadData()}
-          />}
+        open={open}
+        setOpen={setOpen}
+        requests={labRequests}
+        loading={loading}
+        error={error}
+        loadData={() => loadData()}
+      />}
     </div>
   );
 }

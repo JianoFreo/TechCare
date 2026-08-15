@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import Header from "../components/Header";
+import Header from "../../../components/Header";
 
 
 type User = {
@@ -18,6 +18,7 @@ type AdminDashboardProps = {
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     loadData: () => Promise<void>;
+    loading: boolean;
 };
 
 function AdminDashboard({
@@ -25,6 +26,7 @@ function AdminDashboard({
     open,
     setOpen,
     loadData,
+    loading,
 }: AdminDashboardProps) {
     useEffect(() => {
         loadData();
@@ -34,6 +36,7 @@ function AdminDashboard({
 
         <main className="flex-1 min-w-0 p-6">
             <Header
+            loading={loading}
                 open={open}
                 setOpen={setOpen}
                 loadData={loadData}

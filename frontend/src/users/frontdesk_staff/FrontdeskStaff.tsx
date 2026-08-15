@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 
 import api from "../../lib/axios";
-import SideBar from "./components/SideBar";
+import SideBar from "../../components/SideBar";
 import Billing from "./pages/Billing";
 import FrontdeskDashboard from "./pages/FrontdeskDashboard";
 import PatientRecords from "./pages/PatientRecords";
@@ -11,9 +11,10 @@ import QueueManagement from "./pages/QueueManagement";
 
 function FrontdeskStaff() {
     const [patients, setPatients] = useState([]);
-    const [billing, setBilling] = useState([]);
+    const [billing] = useState([]);
     const [queues, setQueues] = useState([]);
     const [services, setServices] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(true);
 
     const [searchParams, setSearchParams] = useSearchParams();
@@ -33,6 +34,7 @@ function FrontdeskStaff() {
     }
     const loadData = useCallback(async () => {
         try {
+            setLoading(true);
             const serviceResponse = await api.get("/api/fdstaff/services");
             const patientsResponse = await api.get("/api/fdstaff/patients");
             const queuesResponse = await api.get("/api/fdstaff/queues");
@@ -42,8 +44,32 @@ function FrontdeskStaff() {
             setQueues(queuesResponse.data.queueEntries);
         } catch (error) {
             console.log("Error fetching queue entries data:", error);
+        } finally {
+            setLoading(false);
         }
     }, []);
+    const navItems = [
+    {
+        page: "dashboard",
+        label: "Dashboard",
+    },
+    {
+        page: "patient-registration",
+        label: "Patient Registration",
+    },
+    {
+        page: "patient-records",
+        label: "Patient Records",
+    },
+    {
+        page: "queue-management",
+        label: "Queue Management",
+    },
+    {
+        page: "billing",
+        label: "Billing",
+    },
+];
 
     useEffect(() => {
         (async () => {
@@ -57,6 +83,7 @@ function FrontdeskStaff() {
                 open={open}
                 page={page}
                 setPage={setPage}
+                navItems={navItems}
             />
 
             {page === "dashboard" && (
@@ -67,6 +94,7 @@ function FrontdeskStaff() {
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
+                    loading={loading}
                 />
             )}
 
@@ -75,6 +103,8 @@ function FrontdeskStaff() {
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
+                    loading={loading}
+
                 />
             )}
 
@@ -84,6 +114,7 @@ function FrontdeskStaff() {
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
+                    loading={loading}
                 />
             )}
 
@@ -95,6 +126,7 @@ function FrontdeskStaff() {
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
+                    loading={loading}
                 />
             )}
 
@@ -104,6 +136,7 @@ function FrontdeskStaff() {
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
+                    loading={loading}
                 />
             )}
         </div>

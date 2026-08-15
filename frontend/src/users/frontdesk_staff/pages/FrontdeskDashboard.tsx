@@ -1,4 +1,4 @@
-import Header from "../components/Header";
+import Header from "../../../components/Header";
 
 type Bill = {
     id: number;
@@ -39,6 +39,7 @@ type Queue = {
 
 type FrontdeskDashboardProps = {
     billing: Bill;
+    loading: boolean;
     patients: Patient;
     queues: Queue;
     open: boolean;
@@ -46,7 +47,14 @@ type FrontdeskDashboardProps = {
     loadData: () => Promise<void>;
 };
 
-function FrontdeskDashboard({ billing, patients, queues, open, setOpen, loadData }: FrontdeskDashboardProps) {
+function FrontdeskDashboard({ 
+    billing, 
+    patients, 
+    queues, 
+    open, 
+    setOpen, 
+    loadData, 
+    loading }: FrontdeskDashboardProps) {
     return (
         <main className="flex-1 min-w-0 p-6">
             <Header
@@ -54,6 +62,7 @@ function FrontdeskDashboard({ billing, patients, queues, open, setOpen, loadData
                 setOpen={setOpen}
                 loadData={loadData}
                 page="Frontdesk Dashboard"
+                loading={loading}
             />
             <div className="grid grid-cols-4 gap-4">
                 <div className="bg-white p-4 shadow">

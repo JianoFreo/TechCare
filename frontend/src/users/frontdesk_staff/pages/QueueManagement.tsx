@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import api from "../../../lib/axios";
-import Header from "../components/Header";
+import Header from "../../../components/Header";
 import LabAndConsuQueues from "../components/LabAndConsuQueues";
 import NowServing from "../components/NowServing";
 import SubmitNewQueue from "../components/SubmitNewQueue";
@@ -21,7 +21,7 @@ type Queue = {
     updated_at: string;
 }[];
 type Patient = {
-    id:number
+    id: number
     patient_id: string
     first_name: string;
     last_name: string;
@@ -40,16 +40,18 @@ type Service = {
     price: number;
 }[];
 type QueueManagementProps = {
-    patients:Patient,
+    patients: Patient,
     services: Service
     queues: Queue;
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     loadData: () => Promise<void>;
+    loading: boolean;
 };
 
 function QueueManagement({
     services,
+    loading,
     queues,
     open,
     setOpen,
@@ -99,6 +101,7 @@ function QueueManagement({
     return (
         <main className="flex-1 min-w-0 bg-gray-100 p-6">
             <Header
+                loading={loading}
                 open={open}
                 setOpen={setOpen}
                 loadData={loadData}

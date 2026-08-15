@@ -1,4 +1,4 @@
-import Header from "../components/Header"
+import Header from "../../../components/Header"
 import { useEffect, useState } from "react";
 import ActivityDetails from "../components/ActivityDetails";
 
@@ -18,10 +18,11 @@ type ActivityModalProps = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   loadData: () => Promise<void>;
+  loading: boolean;
 };
 
 
-function ActivityMonitoring({ activities, open, setOpen, loadData }: ActivityModalProps) {
+function ActivityMonitoring({ activities, open, setOpen, loadData, loading }: ActivityModalProps) {
 
   useEffect(() => {
     loadData();
@@ -33,6 +34,7 @@ function ActivityMonitoring({ activities, open, setOpen, loadData }: ActivityMod
     <main className="flex-1 min-w-0 p-6">
 
       <Header
+      loading={loading}
         open={open}
         setOpen={setOpen}
         loadData={loadData}
