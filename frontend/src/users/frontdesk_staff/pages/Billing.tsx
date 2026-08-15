@@ -1,4 +1,4 @@
-import Header from "../components/Header";
+import Header from "../../../components/Header";
 type Bill = {
     id: number;
     billing_id: string;
@@ -16,8 +16,14 @@ type BillingProps = {
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     loadData(): Promise<void>;
+    loading: boolean;
 };
-function Billing({ billing, open, setOpen, loadData }: BillingProps) {
+function Billing({ 
+    billing, 
+    open, 
+    setOpen, 
+    loadData, 
+    loading }: BillingProps) {
     return (
         <main className="flex-1 min-w-0 p-6">
             <Header
@@ -25,6 +31,7 @@ function Billing({ billing, open, setOpen, loadData }: BillingProps) {
                 setOpen={setOpen}
                 loadData={loadData}
                 page="Billing"
+                loading={loading}
             />
         </main>
 

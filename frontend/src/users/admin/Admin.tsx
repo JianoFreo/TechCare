@@ -44,6 +44,7 @@ function Admin() {
     const [users, setUsers] = useState<User[]>([]);
     const [services, setServices] = useState<Service[]>([]);
     const [activities, setActivities] = useState<Activities[]>([])  // Acitivities[] this means that this object structure can be a lot of objects // array
+    const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(true);
     const [searchParams, setSearchParams] = useSearchParams();
     const page = searchParams.get("page") ?? "dashboard"
@@ -51,26 +52,27 @@ function Admin() {
         setSearchParams({ page: newPage })
     }
     const navItems = [
-    {
-        page: "dashboard",
-        label: "Dashboard",
-    },
-    {
-        page: "user-management",
-        label: "User Management",
-    },
-    {
-        page: "service-pricing",
-        label: "Service Pricing",
-    },
-    {
-        page: "activity-monitoring",
-        label: "Activity Monitoring",
-    },
-];
+        {
+            page: "dashboard",
+            label: "Dashboard",
+        },
+        {
+            page: "user-management",
+            label: "User Management",
+        },
+        {
+            page: "service-pricing",
+            label: "Service Pricing",
+        },
+        {
+            page: "activity-monitoring",
+            label: "Activity Monitoring",
+        },
+    ];
 
     const loadData = useCallback(async () => {
         try {
+            setLoading(true);
             const serviceResponse = await api.get("/api/admin/services");
             const userResponse = await api.get("/api/admin/users");
             const activityResponse = await api.get("/api/admin/activities")
@@ -86,6 +88,8 @@ function Admin() {
             console.log("Users data:", userResponse.data.users);
         } catch (error) {
             console.log("Error fetching services:", error);
+        } finally{
+            setLoading(false);
         }
     }, []);
     useEffect(() => {
@@ -106,6 +110,7 @@ function Admin() {
 
             {page === "dashboard" && (
                 <AdminDashboard
+                    loading={loading}
                     users={users}
                     open={open}
                     setOpen={setOpen}
@@ -114,6 +119,7 @@ function Admin() {
             )}
             {page === "user-management" && (
                 <UserManagement
+                    loading={loading}
                     users={users}
                     open={open}
                     setOpen={setOpen}
@@ -122,6 +128,7 @@ function Admin() {
             )}
             {page === "service-pricing" && (
                 <ServicePricingManagement
+                    loading={loading}
                     services={services}
                     open={open}
                     setOpen={setOpen}
@@ -130,6 +137,7 @@ function Admin() {
             )}
             {page === "activity-monitoring" && (
                 <ActivityMonitoring
+                    loading={loading}
                     activities={activities}
                     open={open}
                     setOpen={setOpen}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Header from "../components/Header";
+import Header from "../../../components/Header";
 import AddUserModal from "../components/AddUserModal";
 import UpdateUserModal from "../components/UpdateUserModal"
 
@@ -20,6 +20,7 @@ type UserManagementProps = {
     loadData: () => Promise<void>;
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    loading: boolean;
 };
 
 function UserManagement({
@@ -27,6 +28,7 @@ function UserManagement({
     loadData,
     open,
     setOpen,
+    loading
 }: UserManagementProps) {
     const [showAddUser, setShowAddUser] = useState(false);
     const [showUpdateUser, setShowUpdateUser] = useState(false);
@@ -45,6 +47,7 @@ function UserManagement({
         <main className="flex-1 min-w-0 p-6">
             <Header
                 open={open}
+                loading={loading}
                 setOpen={setOpen}
                 loadData={loadData}
                 page="User Management"

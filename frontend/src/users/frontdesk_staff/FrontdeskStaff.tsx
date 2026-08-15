@@ -14,6 +14,7 @@ function FrontdeskStaff() {
     const [billing] = useState([]);
     const [queues, setQueues] = useState([]);
     const [services, setServices] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(true);
 
     const [searchParams, setSearchParams] = useSearchParams();
@@ -33,6 +34,7 @@ function FrontdeskStaff() {
     }
     const loadData = useCallback(async () => {
         try {
+            setLoading(true);
             const serviceResponse = await api.get("/api/fdstaff/services");
             const patientsResponse = await api.get("/api/fdstaff/patients");
             const queuesResponse = await api.get("/api/fdstaff/queues");
@@ -42,6 +44,8 @@ function FrontdeskStaff() {
             setQueues(queuesResponse.data.queueEntries);
         } catch (error) {
             console.log("Error fetching queue entries data:", error);
+        } finally {
+            setLoading(false);
         }
     }, []);
     const navItems = [
@@ -90,6 +94,7 @@ function FrontdeskStaff() {
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
+                    loading={loading}
                 />
             )}
 
@@ -98,6 +103,8 @@ function FrontdeskStaff() {
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
+                    loading={loading}
+
                 />
             )}
 
@@ -107,6 +114,7 @@ function FrontdeskStaff() {
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
+                    loading={loading}
                 />
             )}
 
@@ -118,6 +126,7 @@ function FrontdeskStaff() {
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
+                    loading={loading}
                 />
             )}
 
@@ -127,6 +136,7 @@ function FrontdeskStaff() {
                     open={open}
                     setOpen={setOpen}
                     loadData={loadData}
+                    loading={loading}
                 />
             )}
         </div>

@@ -1,34 +1,40 @@
-import Header from "../components/Header";
+import Header from "../../../components/Header";
 import AddService from "../components/AddService"
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 type Service = {
-    id:number;
+    id: number;
     service_id: string;
     service_name: string;
     service_type: string;
     price: number;
-    active:boolean
+    active: boolean
 };
 type ServicePricingProps = {
     services: Service[];
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     loadData(): Promise<void>;
+    loading: boolean;
 };
 
 
-function ServicePricing({ services, open, setOpen, loadData }: ServicePricingProps) {
+function ServicePricing({ services, open, setOpen, loadData, loading }: ServicePricingProps) {
     const [search, setSearch] = useState("")
     const [showAddService, setShowAddService] = useState(false)
     const filteredService = services.filter((service) =>
         service.service_name.toLowerCase().includes(search.toLowerCase()) ||
         service.service_id.toString().toLowerCase().includes(search.toLowerCase())
     )
+    useEffect(() => {
+        loadData()
+    }, [loadData])
+
     return (
         <div className="flex-1 p-6">
             <Header
                 page="Service Pricing"
+                loading={loading}
                 open={open}
                 setOpen={setOpen}
                 loadData={loadData}
@@ -48,7 +54,7 @@ function ServicePricing({ services, open, setOpen, loadData }: ServicePricingPro
                         value={search}
                     />
                     <button
-                    className="bg-gray-200 p-2 hover:bg-gray-300 cursor-pointer"
+                        className="bg-gray-200 p-2 hover:bg-gray-300 cursor-pointer"
                         onClick={() => setShowAddService(true)}
                     > Add service
                     </button>
@@ -70,7 +76,7 @@ function ServicePricing({ services, open, setOpen, loadData }: ServicePricingPro
                                 <td className="px-4 py-3">{service.service_name}</td>
                                 <td className="px-4 py-3">{service.service_type}</td>
                                 <td className="px-4 py-3">{service.price}</td>
-                                <td className="px-4 py-3">{service.active ? "ACTIVE ": "NOT ACTIVE"}</td>
+                                <td className="px-4 py-3">{service.active ? "ACTIVE " : "NOT ACTIVE"}</td>
                             </tr>
                         ))}
                     </tbody>

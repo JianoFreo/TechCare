@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Header from "../components/Header";
+import Header from "../../../components/Header";
 import api from "../../../lib/axios";
 // import IdCard from "../components/IdCard";
 // type Patient = {
@@ -22,6 +22,7 @@ type PatientRegistrationProps = {
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     loadData: () => Promise<void>;
+    loading: boolean;
 };
 
 function PatientRegistration({
@@ -29,6 +30,7 @@ function PatientRegistration({
     open,
     setOpen,
     loadData,
+    loading
 }: PatientRegistrationProps) {
     const [first_name, setFirst_name] = useState("");
     const [last_name, setLast_name] = useState("");
@@ -40,7 +42,7 @@ function PatientRegistration({
     const [emergency_contact, setEmergency_contact] = useState("");
     const [image, setImage] = useState<File | null>(null);
     const [preview, setPreview] = useState<string>("");
-    const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -76,7 +78,7 @@ function PatientRegistration({
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        setLoading(true);
+        setSubmitting(true);
 
         const formData = new FormData();
 
@@ -118,13 +120,14 @@ function PatientRegistration({
             console.error(error);
             alert("Error registering patient: " + (error as { response?: { data?: { message?: string } } }).response?.data?.message);
         } finally {
-            setLoading(false);
+            setSubmitting(false);
         }
     }
 
     return (
         <main className="flex-1 min-w-0 p-6">
             <Header
+            loading={loading}
                 open={open}
                 setOpen={setOpen}
                 loadData={loadData}
@@ -226,9 +229,9 @@ function PatientRegistration({
                     <button
                         type="submit"
                         className="bg-blue-500 text-white p-2 rounded"
-                        disabled={loading}
+                        disabled={submitting}
                     >
-                        {loading ? "Registering..." : "Register Patient"}
+                        {submitting ? "Registering..." : "Register Patient"}
                     </button>
                 </form>
 
