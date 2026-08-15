@@ -146,7 +146,7 @@ export async function generateLaboratoryRequestID() {
   const prefix = `${year}-${month}${day}`;
   const labRequestsCreatedToday = await sql`
         SELECT request_id
-        FROM lab_requests
+        FROM laboratory_requests
         WHERE DATE(requested_at) = CURRENT_DATE
         ORDER BY request_id DESC
       `;
@@ -154,10 +154,38 @@ export async function generateLaboratoryRequestID() {
   let nextNumber = 1;
 
   if (labRequestsCreatedToday.length > 0) {
-    nextNumber = Number(labRequestsCreatedToday[0].request_id.slice(-4)) + 1;
+    const lastId = labRequestsCreatedToday[0].request_id;
+    nextNumber = Number(lastId.slice(-4)) + 1;
   }
   const sequence = String(nextNumber).padStart(4, "0");
   return `LR-${prefix}-${sequence}`;
+}
+
+export async function generateLaboratoryItemID() {
+  const now = new Date();
+
+  const year = String(now.getFullYear()).slice(-2);
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  const prefix = `${year}-${month}${day}`;
+  const labItemsCreatedToday = await sql`
+    SELECT lab_item_id
+    FROM request_items
+    WHERE DATE(created_at) = CURRENT_DATE
+    ORDER BY lab_item_id DESC
+  `;
+
+  let nextNumber = 1;
+
+  if (labItemsCreatedToday.length > 0) {
+    const lastId = labItemsCreatedToday[0].lab_item_id;
+    console.log(lastId);
+    nextNumber = Number(lastId.slice(-4)) + 1;
+  }
+
+  const sequence = String(nextNumber).padStart(4, "0");
+  return `LI-${prefix}-${sequence}`;
 }
 
 /////////=================================== QUQUE ID GENERATOR =========================================
