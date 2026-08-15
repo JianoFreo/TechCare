@@ -65,7 +65,6 @@ const TABLES: {
       emergency_contact: "VARCHAR(20)",
       address: "TEXT NOT NULL",
       birthdate: "DATE NOT NULL",
-      role: "VARCHAR(50) NOT NULL",
       department: "VARCHAR(100)",
       employment_status: "VARCHAR(50)",
       date_hired: "DATE NOT NULL",
