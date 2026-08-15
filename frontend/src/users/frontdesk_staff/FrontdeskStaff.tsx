@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
-
+import {
+    LayoutGrid,
+    UserPlus,
+    Users,
+    ListOrdered,
+    Receipt,
+} from "lucide-react";
 import api from "../../lib/axios";
 import SideBar from "../../components/SideBar";
 import Billing from "./pages/Billing";
@@ -49,27 +55,32 @@ function FrontdeskStaff() {
         }
     }, []);
     const navItems = [
-    {
-        page: "dashboard",
-        label: "Dashboard",
-    },
-    {
-        page: "patient-registration",
-        label: "Patient Registration",
-    },
-    {
-        page: "patient-records",
-        label: "Patient Records",
-    },
-    {
-        page: "queue-management",
-        label: "Queue Management",
-    },
-    {
-        page: "billing",
-        label: "Billing",
-    },
-];
+        {
+            page: "dashboard",
+            label: "Dashboard",
+            icon: <LayoutGrid size={20} />,
+        },
+        {
+            page: "patient-registration",
+            label: "Patient Registration",
+            icon: <UserPlus size={20} />,
+        },
+        {
+            page: "patient-records",
+            label: "Patient Records",
+            icon: <Users size={20} />,
+        },
+        {
+            page: "queue-management",
+            label: "Queue Management",
+            icon: <ListOrdered size={20} />,
+        },
+        {
+            page: "billing",
+            label: "Billing",
+            icon: <Receipt size={20} />,
+        },
+    ];
 
     useEffect(() => {
         (async () => {

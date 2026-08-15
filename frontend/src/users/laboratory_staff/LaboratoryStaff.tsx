@@ -1,4 +1,9 @@
 ﻿import { useCallback, useEffect, useState } from "react";
+import {
+  LayoutGrid,
+  ClipboardList,
+  FileCheck,
+} from "lucide-react";
 import api from "../../lib/axios";
 import LaboratoryRequests from "./pages/LaboratoryRequests";
 import SideBar from "../../components/SideBar";
@@ -54,14 +59,17 @@ function LaboratoryStaff() {
     {
       page: "dashboard",
       label: "Dashboard",
+      icon: <LayoutGrid size={20} />,
     },
     {
       page: "laboratory-requests",
       label: "Laboratory Requests",
+      icon: <ClipboardList size={20} />,
     },
     {
       page: "laboratory-results",
       label: "Laboratory Results",
+      icon: <FileCheck size={20} />,
     },
   ];
 
