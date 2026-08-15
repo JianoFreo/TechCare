@@ -2,31 +2,14 @@ type SideBarProps = {
     open: boolean;
     page: string;
     setPage: (page: string) => void;
+    navItems: { page: string; label: string }[];
 };
 
-const navItems = [
-    {
-        page: "dashboard",
-        label: "Dashboard",
-    },
-    {
-        page: "user-management",
-        label: "User Management",
-    },
-    {
-        page: "service-pricing",
-        label: "Service Pricing",
-    },
-    {
-        page: "activity-monitoring",
-        label: "Activity Monitoring",
-    },
-];
 
-function SideBar({ open, page, setPage }: SideBarProps) {
+function SideBar({ open, page, setPage, navItems }: SideBarProps) {
     return (
         <aside
-            className={`bg-gray-200 text-black h-screen overflow-hidden transition-all duration-300 ${
+            className={`bg-white border-right-1 text-black h-screen overflow-hidden transition-all duration-300 ${
                 open ? "w-64 p-6" : "w-0 p-0"
             }`}
         >

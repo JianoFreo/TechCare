@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import UserManagement from "./pages/UserManagement";
 import AdminDashboard from "./pages/AdminDashboard";
-import SideBar from "./components/SideBar";
+import SideBar from "../../components/SideBar";
 import ServicePricingManagement from "./pages/ServicePricing";
 import ActivityMonitoring from "./pages/ActivityMonitoring";
 import api from "../../lib/axios";
@@ -50,7 +50,24 @@ function Admin() {
     function setPage(newPage: string) {
         setSearchParams({ page: newPage })
     }
-
+    const navItems = [
+    {
+        page: "dashboard",
+        label: "Dashboard",
+    },
+    {
+        page: "user-management",
+        label: "User Management",
+    },
+    {
+        page: "service-pricing",
+        label: "Service Pricing",
+    },
+    {
+        page: "activity-monitoring",
+        label: "Activity Monitoring",
+    },
+];
 
     const loadData = useCallback(async () => {
         try {
@@ -84,6 +101,7 @@ function Admin() {
                 open={open}
                 page={page}
                 setPage={setPage}
+                navItems={navItems}
             />
 
             {page === "dashboard" && (

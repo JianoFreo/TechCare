@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 
 import api from "../../lib/axios";
-import SideBar from "./components/SideBar";
+import SideBar from "../../components/SideBar";
 import Billing from "./pages/Billing";
 import FrontdeskDashboard from "./pages/FrontdeskDashboard";
 import PatientRecords from "./pages/PatientRecords";
@@ -11,7 +11,7 @@ import QueueManagement from "./pages/QueueManagement";
 
 function FrontdeskStaff() {
     const [patients, setPatients] = useState([]);
-    const [billing, setBilling] = useState([]);
+    const [billing] = useState([]);
     const [queues, setQueues] = useState([]);
     const [services, setServices] = useState([]);
     const [open, setOpen] = useState(true);
@@ -44,6 +44,28 @@ function FrontdeskStaff() {
             console.log("Error fetching queue entries data:", error);
         }
     }, []);
+    const navItems = [
+    {
+        page: "dashboard",
+        label: "Dashboard",
+    },
+    {
+        page: "patient-registration",
+        label: "Patient Registration",
+    },
+    {
+        page: "patient-records",
+        label: "Patient Records",
+    },
+    {
+        page: "queue-management",
+        label: "Queue Management",
+    },
+    {
+        page: "billing",
+        label: "Billing",
+    },
+];
 
     useEffect(() => {
         (async () => {
@@ -57,6 +79,7 @@ function FrontdeskStaff() {
                 open={open}
                 page={page}
                 setPage={setPage}
+                navItems={navItems}
             />
 
             {page === "dashboard" && (
