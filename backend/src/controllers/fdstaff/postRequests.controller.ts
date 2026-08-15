@@ -359,12 +359,12 @@ export async function addBills(req: Request, res: Response) {
 export async function addQueueEntry(req: Request, res: Response) {
   try {
     // Get the data sent by the frontend
-    const { patient_id, service_id, service_name, is_priority } = req.body;
+    const { patient_id, service_id, is_priority } = req.body;
 
     // Make sure a service was selected
-    if (!service_id) {
+    if (!service_id || !patient_id) {
       return res.status(400).json({
-        message: "service_id and service_type are required.",
+        message: "service_id and patient_id are required.",
       });
     }
 
@@ -382,18 +382,21 @@ export async function addQueueEntry(req: Request, res: Response) {
     let queueNumber;
 
     // Generate consultation queue ID and number
-    if (serviceType[0].service_type === "consultation") {
+    if (
+      serviceType[0].service_type.split(" ")[0].toLowerCase() === "consultation"
+    ) {
       queueId = await generateConsultationQueueId();
       queueNumber = await generateQueueNumberConsultation(); // Exammple return : CONS-0017
     }
 
     // Generate laboratory queue ID and number
-    if (serviceType[0].service_type === "laboratory") {
+    if (
+      serviceType[0].service_type.split(" ")[0].toLowerCase() === "laboratory"
+    ) {
       queueId = await generateLaboratoryQueueId();
       queueNumber = await generateQueueNumberLaboratory(); // Example return: LAB-0017
     }
 
-    // Default patient name for walk-in patients
     let patientName = null;
 
     // If a patient ID was entered, verify that it exists
@@ -422,22 +425,18 @@ export async function addQueueEntry(req: Request, res: Response) {
       INSERT INTO queue_entries (
         queue_id,
         patient_id,
-        patient_name,
         queue_number,
         service_id,
-        service_name,
-        service_type,
-        is_priority
+        is_priority,
+        status
       )
       VALUES (
         ${queueId},
         ${patient_id},
-        ${patientName},
         ${queueNumber},
         ${service_id},
-        ${service_name},
-        ${serviceType[0].service_type},
-        ${is_priority}
+        ${is_priority},
+        'Waiting'
       )
       RETURNING *;
     `;

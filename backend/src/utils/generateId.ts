@@ -193,7 +193,7 @@ export async function generateConsultationQueueId() {
   const queue = await sql`
     SELECT queue_id 
     FROM queue_entries
-    WHERE service_type = 'consultation'
+    WHERE queue_id LIKE 'CONS-%'
     ORDER BY queue_id DESC
     LIMIT 1
   `;
@@ -210,7 +210,7 @@ export async function generateLaboratoryQueueId() {
   const queue = await sql`
     SELECT queue_id 
     FROM queue_entries
-    WHERE service_type = 'laboratory'
+    WHERE queue_id LIKE 'LAB-%'
     ORDER BY queue_id DESC
     LIMIT 1
   `;
@@ -229,7 +229,7 @@ export async function generateQueueNumberConsultation() {
   const queue = await sql`
     SELECT queue_number
     FROM queue_entries
-    WHERE service_type = 'consultation'
+    WHERE queue_id LIKE 'CONS-%'
     ORDER BY queue_number DESC
     LIMIT 1
     `;
@@ -246,7 +246,7 @@ export async function generateQueueNumberLaboratory() {
   const queue = await sql`
     SELECT queue_number
     FROM queue_entries
-    WHERE service_type = 'laboratory'
+    WHERE queue_id LIKE 'LAB-%'
     ORDER BY queue_number DESC
     LIMIT 1
     `;
