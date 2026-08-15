@@ -4,6 +4,21 @@ type SideBarProps = {
   setPage: (page: string) => void;
 };
 
+const navItems = [
+  {
+    page: "dashboard",
+    label: "Dashboard",
+  },
+  {
+    page: "laboratory-requests",
+    label: "Laboratory Requests",
+  },
+  {
+    page: "laboratory-results",
+    label: "Laboratory Results",
+  },
+];
+
 function SideBar({ open, page, setPage }: SideBarProps) {
   return (
     <aside
@@ -18,41 +33,20 @@ function SideBar({ open, page, setPage }: SideBarProps) {
           </div>
 
           <nav className="flex flex-col gap-3">
-            <button
-              type="button"
-              className={`cursor-pointer border-2 p-5 text-left hover:font-bold ${
-                page === "dashboard"
-                  ? "border-red-800 bg-red-800 text-white"
-                  : ""
-              }`}
-              onClick={() => setPage("dashboard")}
-            >
-              Dashboard
-            </button>
-
-            <button
-              type="button"
-              className={`cursor-pointer border-2 p-5 text-left hover:font-bold ${
-                page === "laboratory-requests"
-                  ? "border-red-800 bg-red-800 text-white"
-                  : ""
-              }`}
-              onClick={() => setPage("laboratory-requests")}
-            >
-              Laboratory Requests
-            </button>
-
-            <button
-              type="button"
-              className={`cursor-pointer border-2 p-5 text-left hover:font-bold ${
-                page === "laboratory-results"
-                  ? "border-red-800 bg-red-800 text-white"
-                  : ""
-              }`}
-              onClick={() => setPage("laboratory-results")}
-            >
-              Laboratory Results
-            </button>
+            {navItems.map((item) => (
+              <button
+                key={item.page}
+                type="button"
+                className={`cursor-pointer border-2 p-5 text-left hover:font-bold ${
+                  page === item.page
+                    ? "border-red-800 bg-red-800 text-white"
+                    : ""
+                }`}
+                onClick={() => setPage(item.page)}
+              >
+                {item.label}
+              </button>
+            ))}
           </nav>
         </>
       )}

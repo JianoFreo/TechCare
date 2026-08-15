@@ -4,6 +4,29 @@ type SideBarProps = {
     setPage: (page: string) => void;
 };
 
+const navItems = [
+    {
+        page: "dashboard",
+        label: "Dashboard",
+    },
+    {
+        page: "patient-registration",
+        label: "Patient Registration",
+    },
+    {
+        page: "patient-records",
+        label: "Patient Records",
+    },
+    {
+        page: "queue-management",
+        label: "Queue Management",
+    },
+    {
+        page: "billing",
+        label: "Billing",
+    },
+];
+
 function SideBar({ open, page, setPage }: SideBarProps) {
     return (
         <aside
@@ -18,65 +41,20 @@ function SideBar({ open, page, setPage }: SideBarProps) {
                     </div>
 
                     <nav className="flex flex-col gap-3">
-                        <button
-                            type="button"
-                            className={`cursor-pointer border-2 p-5 text-left hover:font-bold ${
-                                page === "dashboard"
-                                    ? "border-red-800 bg-red-800 text-white"
-                                    : ""
-                            }`}
-                            onClick={() => setPage("dashboard")}
-                        >
-                            Dashboard
-                        </button>
-
-                        <button
-                            type="button"
-                            className={`cursor-pointer border-2 p-5 text-left hover:font-bold ${
-                                page === "patient-registration"
-                                    ? "border-red-800 bg-red-800 text-white"
-                                    : ""
-                            }`}
-                            onClick={() => setPage("patient-registration")}
-                        >
-                            Patient Registration
-                        </button>
-
-                        <button
-                            type="button"
-                            className={`cursor-pointer border-2 p-5 text-left hover:font-bold ${
-                                page === "patient-records"
-                                    ? "border-red-800 bg-red-800 text-white"
-                                    : ""
-                            }`}
-                            onClick={() => setPage("patient-records")}
-                        >
-                            Patient Records
-                        </button>
-
-                        <button
-                            type="button"
-                            className={`cursor-pointer border-2 p-5 text-left hover:font-bold ${
-                                page === "queue-management"
-                                    ? "border-red-800 bg-red-800 text-white"
-                                    : ""
-                            }`}
-                            onClick={() => setPage("queue-management")}
-                        >
-                            Queue Management
-                        </button>
-
-                        <button
-                            type="button"
-                            className={`cursor-pointer border-2 p-5 text-left hover:font-bold ${
-                                page === "billing"
-                                    ? "border-red-800 bg-red-800 text-white"
-                                    : ""
-                            }`}
-                            onClick={() => setPage("billing")}
-                        >
-                            Billing
-                        </button>
+                        {navItems.map((item) => (
+                            <button
+                                key={item.page}
+                                type="button"
+                                className={`cursor-pointer border-2 p-5 text-left hover:font-bold ${
+                                    page === item.page
+                                        ? "border-red-800 bg-red-800 text-white"
+                                        : ""
+                                }`}
+                                onClick={() => setPage(item.page)}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
                     </nav>
                 </>
             )}
