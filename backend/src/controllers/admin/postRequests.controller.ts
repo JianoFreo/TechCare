@@ -12,7 +12,7 @@ import {
 ///// the tokenantion on ad user is just for testing purposes,
 /// it will be removed later on. optional lang kasi no need tokens right after sign up, its usually on login========
 export async function addUser(req: Request, res: Response) {
-  // post /api/admin/users
+  // POST /api/admin/add-user
   try {
     const {
       username,
@@ -35,127 +35,164 @@ export async function addUser(req: Request, res: Response) {
       shift_start,
       shift_end,
     } = req.body;
+
+    // =========================
+    // REQUIRED FIELDS
+    // =========================
     if (
       !username ||
       !password ||
       !first_name ||
       !last_name ||
       !sex ||
-      !birthdate ||
-      !address ||
-      !role ||
-      !date_hired ||
       !email ||
-      !contact_number
+      !contact_number ||
+      !address ||
+      !birthdate ||
+      !role ||
+      !date_hired
     ) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({
+        message: "Please fill out all required fields",
+      });
     }
 
-    if (!req.file) {
-      return res
-        .status(400)
-        .json({ message: "At least one image is required" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    // const signUpResult = await sql`
-    //     INSERT INTO pending_users (username, password, role)
-    //     VALUES (${username}, ${hashedPassword}, ${role})
-    //     RETURNING *
-    // `;
+    // =========================
+    // CHECK EXISTING USER
+    // =========================
     const existingUser = await sql`
-        SELECT * FROM users
-        WHERE username = ${username} OR email = ${email} OR contact_number = ${contact_number}  
+      SELECT *
+      FROM users
+      WHERE username = ${username}
+         OR email = ${email}
+         OR contact_number = ${contact_number}
     `;
+
     if (existingUser.length > 0) {
-      return res.status(200).json({ message: "User already exists" });
+      return res.status(409).json({
+        message: "Username, email, or contact number already exists",
+      });
     }
+
+    // =========================
+    // HASH PASSWORD
+    // =========================
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // =========================
+    // GENERATE USER ID
+    // =========================
     const userId = await generateUserId();
-    const uploadPromise = await cloudinary.uploader.upload(req.file.path, {
-      folder: "techcare/user_photos",
-    });
-    const profile_photo = uploadPromise.secure_url;
-    // if you are going to upload multipple files
-    // let imageUrls: string[] = [];
 
-    // if (req.files) {
-    //     const files = req.files as Express.Multer.File[];
+    // =========================
+    // PROFILE PHOTO
+    // =========================
+    let profile_photo: string | null = null;
 
-    //     const uploadedImages = await Promise.all(
-    //         files.map((file) =>
-    //             cloudinary.uploader.upload(file.path, {
-    //                 folder: "TechCare/patients",
-    //             })
-    //         )
-    //     );
+    if (req.file) {
+      const uploadResult = await cloudinary.uploader.upload(
+        req.file.path,
+        {
+          folder: "techcare/user_photos",
+        }
+      );
 
-    //     imageUrls = uploadedImages.map((image) => image.secure_url);
-    // }
+      profile_photo = uploadResult.secure_url;
+    }
+
+    // =========================
+    // SHIFT DEFAULTS
+    // =========================
+    const finalShiftStart =
+      shift_start || "08:00:00";
+
+    const finalShiftEnd =
+      shift_end || "17:00:00";
+
+    // =========================
+    // INSERT USER
+    // =========================
     const signUpResult = await sql`
-        INSERT INTO users (
-            user_id, 
-            username, 
-            password_hash, 
-            first_name, 
-            middle_name, 
-            last_name, 
-            suffix, 
-            sex,  
-            email, 
-            contact_number, 
-            emergency_contact_name, 
-            emergency_contact, 
-            address, 
-            birthdate,
-            role, 
-            department, 
-            employment_status, 
-            date_hired, 
-            shift_start, 
-            shift_end, 
-            profile_photo
-        ) 
-        VALUES (
-            ${userId}, 
-            ${username}, 
-            ${hashedPassword}, 
-            ${first_name}, 
-            ${middle_name ?? null}, 
-            ${last_name}, 
-            ${suffix ?? null},
-            ${sex}, 
-            ${email}, 
-            ${contact_number}, 
-            ${emergency_contact_name ?? null}, 
-            ${emergency_contact ?? null}, 
-            ${address}, 
-            ${birthdate},
-            ${role}, 
-            ${department ?? null}, 
-            ${employment_status ?? null}, 
-            ${date_hired}, 
-            ${shift_start ?? "08:00:00"}, 
-            ${shift_end ?? "17:00:00"}, 
-            ${profile_photo ?? null}) 
-        RETURNING *
+      INSERT INTO users (
+        user_id,
+        username,
+        password_hash,
+        first_name,
+        middle_name,
+        last_name,
+        suffix,
+        sex,
+        email,
+        contact_number,
+        emergency_contact_name,
+        emergency_contact,
+        address,
+        birthdate,
+        role,
+        department,
+        employment_status,
+        date_hired,
+        shift_start,
+        shift_end,
+        profile_photo
+      )
+      VALUES (
+        ${userId},
+        ${username},
+        ${hashedPassword},
+        ${first_name},
+        ${middle_name || null},
+        ${last_name},
+        ${suffix || null},
+        ${sex},
+        ${email},
+        ${contact_number},
+        ${emergency_contact_name || null},
+        ${emergency_contact || null},
+        ${address},
+        ${birthdate},
+        ${role},
+        ${department || null},
+        ${employment_status || null},
+        ${date_hired},
+        ${finalShiftStart},
+        ${finalShiftEnd},
+        ${profile_photo}
+      )
+      RETURNING *
     `;
+
     console.log("INSERT RESULT:", signUpResult);
+
+    // =========================
+    // GENERATE TOKEN
+    // =========================
     const token = jwt.sign(
-      { id: signUpResult[0].id },
+      {
+        id: signUpResult[0].id,
+      },
       process.env.JWT_SECRET!,
       {
         expiresIn: "1h",
-      },
+      }
     );
-    res
-      .status(201)
-      .json({ user: signUpResult[0], message: "Sign up successful!", token });
+
+    // =========================
+    // RESPONSE
+    // =========================
+    return res.status(201).json({
+      user: signUpResult[0],
+      message: "User created successfully!",
+      token,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: " Error on uplaoding new user" });
+    console.error("ADD USER ERROR:", error);
+
+    return res.status(500).json({
+      message: "Error while creating new user",
+    });
   }
 }
-
 export async function addService(req: Request, res: Response) {
   // post /api/admin/services
   try {

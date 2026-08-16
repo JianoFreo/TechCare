@@ -184,20 +184,7 @@ const TABLES: {
     patient_id VARCHAR(255) NOT NULL REFERENCES patients(patient_id),
     doctor_id VARCHAR(255) NOT NULL REFERENCES users(user_id),
     queue_id VARCHAR(255) UNIQUE REFERENCES queue_entries(queue_id),
-
     findings JSONB NOT NULL,
-
-    CONSTRAINT findings_structure CHECK (
-      jsonb_typeof(findings) = 'object'
-      AND findings ? 'chief_complaint'
-      AND findings ? 'diagnosis'
-      AND findings ? 'blood_pressure'
-      AND findings ? 'temperature'
-      AND findings ? 'weight'
-      AND findings ? 'height'
-      AND findings ? 'notes'
-    ),
-
     status VARCHAR(20) NOT NULL DEFAULT 'Open',
     consulted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -234,7 +221,8 @@ const TABLES: {
     columns: {
       id: "SERIAL PRIMARY KEY",
       request_id: "VARCHAR(255) UNIQUE NOT NULL",
-      consultation_id: "VARCHAR(255) REFERENCES consultation_records(consultation_record_id)",
+      consultation_id:
+        "VARCHAR(255) REFERENCES consultation_records(consultation_record_id)",
       patient_id: "VARCHAR(255) NOT NULL REFERENCES patients(patient_id)",
       doctor_id: "VARCHAR(255) REFERENCES users(user_id)",
       test_type: "VARCHAR(200) NOT NULL",
@@ -351,6 +339,25 @@ const TABLES: {
       service_name: "VARCHAR(255) NOT NULL REFERENCES services(service_name)",
       details: "JSONB NOT NULL",
       created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+    },
+  },
+  {
+    table: "packages",
+    createSQL: `CREATE TABLE IF NOT EXISTS packages (
+    package_id SERIAL PRIMARY KEY,
+    package_name VARCHAR(255) NOT NULL,
+    package_price NUMERIC(10,2) NOT NULL,
+    service_ids INTEGER[] NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+    columns: {
+      package_id: "SERIAL PRIMARY KEY",
+      package_name: "VARCHAR(255) NOT NULL",
+      package_price: "NUMERIC(10,2) NOT NULL",
+      service_ids: "INTEGER[] NOT NULL",
+      created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+      updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
     },
   },
 ];
