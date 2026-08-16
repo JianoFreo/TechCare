@@ -179,27 +179,38 @@ const TABLES: {
   {
     table: "consultations",
     createSQL: `CREATE TABLE IF NOT EXISTS consultations (
-      id SERIAL PRIMARY KEY,
-      consultation_id VARCHAR(255) UNIQUE NOT NULL,
-      patient_id      VARCHAR(255)     NOT NULL REFERENCES patients(patient_id),
-      doctor_id       VARCHAR(255)    NOT NULL REFERENCES users(user_id),
-      queue_id        VARCHAR(255)     UNIQUE   REFERENCES queue_entries(queue_id),
-      reason          VARCHAR(500),
-      findings        JSONB,
-      prescription    JSONB,
-      status          VARCHAR(20) NOT NULL DEFAULT 'Open',
-      consulted_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at      TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`,
+    id SERIAL PRIMARY KEY,
+    consultation_id VARCHAR(255) UNIQUE NOT NULL,
+    patient_id VARCHAR(255) NOT NULL REFERENCES patients(patient_id),
+    doctor_id VARCHAR(255) NOT NULL REFERENCES users(user_id),
+    queue_id VARCHAR(255) UNIQUE REFERENCES queue_entries(queue_id),
+
+    findings JSONB NOT NULL,
+
+    CONSTRAINT findings_structure CHECK (
+      jsonb_typeof(findings) = 'object'
+      AND findings ? 'chief_complaint'
+      AND findings ? 'diagnosis'
+      AND findings ? 'blood_pressure'
+      AND findings ? 'temperature'
+      AND findings ? 'weight'
+      AND findings ? 'height'
+      AND findings ? 'notes'
+    ),
+
+    status VARCHAR(20) NOT NULL DEFAULT 'Open',
+    consulted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
     columns: {
       id: "SERIAL PRIMARY KEY",
       consultation_id: "VARCHAR(255) UNIQUE NOT NULL",
       patient_id: "VARCHAR(255) NOT NULL REFERENCES patients(patient_id)",
       doctor_id: "VARCHAR(255) NOT NULL REFERENCES users(user_id)",
       queue_id: "VARCHAR(255) UNIQUE REFERENCES queue_entries(queue_id)",
-      reason: "VARCHAR(500)",
-      findings: "JSONB",
-      prescription: "JSONB",
+
+      findings: "JSONB NOT NULL",
+
       status: "VARCHAR(20) NOT NULL DEFAULT 'Open'",
       consulted_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
       updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",

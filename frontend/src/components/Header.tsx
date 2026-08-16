@@ -1,3 +1,6 @@
+import { ChevronDown } from "lucide-react";
+import { Bell } from "lucide-react";
+
 type HeaderProps = {
   page: string;
   loading: boolean;
@@ -34,12 +37,8 @@ function Header({ page, loading, open, setOpen, loadData }: HeaderProps) {
         >
           {loading ? "Loading..." : "Load Data"}
         </div>
-        <button className="flex items-center border p-2 rounded-md text-gray-500 cursor-pointer">
-          <img
-            src="../../../../public/assets/images.jpg"
-            alt=""
-            className="w-8"
-          />
+        <button className="flex items-center border p-2 rounded-md text-gray-400 border-gray-300 cursor-pointer">
+          <Bell size={20} strokeWidth={1} />
         </button>
         <div className="flex items-center gap-3 border-l border-gray-300 px-2">
           <img
@@ -51,7 +50,7 @@ function Header({ page, loading, open, setOpen, loadData }: HeaderProps) {
             <h1 className="text-lg font-semibold">{fullname}</h1>
             <h2 className=" text-gray-500">{email}</h2>
           </div>
-          <button className="ml-3 cursor-pointer">V</button>
+          <ChevronDown size={20} strokeWidth={1} className="cursor-pointer" />
         </div>
       </div>
     </div>

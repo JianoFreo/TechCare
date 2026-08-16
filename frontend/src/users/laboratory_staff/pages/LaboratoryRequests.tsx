@@ -1,8 +1,8 @@
 ﻿import { useState } from "react";
 import Header from "../../../components/Header";
-import RequestTable from "../components/RequestTable";
 import InformationCard from "../components/InformationCard";
 import RequestSummary from "../components/RequestSummary";
+import LaboratoryRequestTable from "../components/LaboratoryRequestTable";
 
 type LabRequest = {
   request_id: string;
@@ -38,7 +38,7 @@ function LaboratoryRequests({
   const [patientIdCard, setPatientIdCard] = useState<string | null>(null);
 
   return (
-    <main className="flex-1 min-w-0 bg-white">
+    <main className="flex-1 min-w-0 bg-white border-l border-gray-300">
       <Header
         page="Laboratory Requests"
         loading={loading}
@@ -46,46 +46,9 @@ function LaboratoryRequests({
         setOpen={setOpen}
         loadData={loadData}
       />
-      <div className="px-6 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <RequestSummary requests={requests} loading={loading} error={error} />
-      </div>
       <div className="px-6 overflow-x-auto flex flex-col space-y-6 z-0">
-        <div className="px-4 py-3 rounded-lg shadow-md bg-white">
-          <h1 className="text-xl font-semibold mb-2">In Progress</h1>
-          <RequestTable
-            setOpenInformationCard={setOpenInformationCard}
-            setPatientIdCard={setPatientIdCard}
-            setRequestIdCard={setRequestIdCard}
-            requests={requests}
-            status="In Progress"
-            error={error}
-            loading={loading}
-          />
-        </div>
-        <div className="px-4 py-3 rounded-lg shadow-md bg-white">
-          <h1 className="text-xl font-semibold mb-2">In Queue</h1>
-          <RequestTable
-            setOpenInformationCard={setOpenInformationCard}
-            setPatientIdCard={setPatientIdCard}
-            setRequestIdCard={setRequestIdCard}
-            requests={requests}
-            status="In Queue"
-            error={error}
-            loading={loading}
-          />
-        </div>
-        <div className="px-4 py-3 rounded-lg shadow-md bg-white">
-          <h1 className="text-xl font-semibold mb-2">Completed</h1>
-          <RequestTable
-            setOpenInformationCard={setOpenInformationCard}
-            setPatientIdCard={setPatientIdCard}
-            setRequestIdCard={setRequestIdCard}
-            requests={requests}
-            status="Completed"
-            error={error}
-            loading={loading}
-          />
-        </div>
+        <RequestSummary requests={requests} loading={loading} error={error} />
+        <LaboratoryRequestTable />
         {openInformationCard && (
           <InformationCard
             onClose={() => setOpenInformationCard(false)}
