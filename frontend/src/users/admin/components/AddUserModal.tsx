@@ -216,7 +216,7 @@ function AddUserModal({ onClose, loadData }: Props) {
             // =========================
             if (profilePhoto) {
                 formData.append(
-                    "profile_photo",
+                    "image",
                     profilePhoto
                 );
             }

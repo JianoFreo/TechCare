@@ -55,24 +55,38 @@ const TABLES: {
     columns: {
       id: "SERIAL PRIMARY KEY",
       user_id: "VARCHAR(255) UNIQUE NOT NULL",
-      username: "VARCHAR(255) NOT NULL UNIQUE",
-      password: "VARCHAR(255) NOT NULL",
-      role: "VARCHAR(50) NOT NULL",
-      full_name: "VARCHAR(255) NOT NULL",
+      username: "VARCHAR(255) NOT NULL",
+      password_hash: "VARCHAR(255) NOT NULL",
+
+      first_name: "VARCHAR(255) NOT NULL",
+      middle_name: "VARCHAR(255)",
+      last_name: "VARCHAR(255) NOT NULL",
+      suffix: "VARCHAR(20)",
+      sex: "VARCHAR(20) NOT NULL",
+
       email: "VARCHAR(255) NOT NULL UNIQUE",
       contact_number: "VARCHAR(20) NOT NULL",
+
       emergency_contact_name: "VARCHAR(255)",
       emergency_contact: "VARCHAR(20)",
+
       address: "TEXT NOT NULL",
       birthdate: "DATE NOT NULL",
+
+      role: "VARCHAR(50) NOT NULL",
       department: "VARCHAR(100)",
       employment_status: "VARCHAR(50)",
+
       date_hired: "DATE NOT NULL",
+
       shift_start: "TIME NOT NULL DEFAULT '08:00:00'",
       shift_end: "TIME NOT NULL DEFAULT '17:00:00'",
+
       last_login: "TIMESTAMP",
       account_status: "BOOLEAN NOT NULL DEFAULT TRUE",
+
       profile_photo: "TEXT",
+
       created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
       updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
     },
