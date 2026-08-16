@@ -55,24 +55,38 @@ const TABLES: {
     columns: {
       id: "SERIAL PRIMARY KEY",
       user_id: "VARCHAR(255) UNIQUE NOT NULL",
-      username: "VARCHAR(255) NOT NULL UNIQUE",
-      password: "VARCHAR(255) NOT NULL",
-      role: "VARCHAR(50) NOT NULL",
-      full_name: "VARCHAR(255) NOT NULL",
+      username: "VARCHAR(255) NOT NULL",
+      password_hash: "VARCHAR(255) NOT NULL",
+
+      first_name: "VARCHAR(255) NOT NULL",
+      middle_name: "VARCHAR(255)",
+      last_name: "VARCHAR(255) NOT NULL",
+      suffix: "VARCHAR(20)",
+      sex: "VARCHAR(20) NOT NULL",
+
       email: "VARCHAR(255) NOT NULL UNIQUE",
       contact_number: "VARCHAR(20) NOT NULL",
+
       emergency_contact_name: "VARCHAR(255)",
       emergency_contact: "VARCHAR(20)",
+
       address: "TEXT NOT NULL",
       birthdate: "DATE NOT NULL",
+
+      role: "VARCHAR(50) NOT NULL",
       department: "VARCHAR(100)",
       employment_status: "VARCHAR(50)",
+
       date_hired: "DATE NOT NULL",
+
       shift_start: "TIME NOT NULL DEFAULT '08:00:00'",
       shift_end: "TIME NOT NULL DEFAULT '17:00:00'",
+
       last_login: "TIMESTAMP",
       account_status: "BOOLEAN NOT NULL DEFAULT TRUE",
+
       profile_photo: "TEXT",
+
       created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
       updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
     },
@@ -177,29 +191,27 @@ const TABLES: {
     },
   },
   {
-    table: "consultations",
-    createSQL: `CREATE TABLE IF NOT EXISTS consultations (
-      id SERIAL PRIMARY KEY,
-      consultation_id VARCHAR(255) UNIQUE NOT NULL,
-      patient_id      VARCHAR(255)     NOT NULL REFERENCES patients(patient_id),
-      doctor_id       VARCHAR(255)    NOT NULL REFERENCES users(user_id),
-      queue_id        VARCHAR(255)     UNIQUE   REFERENCES queue_entries(queue_id),
-      reason          VARCHAR(500),
-      findings        JSONB,
-      prescription    JSONB,
-      status          VARCHAR(20) NOT NULL DEFAULT 'Open',
-      consulted_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at      TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`,
+    table: "consultation_records",
+    createSQL: `CREATE TABLE IF NOT EXISTS consultation_records (
+    id SERIAL PRIMARY KEY,
+    consultation_record_id VARCHAR(255) UNIQUE NOT NULL,
+    patient_id VARCHAR(255) NOT NULL REFERENCES patients(patient_id),
+    doctor_id VARCHAR(255) NOT NULL REFERENCES users(user_id),
+    queue_id VARCHAR(255) UNIQUE REFERENCES queue_entries(queue_id),
+    findings JSONB NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'Open',
+    consulted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
     columns: {
       id: "SERIAL PRIMARY KEY",
-      consultation_id: "VARCHAR(255) UNIQUE NOT NULL",
+      consultation_record_id: "VARCHAR(255) UNIQUE NOT NULL",
       patient_id: "VARCHAR(255) NOT NULL REFERENCES patients(patient_id)",
       doctor_id: "VARCHAR(255) NOT NULL REFERENCES users(user_id)",
       queue_id: "VARCHAR(255) UNIQUE REFERENCES queue_entries(queue_id)",
-      reason: "VARCHAR(500)",
-      findings: "JSONB",
-      prescription: "JSONB",
+
+      findings: "JSONB NOT NULL",
+
       status: "VARCHAR(20) NOT NULL DEFAULT 'Open'",
       consulted_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
       updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
@@ -210,7 +222,7 @@ const TABLES: {
     createSQL: `CREATE TABLE IF NOT EXISTS lab_requests (
       id              SERIAL PRIMARY KEY,
       request_id      VARCHAR(255) UNIQUE NOT NULL,
-      consultation_id VARCHAR(255) REFERENCES consultations(consultation_id),
+      consultation_record_id VARCHAR(255) REFERENCES consultation_records(consultation_record_id),
       patient_id      VARCHAR(255)     NOT NULL REFERENCES patients(patient_id),
       doctor_id       VARCHAR(255) REFERENCES users(user_id),
       test_type       VARCHAR(200) NOT NULL,
@@ -223,7 +235,8 @@ const TABLES: {
     columns: {
       id: "SERIAL PRIMARY KEY",
       request_id: "VARCHAR(255) UNIQUE NOT NULL",
-      consultation_id: "VARCHAR(255) REFERENCES consultations(consultation_id)",
+      consultation_id:
+        "VARCHAR(255) REFERENCES consultation_records(consultation_record_id)",
       patient_id: "VARCHAR(255) NOT NULL REFERENCES patients(patient_id)",
       doctor_id: "VARCHAR(255) REFERENCES users(user_id)",
       test_type: "VARCHAR(200) NOT NULL",
@@ -340,6 +353,25 @@ const TABLES: {
       service_name: "VARCHAR(255) NOT NULL REFERENCES services(service_name)",
       details: "JSONB NOT NULL",
       created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+    },
+  },
+  {
+    table: "packages",
+    createSQL: `CREATE TABLE IF NOT EXISTS packages (
+    package_id SERIAL PRIMARY KEY,
+    package_name VARCHAR(255) NOT NULL,
+    package_price NUMERIC(10,2) NOT NULL,
+    service_ids INTEGER[] NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+    columns: {
+      package_id: "SERIAL PRIMARY KEY",
+      package_name: "VARCHAR(255) NOT NULL",
+      package_price: "NUMERIC(10,2) NOT NULL",
+      service_ids: "INTEGER[] NOT NULL",
+      created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+      updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
     },
   },
 ];
