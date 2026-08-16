@@ -177,10 +177,10 @@ const TABLES: {
     },
   },
   {
-    table: "consultations",
-    createSQL: `CREATE TABLE IF NOT EXISTS consultations (
+    table: "consultation_records",
+    createSQL: `CREATE TABLE IF NOT EXISTS consultation_records (
     id SERIAL PRIMARY KEY,
-    consultation_id VARCHAR(255) UNIQUE NOT NULL,
+    consultation_record_id VARCHAR(255) UNIQUE NOT NULL,
     patient_id VARCHAR(255) NOT NULL REFERENCES patients(patient_id),
     doctor_id VARCHAR(255) NOT NULL REFERENCES users(user_id),
     queue_id VARCHAR(255) UNIQUE REFERENCES queue_entries(queue_id),
@@ -204,7 +204,7 @@ const TABLES: {
   )`,
     columns: {
       id: "SERIAL PRIMARY KEY",
-      consultation_id: "VARCHAR(255) UNIQUE NOT NULL",
+      consultation_record_id: "VARCHAR(255) UNIQUE NOT NULL",
       patient_id: "VARCHAR(255) NOT NULL REFERENCES patients(patient_id)",
       doctor_id: "VARCHAR(255) NOT NULL REFERENCES users(user_id)",
       queue_id: "VARCHAR(255) UNIQUE REFERENCES queue_entries(queue_id)",
@@ -221,7 +221,7 @@ const TABLES: {
     createSQL: `CREATE TABLE IF NOT EXISTS lab_requests (
       id              SERIAL PRIMARY KEY,
       request_id      VARCHAR(255) UNIQUE NOT NULL,
-      consultation_id VARCHAR(255) REFERENCES consultations(consultation_id),
+      consultation_record_id VARCHAR(255) REFERENCES consultation_records(consultation_record_id),
       patient_id      VARCHAR(255)     NOT NULL REFERENCES patients(patient_id),
       doctor_id       VARCHAR(255) REFERENCES users(user_id),
       test_type       VARCHAR(200) NOT NULL,
@@ -234,7 +234,7 @@ const TABLES: {
     columns: {
       id: "SERIAL PRIMARY KEY",
       request_id: "VARCHAR(255) UNIQUE NOT NULL",
-      consultation_id: "VARCHAR(255) REFERENCES consultations(consultation_id)",
+      consultation_id: "VARCHAR(255) REFERENCES consultation_records(consultation_record_id)",
       patient_id: "VARCHAR(255) NOT NULL REFERENCES patients(patient_id)",
       doctor_id: "VARCHAR(255) REFERENCES users(user_id)",
       test_type: "VARCHAR(200) NOT NULL",
