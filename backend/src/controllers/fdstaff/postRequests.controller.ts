@@ -445,7 +445,7 @@ export async function addLaboratoryRequest(req: Request, res: Response) {
     const request_id = await generateLaboratoryRequestID();
 
     const laboratory_request_result = await sql`
-      INSERT INTO laboratory_requests (
+      INSERT INTO lab_requests (
         request_id,
         patient_id,
         is_paid
@@ -464,30 +464,16 @@ export async function addLaboratoryRequest(req: Request, res: Response) {
       });
     }
 
-    const laboratory_item_result = await Promise.all(
-      services.map(async (service: { service_id: string }) => {
-        const service_id = service.service_id;
-        const lab_item_id = await generateLaboratoryItemID();
-
-        const insertedItem = await sql`
-          INSERT INTO request_items (
-            lab_item_id,
-            request_id,
-            service_id,
-            status
-          )
-          VALUES (
-            ${lab_item_id},
-            ${request_id},
-            ${service_id},
-            'Requested'
-          )
-          RETURNING *
-        `;
-
-        return insertedItem[0];
-      }),
-    );
+    const laboratory_item_result = [];
+    for (const service of services) {
+      const lab_item_id = await generateLaboratoryItemID();
+      const result = await sql`
+        INSERT INTO request_items (lab_item_id, request_id, service_id, status)
+        VALUES (${lab_item_id}, ${request_id}, ${service.service_id}, 'Requested')
+        RETURNING *
+      `;
+      laboratory_item_result.push(result[0]);
+    }
 
     return res.status(201).json({
       message: "Laboratory request added successfully.",

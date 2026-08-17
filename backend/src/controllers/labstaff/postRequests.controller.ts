@@ -1,5 +1,5 @@
 import { sql } from "../../config/db.js";
-import { json, Request, Response } from "express";
+import { Request, Response } from "express";
 import { generateLaboratoryRequestID } from "../../utils/generateId.js";
 import { generateLaboratoryItemID } from "../../utils/generateId.js";
 
