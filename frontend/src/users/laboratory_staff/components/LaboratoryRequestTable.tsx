@@ -1,4 +1,3 @@
-// import { Input } from "#components/ui/input";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
@@ -62,7 +61,6 @@ function LaboratoryRequestTable({ queues, loading, error }: RequestTableProps) {
   }[] = [
     { label: "All", value: "All" },
     { label: "Waiting", value: "Waiting" },
-    { label: "Priority", value: "Priority" },
     { label: "In Progress", value: "In Progress" },
     { label: "Completed", value: "Completed" },
     { label: "Skipped", value: "Skipped" },
@@ -74,8 +72,7 @@ function LaboratoryRequestTable({ queues, loading, error }: RequestTableProps) {
       (activeMainFilter === "Waiting" && queue.status === "Waiting") ||
       (activeMainFilter === "In Progress" && queue.status === "In Progress") ||
       (activeMainFilter === "Completed" && queue.status === "Completed") ||
-      (activeMainFilter === "Skipped" && queue.status === "Skipped") ||
-      (activeMainFilter === "Priority" && queue.is_priority);
+      (activeMainFilter === "Skipped" && queue.status === "Skipped");
 
     return matchesActiveMainFilter;
   });
