@@ -12,13 +12,25 @@ type LabRequest = {
   updated_at: string;
 };
 
+type Queue = {
+  id: number;
+  queue_id: string;
+  patient_id: string;
+  queue_number: number;
+  service_id: string;
+  is_priority: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
 type RequestSummaryProps = {
-  requests: LabRequest[];
+  queues: Queue[];
   loading: boolean;
   error: string | null;
 };
 
-function RequestSummary({ requests, loading, error }: RequestSummaryProps) {
+function RequestSummary({ queues, loading, error }: RequestSummaryProps) {
   const room = "Laboratory Room 1";
   const active = true;
 

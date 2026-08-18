@@ -3,6 +3,7 @@ import {
   getAllLaboratoryPaid,
   getPatientInfo,
   getLaboratoryRequest,
+  getALLLaboratoryQueues,
 } from "../controllers/labstaff/getRequests.controller.js";
 import {
   updateLabRequestStatus,
@@ -20,6 +21,7 @@ if (ENV.IS_PRODUCTION) {
 router.get("/laboratory-requests", getAllLaboratoryPaid);
 router.get("/laboratory-requests/:request_id", getLaboratoryRequest);
 router.get("/patients/:patient_id", getPatientInfo);
+router.get("/queues", getALLLaboratoryQueues);
 
 // POST ROUTES
 

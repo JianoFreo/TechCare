@@ -146,7 +146,7 @@ export async function generateLaboratoryRequestID() {
   const prefix = `${year}-${month}${day}`;
   const labRequestsCreatedToday = await sql`
         SELECT request_id
-        FROM laboratory_requests
+        FROM lab_requests
         WHERE DATE(requested_at) = CURRENT_DATE
         ORDER BY request_id DESC
       `;

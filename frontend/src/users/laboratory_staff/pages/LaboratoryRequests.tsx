@@ -16,10 +16,22 @@ type LabRequest = {
   updated_at: string;
 };
 
+type Queue = {
+  id: number;
+  queue_id: string;
+  patient_id: string;
+  queue_number: number;
+  service_id: string;
+  is_priority: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
 type LaboratoryRequestsProps = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  requests: LabRequest[];
+  queues: Queue[];
   loading: boolean;
   error: string | null;
   loadData: () => Promise<void>;
@@ -28,7 +40,7 @@ type LaboratoryRequestsProps = {
 function LaboratoryRequests({
   open,
   setOpen,
-  requests,
+  queues,
   loading,
   error,
   loadData,
@@ -47,8 +59,12 @@ function LaboratoryRequests({
         loadData={loadData}
       />
       <div className="px-6 overflow-x-auto flex flex-col space-y-6 z-0">
-        <RequestSummary requests={requests} loading={loading} error={error} />
-        <LaboratoryRequestTable />
+        <RequestSummary queues={queues} loading={loading} error={error} />
+        <LaboratoryRequestTable
+          queues={queues}
+          loading={loading}
+          error={error}
+        />
         {openInformationCard && (
           <InformationCard
             onClose={() => setOpenInformationCard(false)}

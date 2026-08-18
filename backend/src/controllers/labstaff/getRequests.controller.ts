@@ -57,3 +57,22 @@ export async function getPatientInfo(req: Request, res: Response) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
+
+export async function getALLLaboratoryQueues(req: Request, res: Response) {
+  try {
+    const laboratoryQueue = await sql`
+        SELECT * FROM queue_entries
+        WHERE queue_id LIKE 'LAB-%'
+              AND created_at >= CURRENT_DATE
+              AND created_at < CURRENT_DATE + INTERVAL '1 day'
+        ORDER BY queue_number ASC
+    `;
+    if (laboratoryQueue.length === 0) {
+      return res.status(404).json({ message: "No existing Queue" });
+    }
+    return res.status(200).json(laboratoryQueue);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}

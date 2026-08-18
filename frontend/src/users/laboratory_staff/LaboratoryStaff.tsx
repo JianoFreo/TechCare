@@ -1,9 +1,5 @@
 ﻿import { useCallback, useEffect, useState } from "react";
-import {
-  LayoutGrid,
-  ClipboardList,
-  FileCheck,
-} from "lucide-react";
+import { LayoutGrid, ClipboardList, FileCheck } from "lucide-react";
 import api from "../../lib/axios";
 import LaboratoryRequests from "./pages/LaboratoryRequests";
 import SideBar from "../../components/SideBar";
@@ -17,10 +13,30 @@ type LabRequest = {
   consultation_id: string | null;
   patient_id: string;
   doctor_id: string | null;
-  test_type: string;
-  results: Record<string, unknown> | null;
   status: string;
   requested_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type RequestItem = {
+  lab_item_id: string;
+  request_id: string;
+  service_id: string;
+  queue_id: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type Queue = {
+  id: number;
+  queue_id: string;
+  patient_id: string;
+  queue_number: number;
+  service_id: string;
+  is_priority: boolean;
+  status: string;
   created_at: string;
   updated_at: string;
 };
@@ -29,6 +45,7 @@ function LaboratoryStaff() {
   const [open, setOpen] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const [labRequests, setLabRequests] = useState<LabRequest[]>([]);
+  const [queues, setQueues] = useState<Queue[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,15 +59,14 @@ function LaboratoryStaff() {
     setError(null);
 
     try {
-      const response = await api.get("/api/labstaff/laboratory-requests");
-
-      setLabRequests(response.data ?? []);
+      const response = await api.get("/api/labstaff/queues");
+      setQueues(response.data ?? []);
     } catch (err) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Unable to fetch laboratory requests.";
+          ?.message || "Unable to fetch laboratory queue.";
       setError(message);
-      setLabRequests([]);
+      setQueues([]);
     } finally {
       setLoading(false);
     }
@@ -81,16 +97,22 @@ function LaboratoryStaff() {
 
   return (
     <div className="flex min-h-screen cursor-default">
-      <SideBar
-        open={open}
-        page={page}
-        setPage={setPage}
-        navItems={navItems}
-      />
+      <SideBar open={open} page={page} setPage={setPage} navItems={navItems} />
       {page === "dashboard" && <LabstaffDashboard />}
 
       {page === "laboratory-requests" && (
         <LaboratoryRequests
+          open={open}
+          setOpen={setOpen}
+          queues={queues}
+          loading={loading}
+          error={error}
+          loadData={() => loadData()}
+        />
+      )}
+
+      {page === "laboratory-results" && (
+        <LaboratoryResults
           open={open}
           setOpen={setOpen}
           requests={labRequests}
@@ -99,15 +121,6 @@ function LaboratoryStaff() {
           loadData={() => loadData()}
         />
       )}
-
-      {page === "laboratory-results" && <LaboratoryResults
-        open={open}
-        setOpen={setOpen}
-        requests={labRequests}
-        loading={loading}
-        error={error}
-        loadData={() => loadData()}
-      />}
     </div>
   );
 }
