@@ -1,8 +1,8 @@
 ﻿import { useState } from "react";
 import Header from "../../../components/Header";
-import InformationCard from "../components/InformationCard";
-import RequestSummary from "../components/RequestSummary";
-import LaboratoryRequestTable from "../components/LaboratoryRequestTable";
+import InformationCard from "../components/LaboratoryRequests/InformationCard";
+import RequestSummary from "../components/LaboratoryRequests/RequestSummary";
+import LaboratoryRequestTable from "../components/LaboratoryRequests/LaboratoryRequestTable";
 
 type LabRequest = {
   request_id: string;

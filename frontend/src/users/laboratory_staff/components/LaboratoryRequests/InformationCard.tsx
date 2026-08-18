@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from "../../../lib/axios";
+import api from "../../../../lib/axios";
 type Patient = {
   id: number;
   patient_id: string;
