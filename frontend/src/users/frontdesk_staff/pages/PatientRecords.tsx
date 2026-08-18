@@ -2,7 +2,7 @@
 import { useState } from "react";
 
 import api from "../../../lib/axios";
-import EditPatientRecord from "../components/EditPatientRecord";
+import EditPatientRecord from "../components/PatientRecords/EditPatientRecord";
 import Header from "../../../components/Header";
 
 // adjust path to wherever the file lives
