@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Header from "../../../components/Header";
-import ReleasingSide from "../components/ReleasingSide";
-import LaboratoryResultTable, {type LaboratoryResult} from "../components/LaboratoryResultTable";
+import ReleasingSide from "../components/LaboratoryResults/ReleasingSide";
+import LaboratoryResultTable, {type LaboratoryResult} from "../components/LaboratoryResults/LaboratoryResultTable";
 import api from "../../../lib/axios";
 
 type LabRequest = {
