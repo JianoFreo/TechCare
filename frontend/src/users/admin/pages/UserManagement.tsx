@@ -102,11 +102,11 @@ function UserManagement({
                     />
                 )}
             </div>
-            {users.map((user) => {
+            {users.map((user, index) => {
 
                 return (
                     <UserCard
-                        key={user.user_id}
+                        key={index}
                         user={user}
                     />
                 );
