@@ -108,20 +108,19 @@ function UserManagement({
                         user={selectedUser}
                         onBack={() => setShowUserProfile(false)}
                     />
-                )} 
+                )}
 
             </div>
-            {users.map((user, index) => {
-
-                return (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
+                {users.map((user) => (
                     <UserCardSquare
-                        setShowUserProfile={setShowUserProfile}
-                        setSelectedUser={setSelectedUser}
-                        key={index}
+                        key={user.user_id}
                         user={user}
+                        setSelectedUser={setSelectedUser}
+                        setShowUserProfile={setShowUserProfile}
                     />
-                );
-            })}
+                ))}
+            </div>
             {/* <div className="w-full overflow-x-auto">
                 <table className="min-w-full border border-gray-300">
                     <thead className="bg-gray-200">
