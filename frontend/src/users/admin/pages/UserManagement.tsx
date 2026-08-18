@@ -2,19 +2,34 @@ import { useEffect, useState } from "react";
 import Header from "../../../components/Header";
 import AddUserModal from "../components/UserManagement/AddUserModal";
 import UpdateUserModal from "../components/UserManagement/UpdateUserModal"
+import { User } from "lucide-react";
+import UserCard from "../components/UserManagement/UserCard";
 
 type User = {
-    id: number;
     user_id: string;
-    full_name: string
     username: string;
-    password: string;
-    role: string;
-    created_at: string;
-    contact_number: string;
+    first_name: string;
+    middle_name: string | null;
+    last_name: string;
+    suffix: string | null;
+    sex: string;
     email: string;
+    contact_number: string;
+    emergency_contact_name: string | null;
+    emergency_contact: string | null;
+    address: string;
+    birthdate: string;
+    role: string;
+    department: string | null;
+    employment_status: string | null;
+    date_hired: string;
+    shift_start: string;
+    shift_end: string;
+    profile_photo: string | null;
+    deleted: boolean;
+    created_at: string;
+    updated_at: string;
 };
-
 type UserManagementProps = {
     users: User[];
     loadData: () => Promise<void>;
@@ -87,8 +102,16 @@ function UserManagement({
                     />
                 )}
             </div>
+            {users.map((user) => {
 
-            <div className="w-full overflow-x-auto">
+                return (
+                    <UserCard
+                        key={user.user_id}
+                        user={user}
+                    />
+                );
+            })}
+            {/* <div className="w-full overflow-x-auto">
                 <table className="min-w-full border border-gray-300">
                     <thead className="bg-gray-200">
                         <tr>
@@ -128,7 +151,8 @@ function UserManagement({
                         ))}
                     </tbody>
                 </table>
-            </div>
+            </div> */}
+
         </main>
     );
 }

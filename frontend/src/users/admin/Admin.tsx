@@ -11,18 +11,7 @@ import SideBar from "../../components/SideBar";
 import ServicePricingManagement from "./pages/ServicePricing";
 import ActivityMonitoring from "./pages/ActivityMonitoring";
 import api from "../../lib/axios";
-
-type User = {
-    id: number;
-    user_id: string;
-    full_name: string
-    username: string;
-    password: string;
-    role: string;
-    created_at: string;
-    contact_number: string;
-    email: string;
-};
+import type { User } from "../../interface/User";
 type Service = {
     id: number;
     service_id: string;
