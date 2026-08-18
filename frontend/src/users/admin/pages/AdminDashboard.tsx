@@ -1,17 +1,6 @@
 import { useEffect } from "react";
 import Header from "../../../components/Header";
-
-
-type User = {
-    id: number;
-    user_id: string;
-    username: string;
-    password: string;
-    role: string;
-    created_at: string;
-    contact_number: string;
-    email: string;
-};
+import type { User } from "../../../../interface/User";
 
 type AdminDashboardProps = {
     users: User[];

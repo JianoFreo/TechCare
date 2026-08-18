@@ -1,44 +1,57 @@
 import { sql } from "../../config/db.js";
 import { NextFunction, Request, Response } from "express";
 
-export async function getAllUsers(req: Request, res: Response) { // get /api/admin/users
+export async function getAllUsers(req: Request, res: Response) {
+  // GET /api/admin/users
   try {
-    const users = await sql`SELECT * FROM users`;
-    if (!users) {
-      res.json({ message: "there are no users " });
-    }
-    res.status(200).json({ users });
+    const users = await sql`
+      SELECT *
+      FROM users
+    `;
+
+    return res.status(200).json({
+      users,
+    });
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("GET ALL USERS ERROR:", error);
+
+    return res.status(500).json({
+      message: "Error while fetching users",
+    });
   }
 }
+
+// Example response:
 // {
-//   "users":[{
-//     "user_id": 1,
-//     "username": "admin",
-//     "password": "$2a$10$7Q1J8F1J8F1J8F1J8F1J8F1J8F1J8F1J8F1J8F1J8F1J8F1J8F1J8F",
-//     "role": "Administrator",
-//     "full_name": "Admin User",
-//     "email": "admin@example.com",
-//     "contact_number": "1234567890",
-//     "deleted": false,
-//     "created_at": "2026-06-28T20:19:10.904Z",
-//     "updated_at": "2026-06-28T20:19:10.904Z"
-//   },
-//   {
-//     "user_id": 2,
-//     "username": "doctor",
-//     "password": "$2a$10$7Q1J8F1J8F1J8F1J8F1J8F1J8F1J8F1J8F1J8F1J8F1J8F1J8F1J8F",
-//     "role": "Doctor",
-//     "full_name": "Doctor User",
-//     "email": "doctor@example.com",
-//     "contact_number": "0987654321",
-//     "deleted": false,
-//     "created_at": "2026-06-28T20:19:10.904Z",
-//     "updated_at": "2026-06-28T20:19:10.904Z"
-//   }]
+//   "users": [
+//     {
+//       "user_id": "USR-2026-0001",
+//       "username": "admin",
+//       "password_hash": "$2a$10$...",
+//       "first_name": "Admin",
+//       "middle_name": null,
+//       "last_name": "User",
+//       "suffix": null,
+//       "sex": "Male",
+//       "email": "admin@example.com",
+//       "contact_number": "1234567890",
+//       "emergency_contact_name": "Emergency Contact",
+//       "emergency_contact": "09123456789",
+//       "address": "Manila, Philippines",
+//       "birthdate": "1990-01-01",
+//       "role": "Administrator",
+//       "department": "Administration",
+//       "employment_status": "Regular",
+//       "date_hired": "2026-06-28",
+//       "shift_start": "08:00:00",
+//       "shift_end": "17:00:00",
+//       "profile_photo": "https://...",
+//       "deleted": false,
+//       "created_at": "2026-06-28T20:19:10.904Z",
+//       "updated_at": "2026-06-28T20:19:10.904Z"
+//     }
+//   ]
 // }
-//----------------------------------------------------------------------------------------------------------------//
 export async function getAllActivities(req: Request, res: Response) { // get /api/admin/activities
   try {
     const activities = await sql`
