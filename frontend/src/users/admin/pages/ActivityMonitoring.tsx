@@ -1,6 +1,6 @@
 import Header from "../../../components/Header"
 import { useEffect, useState } from "react";
-import ActivityDetails from "../components/ActivityDetails";
+import ActivityDetails from "../components/ActivityMonitoring/ActivityDetails";
 
 
 type Activity = {

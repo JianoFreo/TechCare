@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+// import { useEffect, useState } from "react";
 
-import api from "../../../lib/axios";
+import api from "../../../../lib/axios";
 
 type QueueItem = {
     id: number;

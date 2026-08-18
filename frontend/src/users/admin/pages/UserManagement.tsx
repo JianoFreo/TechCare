@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Header from "../../../components/Header";
-import AddUserModal from "../components/AddUserModal";
-import UpdateUserModal from "../components/UpdateUserModal"
+import AddUserModal from "../components/UserManagement/AddUserModal";
+import UpdateUserModal from "../components/UserManagement/UpdateUserModal"
 
 type User = {
     id: number;

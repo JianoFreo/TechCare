@@ -1,5 +1,5 @@
 import Header from "../../../components/Header";
-import AddService from "../components/AddService"
+import AddService from "../components/ServicePricing/AddService"
 import { useEffect, useState } from 'react'
 
 type Service = {
