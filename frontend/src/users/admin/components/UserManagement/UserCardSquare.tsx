@@ -1,7 +1,11 @@
 import type { User } from "../../../../interface/User";
 import { Phone } from "lucide-react";
-
-function UserCard({ user }: { user: User }) {
+type Props = {
+  user: User;
+  setSelectedUser: React.Dispatch<React.SetStateAction<User>>;
+  setShowUserProfile: React.Dispatch<React.SetStateAction<boolean>>;
+};
+function UserCardSquare({ user, setSelectedUser, setShowUserProfile }: Props) {
   const fullName = [
     user.first_name,
     user.middle_name,
@@ -16,7 +20,12 @@ function UserCard({ user }: { user: User }) {
   }`;
 
   return (
-    <div className="w-full max-w-sm rounded-3xl bg-white p-2 shadow-md">
+    <div 
+    className="w-full max-w-sm rounded-3xl bg-white p-2 shadow-md"
+    onClick={() => {
+      setSelectedUser(user);
+      setShowUserProfile(true);
+    }}>
       {/* Profile Image */}
       <div className="relative h-64 w-full overflow-hidden rounded-[1.4rem] bg-gray-100">
         {user.profile_photo ? (
@@ -79,24 +88,9 @@ function UserCard({ user }: { user: User }) {
             </span>
           </div>
         </div>
-
-        {/* Button */}
-        <div className="mt-4 flex gap-2">
-          <button
-            className="flex-1 rounded-full bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-900 transition hover:bg-gray-200"
-          >
-            View Profile
-          </button>
-
-          <button
-            className="rounded-full bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-700"
-          >
-            Edit
-          </button>
-        </div>
       </div>
     </div>
   );
 }
 
-export default UserCard;
+export default UserCardSquare;

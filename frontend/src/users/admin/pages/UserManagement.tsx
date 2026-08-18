@@ -3,7 +3,8 @@ import Header from "../../../components/Header";
 import AddUserModal from "../components/UserManagement/AddUserModal";
 import UpdateUserModal from "../components/UserManagement/UpdateUserModal"
 import { User } from "lucide-react";
-import UserCard from "../components/UserManagement/UserCard";
+import UserCardSquare from "../components/UserManagement/UserCardSquare";
+import UserProfile from "./UserProfile";
 
 type User = {
     user_id: string;
@@ -47,6 +48,7 @@ function UserManagement({
 }: UserManagementProps) {
     const [showAddUser, setShowAddUser] = useState(false);
     const [showUpdateUser, setShowUpdateUser] = useState(false);
+    const [showUserProfile, setShowUserProfile] = useState(false);
     const [search, setSearch] = useState("");
     const [selectedUser, setSelectedUser] = useState<User>(users[0]);
     useEffect(() => {
@@ -101,11 +103,20 @@ function UserManagement({
                         loadData={loadData}
                     />
                 )}
+                {showUserProfile && (
+                    <UserProfile
+                        user={selectedUser}
+                        onBack={() => setShowUserProfile(false)}
+                    />
+                )} 
+
             </div>
             {users.map((user, index) => {
 
                 return (
-                    <UserCard
+                    <UserCardSquare
+                        setShowUserProfile={setShowUserProfile}
+                        setSelectedUser={setSelectedUser}
                         key={index}
                         user={user}
                     />
