@@ -28,7 +28,11 @@ router.get("/activities", getAllActivities);
 router.get("/users", getAllUsers);
 router.post("/add-user", upload.single("image"), addUser);
 router.post("/services", addService);
-router.patch("/users/:user_id", updateUser);
+router.patch(
+  "/users/:user_id",
+  upload.single("image"),
+  updateUser
+);
 router.post("/activities", addActivity);
 
 export default router;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { User } from "../../../../interface/User";
 import {
   X,
@@ -10,6 +10,8 @@ import {
   Eye,
   EyeOff,
   Save,
+  ArrowLeft,
+  Camera,
 } from "lucide-react";
 import api from "../../../../lib/axios";
 
@@ -74,6 +76,14 @@ function UpdateUserModal({
   const [hiddenPassword, setHiddenPassword] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // PFP
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState(
+    user.profile_photo || ""
+  );
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const fullName = [
     firstName,
     middleName,
@@ -83,9 +93,29 @@ function UpdateUserModal({
     .filter(Boolean)
     .join(" ");
 
-  const initials = `${firstName?.charAt(0) || ""}${
-    lastName?.charAt(0) || ""
-  }`;
+  const initials = `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""
+    }`;
+
+  const handleProfilePhoto = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Profile photo must be less than 5MB.");
+      return;
+    }
+
+    setProfilePhoto(file);
+    setProfilePhotoPreview(URL.createObjectURL(file));
+  };
 
   const editUser = async () => {
     if (password && password !== confirmPassword) {
@@ -96,40 +126,55 @@ function UpdateUserModal({
     try {
       setSaving(true);
 
-      const data: Record<string, string> = {
-        username: username.trim(),
-        first_name: firstName.trim(),
-        middle_name: middleName.trim(),
-        last_name: lastName.trim(),
-        suffix: suffix.trim(),
-        sex,
-        birthdate,
-        email: email.trim(),
-        contact_number: contactNumber.trim(),
-        address: address.trim(),
-        role,
-        department: department.trim(),
-        employment_status: employmentStatus,
-        date_hired: dateHired,
-        shift_start: shiftStart,
-        shift_end: shiftEnd,
-        emergency_contact_name: emergencyContactName.trim(),
-        emergency_contact: emergencyContact.trim(),
-      };
+      const formData = new FormData();
+
+      formData.append("username", username.trim());
+      formData.append("first_name", firstName.trim());
+      formData.append("middle_name", middleName.trim());
+      formData.append("last_name", lastName.trim());
+      formData.append("suffix", suffix.trim());
+      formData.append("sex", sex);
+      formData.append("birthdate", birthdate);
+      formData.append("email", email.trim());
+      formData.append("contact_number", contactNumber.trim());
+      formData.append("address", address.trim());
+      formData.append("role", role);
+      formData.append("department", department.trim());
+      formData.append("employment_status", employmentStatus);
+      formData.append("date_hired", dateHired);
+      formData.append("shift_start", shiftStart);
+      formData.append("shift_end", shiftEnd);
+
+      formData.append(
+        "emergency_contact_name",
+        emergencyContactName.trim()
+      );
+
+      formData.append(
+        "emergency_contact",
+        emergencyContact.trim()
+      );
 
       if (password.trim()) {
-        data.password = password;
+        formData.append("password", password);
+      }
+
+      // MUST be "image" because the backend uses:
+      // upload.single("image")
+      if (profilePhoto) {
+        formData.append("image", profilePhoto);
       }
 
       const response = await api.patch(
         `/api/admin/users/${user.user_id}`,
-        data
+        formData
       );
 
       alert(response.data.message);
 
-      onClose();
       loadData();
+      onClose();
+
     } catch (error) {
       console.error("UPDATE USER ERROR:", error);
       alert("Failed to update user.");
@@ -157,22 +202,37 @@ function UpdateUserModal({
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              Update User
-            </h2>
 
-            <p className="mt-0.5 text-sm text-gray-500">
-              Edit account and personal information
-            </p>
+          <div className="flex items-center gap-3">
+
+            <button
+              onClick={onClose}
+              disabled={saving}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50"
+            >
+              <ArrowLeft size={19} />
+            </button>
+
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Update User
+              </h2>
+
+              <p className="mt-0.5 text-sm text-gray-500">
+                Edit account and personal information
+              </p>
+            </div>
+
           </div>
 
           <button
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
+            disabled={saving}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50"
           >
             <X size={20} />
           </button>
+
         </div>
 
         {/* Content */}
@@ -184,38 +244,84 @@ function UpdateUserModal({
             <div className="h-36 bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100" />
 
             <div className="px-8 pb-8">
+
               <div className="-mt-16 flex items-end justify-between">
 
-                {user.profile_photo ? (
-                  <img
-                    src={user.profile_photo}
-                    alt={fullName}
-                    className="h-32 w-32 rounded-3xl border-4 border-white object-cover shadow-lg"
-                  />
-                ) : (
-                  <div className="flex h-32 w-32 items-center justify-center rounded-3xl border-4 border-white bg-gray-200 text-4xl font-bold text-gray-500 shadow-lg">
-                    {initials}
-                  </div>
-                )}
+                {/* Profile photo */}
+                <div className="relative">
 
-                {!user.deleted && (
-                  <span className="flex items-center gap-2 rounded-full bg-green-50 px-4 py-2 text-sm font-medium text-green-700">
-                    <span className="h-2 w-2 rounded-full bg-green-500" />
-                    Active
-                  </span>
-                )}
+                  {profilePhotoPreview ? (
+                    <img
+                      src={profilePhotoPreview}
+                      alt={fullName}
+                      className="h-32 w-32 rounded-3xl border-4 border-white object-cover shadow-lg"
+                    />
+                  ) : (
+                    <div className="flex h-32 w-32 items-center justify-center rounded-3xl border-4 border-white bg-gray-200 text-4xl font-bold text-gray-500 shadow-lg">
+                      {initials}
+                    </div>
+                  )}
+
+                  {/* Camera button */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      fileInputRef.current?.click()
+                    }
+                    className="absolute bottom-1 right-1 flex h-10 w-10 items-center justify-center rounded-xl border-2 border-white bg-gray-900 text-white shadow-lg transition hover:bg-gray-800"
+                  >
+                    <Camera size={18} />
+                  </button>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePhoto}
+                    className="hidden"
+                  />
+
+                </div>
+
+                <span className="flex items-center gap-2 rounded-full bg-green-50 px-4 py-2 text-sm font-medium text-green-700">
+                  <span className="h-2 w-2 rounded-full bg-green-500" />
+                  Active
+                </span>
+
               </div>
 
               <div className="mt-5">
+
                 <h1 className="text-2xl font-bold tracking-tight text-gray-900">
                   {fullName}
                 </h1>
 
                 <p className="mt-1 text-sm text-gray-500">
-                  <span className="capitalize">{role}</span>
+                  <span className="capitalize">
+                    {role}
+                  </span>
+
                   {department && ` • ${department}`}
                 </p>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    fileInputRef.current?.click()
+                  }
+                  className="mt-4 text-sm font-medium text-gray-600 transition hover:text-gray-900"
+                >
+                  Change profile photo
+                </button>
+
+                {profilePhoto && (
+                  <p className="mt-1 text-xs text-gray-400">
+                    {profilePhoto.name}
+                  </p>
+                )}
+
               </div>
+
             </div>
           </div>
 
@@ -224,6 +330,7 @@ function UpdateUserModal({
 
             {/* Contact */}
             <div className="rounded-3xl bg-white p-6 shadow-sm">
+
               <h2 className="mb-6 text-base font-semibold text-gray-900">
                 Contact Information
               </h2>
@@ -231,6 +338,7 @@ function UpdateUserModal({
               <div className="space-y-5">
 
                 <div className="flex gap-4">
+
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100">
                     <Mail size={18} className="text-gray-600" />
                   </div>
@@ -243,13 +351,17 @@ function UpdateUserModal({
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) =>
+                        setEmail(e.target.value)
+                      }
                       className={inputClass}
                     />
                   </div>
+
                 </div>
 
                 <div className="flex gap-4">
+
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100">
                     <Phone size={18} className="text-gray-600" />
                   </div>
@@ -268,9 +380,11 @@ function UpdateUserModal({
                       className={inputClass}
                     />
                   </div>
+
                 </div>
 
                 <div className="flex gap-4">
+
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100">
                     <MapPin size={18} className="text-gray-600" />
                   </div>
@@ -289,6 +403,7 @@ function UpdateUserModal({
                       className={`${inputClass} resize-none`}
                     />
                   </div>
+
                 </div>
 
               </div>
@@ -296,6 +411,7 @@ function UpdateUserModal({
 
             {/* Employment */}
             <div className="rounded-3xl bg-white p-6 shadow-sm">
+
               <h2 className="mb-6 text-base font-semibold text-gray-900">
                 Employment Information
               </h2>
@@ -334,7 +450,9 @@ function UpdateUserModal({
 
                   <select
                     value={role}
-                    onChange={(e) => setRole(e.target.value)}
+                    onChange={(e) =>
+                      setRole(e.target.value)
+                    }
                     className={inputClass}
                   >
                     <option value="admin">Admin</option>
@@ -439,6 +557,7 @@ function UpdateUserModal({
 
             {/* Personal */}
             <div className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-2">
+
               <h2 className="mb-6 text-base font-semibold text-gray-900">
                 Personal Information
               </h2>
@@ -446,7 +565,10 @@ function UpdateUserModal({
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
 
                 <div>
-                  <label className={labelClass}>First Name</label>
+                  <label className={labelClass}>
+                    First Name
+                  </label>
+
                   <input
                     type="text"
                     value={firstName}
@@ -458,7 +580,10 @@ function UpdateUserModal({
                 </div>
 
                 <div>
-                  <label className={labelClass}>Middle Name</label>
+                  <label className={labelClass}>
+                    Middle Name
+                  </label>
+
                   <input
                     type="text"
                     value={middleName}
@@ -470,7 +595,10 @@ function UpdateUserModal({
                 </div>
 
                 <div>
-                  <label className={labelClass}>Last Name</label>
+                  <label className={labelClass}>
+                    Last Name
+                  </label>
+
                   <input
                     type="text"
                     value={lastName}
@@ -482,7 +610,10 @@ function UpdateUserModal({
                 </div>
 
                 <div>
-                  <label className={labelClass}>Suffix</label>
+                  <label className={labelClass}>
+                    Suffix
+                  </label>
+
                   <input
                     type="text"
                     value={suffix}
@@ -494,11 +625,15 @@ function UpdateUserModal({
                 </div>
 
                 <div>
-                  <label className={labelClass}>Sex</label>
+                  <label className={labelClass}>
+                    Sex
+                  </label>
 
                   <select
                     value={sex}
-                    onChange={(e) => setSex(e.target.value)}
+                    onChange={(e) =>
+                      setSex(e.target.value)
+                    }
                     className={inputClass}
                   >
                     <option value="male">Male</option>
@@ -526,6 +661,7 @@ function UpdateUserModal({
 
             {/* Emergency */}
             <div className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-2">
+
               <h2 className="mb-6 text-base font-semibold text-gray-900">
                 Emergency Contact
               </h2>
@@ -541,7 +677,9 @@ function UpdateUserModal({
                     type="text"
                     value={emergencyContactName}
                     onChange={(e) =>
-                      setEmergencyContactName(e.target.value)
+                      setEmergencyContactName(
+                        e.target.value
+                      )
                     }
                     placeholder="Not provided"
                     className={inputClass}
@@ -569,6 +707,7 @@ function UpdateUserModal({
 
             {/* Password */}
             <div className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-2">
+
               <h2 className="mb-2 text-base font-semibold text-gray-900">
                 Change Password
               </h2>
@@ -585,12 +724,9 @@ function UpdateUserModal({
                   </label>
 
                   <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100">
+
                     <input
-                      type={
-                        hiddenPassword
-                          ? "password"
-                          : "text"
-                      }
+                      type={hiddenPassword ? "password" : "text"}
                       value={password}
                       onChange={(e) =>
                         setPassword(e.target.value)
@@ -612,6 +748,7 @@ function UpdateUserModal({
                         <EyeOff size={18} />
                       )}
                     </button>
+
                   </div>
                 </div>
 
@@ -642,9 +779,10 @@ function UpdateUserModal({
             <button
               onClick={onClose}
               disabled={saving}
-              className="rounded-xl bg-white px-5 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-100 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-100 disabled:opacity-50"
             >
-              Cancel
+              <ArrowLeft size={16} />
+              Back to Profile
             </button>
 
             <button
