@@ -4,7 +4,7 @@ import AddUserModal from "../components/UserManagement/AddUserModal";
 import UpdateUserModal from "../components/UserManagement/UpdateUserModal"
 import { User } from "lucide-react";
 import UserCardSquare from "../components/UserManagement/UserCardSquare";
-import UserProfile from "./UserProfile";
+import UserProfile from "../components/UserManagement/UserProfile";
 
 type User = {
     user_id: string;
@@ -98,7 +98,7 @@ function UserManagement({
                 )}
                 {showUpdateUser && (
                     <UpdateUserModal
-                        selectedUser={selectedUser}
+                        user={selectedUser}
                         onClose={() => setShowUpdateUser(false)}
                         loadData={loadData}
                     />
@@ -107,6 +107,7 @@ function UserManagement({
                     <UserProfile
                         user={selectedUser}
                         onBack={() => setShowUserProfile(false)}
+                        setShowUpdateUser={() => setShowUpdateUser(true)}
                     />
                 )}
 

@@ -1,30 +1,121 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { User } from "../../../../interface/User";
+import {
+  X,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  Clock,
+  Eye,
+  EyeOff,
+  Save,
+  ArrowLeft,
+  Camera,
+} from "lucide-react";
 import api from "../../../../lib/axios";
 
 type Props = {
+  user: User;
   onClose: () => void;
   loadData: () => void;
-  selectedUser: User;
 };
 
-function UpdateUserModal({ selectedUser, onClose, loadData }: Props) {
-  const [username, setUsername] = useState(selectedUser.username);
+function UpdateUserModal({
+  user,
+  onClose,
+  loadData,
+}: Props) {
+  const [username, setUsername] = useState(user.username);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [firstName, setFirstName] = useState(selectedUser.first_name);
-  const [middleName, setMiddleName] = useState(selectedUser.middle_name || "");
-  const [lastName, setLastName] = useState(selectedUser.last_name);
-  const [suffix, setSuffix] = useState(selectedUser.suffix || "");
+  const [firstName, setFirstName] = useState(user.first_name);
+  const [middleName, setMiddleName] = useState(user.middle_name || "");
+  const [lastName, setLastName] = useState(user.last_name);
+  const [suffix, setSuffix] = useState(user.suffix || "");
 
-  const [contactNumber, setContactNumber] = useState(
-    selectedUser.contact_number
+  const [sex, setSex] = useState(user.sex);
+  const [birthdate, setBirthdate] = useState(
+    user.birthdate?.substring(0, 10) || ""
   );
-  const [email, setEmail] = useState(selectedUser.email);
-  const [role, setRole] = useState(selectedUser.role);
+
+  const [email, setEmail] = useState(user.email);
+  const [contactNumber, setContactNumber] = useState(
+    user.contact_number
+  );
+  const [address, setAddress] = useState(user.address);
+
+  const [role, setRole] = useState(user.role);
+  const [department, setDepartment] = useState(
+    user.department || ""
+  );
+  const [employmentStatus, setEmploymentStatus] = useState(
+    user.employment_status || "active"
+  );
+
+  const [dateHired, setDateHired] = useState(
+    user.date_hired?.substring(0, 10) || ""
+  );
+
+  const [shiftStart, setShiftStart] = useState(
+    user.shift_start || ""
+  );
+
+  const [shiftEnd, setShiftEnd] = useState(
+    user.shift_end || ""
+  );
+
+  const [emergencyContactName, setEmergencyContactName] =
+    useState(user.emergency_contact_name || "");
+
+  const [emergencyContact, setEmergencyContact] = useState(
+    user.emergency_contact || ""
+  );
 
   const [hiddenPassword, setHiddenPassword] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // PFP
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState(
+    user.profile_photo || ""
+  );
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fullName = [
+    firstName,
+    middleName,
+    lastName,
+    suffix,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const initials = `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""
+    }`;
+
+  const handleProfilePhoto = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Profile photo must be less than 5MB.");
+      return;
+    }
+
+    setProfilePhoto(file);
+    setProfilePhotoPreview(URL.createObjectURL(file));
+  };
 
   const editUser = async () => {
     if (password && password !== confirmPassword) {
@@ -33,173 +124,674 @@ function UpdateUserModal({ selectedUser, onClose, loadData }: Props) {
     }
 
     try {
-      const data: Record<string, string> = {};
+      setSaving(true);
 
-      if (username.trim()) data.username = username;
-      if (password.trim()) data.password = password;
+      const formData = new FormData();
 
-      if (firstName.trim()) data.first_name = firstName;
-      if (middleName.trim()) data.middle_name = middleName;
-      if (lastName.trim()) data.last_name = lastName;
-      if (suffix.trim()) data.suffix = suffix;
+      formData.append("username", username.trim());
+      formData.append("first_name", firstName.trim());
+      formData.append("middle_name", middleName.trim());
+      formData.append("last_name", lastName.trim());
+      formData.append("suffix", suffix.trim());
+      formData.append("sex", sex);
+      formData.append("birthdate", birthdate);
+      formData.append("email", email.trim());
+      formData.append("contact_number", contactNumber.trim());
+      formData.append("address", address.trim());
+      formData.append("role", role);
+      formData.append("department", department.trim());
+      formData.append("employment_status", employmentStatus);
+      formData.append("date_hired", dateHired);
+      formData.append("shift_start", shiftStart);
+      formData.append("shift_end", shiftEnd);
 
-      if (role.trim()) data.role = role;
-      if (email.trim()) data.email = email;
-      if (contactNumber.trim()) {
-        data.contact_number = contactNumber;
+      formData.append(
+        "emergency_contact_name",
+        emergencyContactName.trim()
+      );
+
+      formData.append(
+        "emergency_contact",
+        emergencyContact.trim()
+      );
+
+      if (password.trim()) {
+        formData.append("password", password);
+      }
+
+      // MUST be "image" because the backend uses:
+      // upload.single("image")
+      if (profilePhoto) {
+        formData.append("image", profilePhoto);
       }
 
       const response = await api.patch(
-        `/api/admin/users/${selectedUser.user_id}`,
-        data
+        `/api/admin/users/${user.user_id}`,
+        formData
       );
 
       alert(response.data.message);
 
-      onClose();
       loadData();
+      onClose();
+
     } catch (error) {
       console.error("UPDATE USER ERROR:", error);
       alert("Failed to update user.");
+    } finally {
+      setSaving(false);
     }
   };
 
+  const inputClass =
+    "w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-400 focus:ring-2 focus:ring-gray-100";
+
+  const labelClass =
+    "mb-1.5 block text-xs font-medium text-gray-500";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        <h2 className="mb-4 flex justify-between text-2xl font-bold">
-          Update User
+    <>
+      {/* Overlay */}
+      <div
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="fixed left-1/2 top-1/2 z-50 flex w-[94%] max-w-5xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-3xl bg-gray-50 shadow-2xl">
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5">
+
+          <div className="flex items-center gap-3">
+
+            <button
+              onClick={onClose}
+              disabled={saving}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50"
+            >
+              <ArrowLeft size={19} />
+            </button>
+
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Update User
+              </h2>
+
+              <p className="mt-0.5 text-sm text-gray-500">
+                Edit account and personal information
+              </p>
+            </div>
+
+          </div>
 
           <button
             onClick={onClose}
-            className="border px-4 py-2"
+            disabled={saving}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50"
           >
-            X
+            <X size={20} />
           </button>
-        </h2>
 
-        <div className="space-y-4">
+        </div>
 
-          {/* Username */}
-          <input
-            type="text"
-            placeholder="Username"
-            className="w-full border p-2"
-            onChange={(e) => setUsername(e.target.value)}
-            value={username}
-          />
+        {/* Content */}
+        <div className="max-h-[82vh] overflow-y-auto p-6">
 
-          {/* Password */}
-          <div className="flex border">
-            <input
-              type={hiddenPassword ? "password" : "text"}
-              placeholder="New Password"
-              className="w-full p-2 outline-none"
-              onChange={(e) => setPassword(e.target.value)}
-              value={password}
-            />
+          {/* Profile Hero */}
+          <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
 
-            <button
-              type="button"
-              className="p-2"
-              onClick={() => setHiddenPassword(!hiddenPassword)}
-            >
-              {hiddenPassword ? "Show" : "Hide"}
-            </button>
+            <div className="h-36 bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100" />
+
+            <div className="px-8 pb-8">
+
+              <div className="-mt-16 flex items-end justify-between">
+
+                {/* Profile photo */}
+                <div className="relative">
+
+                  {profilePhotoPreview ? (
+                    <img
+                      src={profilePhotoPreview}
+                      alt={fullName}
+                      className="h-32 w-32 rounded-3xl border-4 border-white object-cover shadow-lg"
+                    />
+                  ) : (
+                    <div className="flex h-32 w-32 items-center justify-center rounded-3xl border-4 border-white bg-gray-200 text-4xl font-bold text-gray-500 shadow-lg">
+                      {initials}
+                    </div>
+                  )}
+
+                  {/* Camera button */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      fileInputRef.current?.click()
+                    }
+                    className="absolute bottom-1 right-1 flex h-10 w-10 items-center justify-center rounded-xl border-2 border-white bg-gray-900 text-white shadow-lg transition hover:bg-gray-800"
+                  >
+                    <Camera size={18} />
+                  </button>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePhoto}
+                    className="hidden"
+                  />
+
+                </div>
+
+                <span className="flex items-center gap-2 rounded-full bg-green-50 px-4 py-2 text-sm font-medium text-green-700">
+                  <span className="h-2 w-2 rounded-full bg-green-500" />
+                  Active
+                </span>
+
+              </div>
+
+              <div className="mt-5">
+
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                  {fullName}
+                </h1>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  <span className="capitalize">
+                    {role}
+                  </span>
+
+                  {department && ` • ${department}`}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    fileInputRef.current?.click()
+                  }
+                  className="mt-4 text-sm font-medium text-gray-600 transition hover:text-gray-900"
+                >
+                  Change profile photo
+                </button>
+
+                {profilePhoto && (
+                  <p className="mt-1 text-xs text-gray-400">
+                    {profilePhoto.name}
+                  </p>
+                )}
+
+              </div>
+
+            </div>
           </div>
 
-          {/* Confirm Password */}
-          <input
-            type="password"
-            placeholder="Repeat Password"
-            className="w-full border p-2"
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            value={confirmPassword}
-          />
+          {/* Cards */}
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
 
-          {/* First Name */}
-          <input
-            type="text"
-            placeholder="First Name"
-            className="w-full border p-2"
-            onChange={(e) => setFirstName(e.target.value)}
-            value={firstName}
-          />
+            {/* Contact */}
+            <div className="rounded-3xl bg-white p-6 shadow-sm">
 
-          {/* Middle Name */}
-          <input
-            type="text"
-            placeholder="Middle Name"
-            className="w-full border p-2"
-            onChange={(e) => setMiddleName(e.target.value)}
-            value={middleName}
-          />
+              <h2 className="mb-6 text-base font-semibold text-gray-900">
+                Contact Information
+              </h2>
 
-          {/* Last Name */}
-          <input
-            type="text"
-            placeholder="Last Name"
-            className="w-full border p-2"
-            onChange={(e) => setLastName(e.target.value)}
-            value={lastName}
-          />
+              <div className="space-y-5">
 
-          {/* Suffix */}
-          <input
-            type="text"
-            placeholder="Suffix"
-            className="w-full border p-2"
-            onChange={(e) => setSuffix(e.target.value)}
-            value={suffix}
-          />
+                <div className="flex gap-4">
 
-          {/* Contact Number */}
-          <input
-            type="text"
-            placeholder="Contact Number"
-            className="w-full border p-2"
-            onChange={(e) => setContactNumber(e.target.value)}
-            value={contactNumber}
-          />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100">
+                    <Mail size={18} className="text-gray-600" />
+                  </div>
 
-          {/* Email */}
-          <input
-            type="text"
-            placeholder="Email"
-            className="w-full border p-2"
-            onChange={(e) => setEmail(e.target.value)}
-            value={email}
-          />
+                  <div className="flex-1">
+                    <label className={labelClass}>
+                      Email
+                    </label>
 
-          {/* Role */}
-          <select
-            className="w-full border p-2"
-            onChange={(e) => setRole(e.target.value)}
-            value={role}
-          >
-            <option value="">Select Role</option>
-            <option value="admin">Admin</option>
-            <option value="doctor">Doctor</option>
-            <option value="laboratory-staff">
-              Laboratory Staff
-            </option>
-            <option value="frontdesk-staff">
-              Front Desk Staff
-            </option>
-            <option value="patient">Patient</option>
-          </select>
-        </div>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) =>
+                        setEmail(e.target.value)
+                      }
+                      className={inputClass}
+                    />
+                  </div>
 
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            className="bg-gray-200 px-4 py-2 hover:cursor-pointer hover:bg-gray-400"
-            onClick={editUser}
-          >
-            Edit User
-          </button>
+                </div>
+
+                <div className="flex gap-4">
+
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100">
+                    <Phone size={18} className="text-gray-600" />
+                  </div>
+
+                  <div className="flex-1">
+                    <label className={labelClass}>
+                      Contact Number
+                    </label>
+
+                    <input
+                      type="text"
+                      value={contactNumber}
+                      onChange={(e) =>
+                        setContactNumber(e.target.value)
+                      }
+                      className={inputClass}
+                    />
+                  </div>
+
+                </div>
+
+                <div className="flex gap-4">
+
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100">
+                    <MapPin size={18} className="text-gray-600" />
+                  </div>
+
+                  <div className="flex-1">
+                    <label className={labelClass}>
+                      Address
+                    </label>
+
+                    <textarea
+                      value={address}
+                      onChange={(e) =>
+                        setAddress(e.target.value)
+                      }
+                      rows={3}
+                      className={`${inputClass} resize-none`}
+                    />
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+
+            {/* Employment */}
+            <div className="rounded-3xl bg-white p-6 shadow-sm">
+
+              <h2 className="mb-6 text-base font-semibold text-gray-900">
+                Employment Information
+              </h2>
+
+              <div className="space-y-5">
+
+                <div>
+                  <label className={labelClass}>
+                    Employee ID
+                  </label>
+
+                  <div className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm font-semibold text-gray-700">
+                    {user.user_id}
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelClass}>
+                    Username
+                  </label>
+
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) =>
+                      setUsername(e.target.value)
+                    }
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>
+                    Role
+                  </label>
+
+                  <select
+                    value={role}
+                    onChange={(e) =>
+                      setRole(e.target.value)
+                    }
+                    className={inputClass}
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="doctor">Doctor</option>
+                    <option value="laboratory-staff">
+                      Laboratory Staff
+                    </option>
+                    <option value="frontdesk-staff">
+                      Front Desk Staff
+                    </option>
+                    <option value="patient">Patient</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={labelClass}>
+                    Department
+                  </label>
+
+                  <input
+                    type="text"
+                    value={department}
+                    onChange={(e) =>
+                      setDepartment(e.target.value)
+                    }
+                    placeholder="Not assigned"
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>
+                    Employment Status
+                  </label>
+
+                  <select
+                    value={employmentStatus}
+                    onChange={(e) =>
+                      setEmploymentStatus(e.target.value)
+                    }
+                    className={inputClass}
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="on-leave">On Leave</option>
+                  </select>
+                </div>
+
+                {/* Date Hired */}
+                <div>
+                  <label className={labelClass}>
+                    <span className="flex items-center gap-1">
+                      <Calendar size={13} />
+                      Date Hired
+                    </span>
+                  </label>
+
+                  <input
+                    type="date"
+                    value={dateHired}
+                    onChange={(e) => setDateHired(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+
+                {/* Shift */}
+                <div>
+                  <label className={labelClass}>
+                    <span className="flex items-center gap-1">
+                      <Clock size={13} />
+                      Shift
+                    </span>
+                  </label>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      type="time"
+                      value={shiftStart}
+                      onChange={(e) => setShiftStart(e.target.value)}
+                      className={inputClass}
+                    />
+
+                    <input
+                      type="time"
+                      value={shiftEnd}
+                      onChange={(e) => setShiftEnd(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Personal */}
+            <div className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-2">
+
+              <h2 className="mb-6 text-base font-semibold text-gray-900">
+                Personal Information
+              </h2>
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+
+                <div>
+                  <label className={labelClass}>
+                    First Name
+                  </label>
+
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={(e) =>
+                      setFirstName(e.target.value)
+                    }
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>
+                    Middle Name
+                  </label>
+
+                  <input
+                    type="text"
+                    value={middleName}
+                    onChange={(e) =>
+                      setMiddleName(e.target.value)
+                    }
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>
+                    Last Name
+                  </label>
+
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={(e) =>
+                      setLastName(e.target.value)
+                    }
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>
+                    Suffix
+                  </label>
+
+                  <input
+                    type="text"
+                    value={suffix}
+                    onChange={(e) =>
+                      setSuffix(e.target.value)
+                    }
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>
+                    Sex
+                  </label>
+
+                  <select
+                    value={sex}
+                    onChange={(e) =>
+                      setSex(e.target.value)
+                    }
+                    className={inputClass}
+                  >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={labelClass}>
+                    Birthdate
+                  </label>
+
+                  <input
+                    type="date"
+                    value={birthdate}
+                    onChange={(e) =>
+                      setBirthdate(e.target.value)
+                    }
+                    className={inputClass}
+                  />
+                </div>
+
+              </div>
+            </div>
+
+            {/* Emergency */}
+            <div className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-2">
+
+              <h2 className="mb-6 text-base font-semibold text-gray-900">
+                Emergency Contact
+              </h2>
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+                <div>
+                  <label className={labelClass}>
+                    Contact Name
+                  </label>
+
+                  <input
+                    type="text"
+                    value={emergencyContactName}
+                    onChange={(e) =>
+                      setEmergencyContactName(
+                        e.target.value
+                      )
+                    }
+                    placeholder="Not provided"
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>
+                    Contact Number
+                  </label>
+
+                  <input
+                    type="text"
+                    value={emergencyContact}
+                    onChange={(e) =>
+                      setEmergencyContact(e.target.value)
+                    }
+                    placeholder="Not provided"
+                    className={inputClass}
+                  />
+                </div>
+
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-2">
+
+              <h2 className="mb-2 text-base font-semibold text-gray-900">
+                Change Password
+              </h2>
+
+              <p className="mb-6 text-sm text-gray-500">
+                Leave the password fields blank to keep the current password.
+              </p>
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+                <div>
+                  <label className={labelClass}>
+                    New Password
+                  </label>
+
+                  <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100">
+
+                    <input
+                      type={hiddenPassword ? "password" : "text"}
+                      value={password}
+                      onChange={(e) =>
+                        setPassword(e.target.value)
+                      }
+                      placeholder="New password"
+                      className="w-full px-3 py-2.5 text-sm outline-none"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setHiddenPassword(!hiddenPassword)
+                      }
+                      className="px-3 text-gray-400 transition hover:text-gray-700"
+                    >
+                      {hiddenPassword ? (
+                        <Eye size={18} />
+                      ) : (
+                        <EyeOff size={18} />
+                      )}
+                    </button>
+
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelClass}>
+                    Confirm New Password
+                  </label>
+
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) =>
+                      setConfirmPassword(e.target.value)
+                    }
+                    placeholder="Confirm new password"
+                    className={inputClass}
+                  />
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          {/* Actions */}
+          <div className="mt-6 flex justify-end gap-3">
+
+            <button
+              onClick={onClose}
+              disabled={saving}
+              className="flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-100 disabled:opacity-50"
+            >
+              <ArrowLeft size={16} />
+              Back to Profile
+            </button>
+
+            <button
+              onClick={editUser}
+              disabled={saving}
+              className="flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Save size={16} />
+
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+
+          </div>
+
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

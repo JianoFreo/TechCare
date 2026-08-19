@@ -71,13 +71,16 @@ function UserCardSquare({ user, setSelectedUser, setShowUserProfile }: Props) {
 
         {/* Description / Contact */}
         <p className="mt-2 line-clamp-2 text-sm leading-5 text-gray-500">
+          {user.user_id}
+        </p>
+        <p className="mt-2 line-clamp-2 text-sm leading-5 text-gray-500">
           {user.email}
         </p>
 
         {/* Stats */}
         <div className="mt-4 flex items-center gap-5 text-sm text-gray-500">
           <div className="flex items-center gap-1">
-            <span><Phone /></span>
+            <span><Phone className="w-4" /></span>
             <span>{user.contact_number}</span>
           </div>
 
