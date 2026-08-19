@@ -345,18 +345,18 @@ const TABLES: {
   {
     table: "packages",
     createSQL: `CREATE TABLE IF NOT EXISTS packages (
-      package_id   SERIAL PRIMARY KEY,
-      package_name VARCHAR(255) NOT NULL,
-      package_price NUMERIC(10,2) NOT NULL,
-      service_ids  INTEGER[] NOT NULL,
-      created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`,
+    package_id    SERIAL PRIMARY KEY,
+    package_name  VARCHAR(255) NOT NULL,
+    package_price NUMERIC(10,2) NOT NULL,
+    service_ids   VARCHAR(255)[] NOT NULL,
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
     columns: {
       package_id: "SERIAL PRIMARY KEY",
       package_name: "VARCHAR(255) NOT NULL",
       package_price: "NUMERIC(10,2) NOT NULL",
-      service_ids: "INTEGER[] NOT NULL",
+      service_ids: "VARCHAR(255)[] NOT NULL",
       created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
       updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
     },
