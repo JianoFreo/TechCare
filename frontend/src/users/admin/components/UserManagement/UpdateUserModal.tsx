@@ -501,55 +501,47 @@ function UpdateUserModal({
                   </select>
                 </div>
 
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                {/* Date Hired */}
+                <div>
+                  <label className={labelClass}>
+                    <span className="flex items-center gap-1">
+                      <Calendar size={13} />
+                      Date Hired
+                    </span>
+                  </label>
 
-                  <div>
-                    <label className={labelClass}>
-                      <span className="flex items-center gap-1">
-                        <Calendar size={13} />
-                        Date Hired
-                      </span>
-                    </label>
+                  <input
+                    type="date"
+                    value={dateHired}
+                    onChange={(e) => setDateHired(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+
+                {/* Shift */}
+                <div>
+                  <label className={labelClass}>
+                    <span className="flex items-center gap-1">
+                      <Clock size={13} />
+                      Shift
+                    </span>
+                  </label>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      type="time"
+                      value={shiftStart}
+                      onChange={(e) => setShiftStart(e.target.value)}
+                      className={inputClass}
+                    />
 
                     <input
-                      type="date"
-                      value={dateHired}
-                      onChange={(e) =>
-                        setDateHired(e.target.value)
-                      }
+                      type="time"
+                      value={shiftEnd}
+                      onChange={(e) => setShiftEnd(e.target.value)}
                       className={inputClass}
                     />
                   </div>
-
-                  <div>
-                    <label className={labelClass}>
-                      <span className="flex items-center gap-1">
-                        <Clock size={13} />
-                        Shift
-                      </span>
-                    </label>
-
-                    <div className="flex gap-2">
-                      <input
-                        type="time"
-                        value={shiftStart}
-                        onChange={(e) =>
-                          setShiftStart(e.target.value)
-                        }
-                        className={inputClass}
-                      />
-
-                      <input
-                        type="time"
-                        value={shiftEnd}
-                        onChange={(e) =>
-                          setShiftEnd(e.target.value)
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-                  </div>
-
                 </div>
 
               </div>
