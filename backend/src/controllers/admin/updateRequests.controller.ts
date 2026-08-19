@@ -1,11 +1,12 @@
 import { sql } from "../../config/db.js";
 import bcrypt from "bcryptjs";
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 
 export async function updateUser(req: Request, res: Response) {
-  //patch /api/admin/users/:user_id
+  // PATCH /api/admin/users/:user_id
   try {
     const { user_id } = req.params;
+
     const {
       username,
       password,
@@ -48,17 +49,29 @@ export async function updateUser(req: Request, res: Response) {
         role = COALESCE(${role}, role),
         email = COALESCE(${email}, email),
         contact_number = COALESCE(${contact_number}, contact_number),
-        emergency_contact_name =  COALESCE(${emergency_contact_name}, emergency_contact_name),
-        emergency_contact = COALESCE(${emergency_contact}, emergency_contact),
+        emergency_contact_name = COALESCE(
+          ${emergency_contact_name},
+          emergency_contact_name
+        ),
+        emergency_contact = COALESCE(
+          ${emergency_contact},
+          emergency_contact
+        ),
         address = COALESCE(${address}, address),
         birthdate = COALESCE(${birthdate}, birthdate),
         department = COALESCE(${department}, department),
-        employment_status = COALESCE(${employment_status}, employment_status),
-        account_status = COALESCE(${account_status}, account_status),
+        employment_status = COALESCE(
+          ${employment_status},
+          employment_status
+        ),
+        account_status = COALESCE(
+          ${account_status},
+          account_status
+        ),
         date_hired = COALESCE(${date_hired}, date_hired),
         shift_start = COALESCE(${shift_start}, shift_start),
-        shift_end = COALESCE(${shift_end}, shift_end)
-        updated_at = CURRENT_TIMESTAMP,
+        shift_end = COALESCE(${shift_end}, shift_end),
+        updated_at = CURRENT_TIMESTAMP
       WHERE user_id = ${user_id}
       RETURNING *;
     `;
@@ -68,7 +81,10 @@ export async function updateUser(req: Request, res: Response) {
       user: updatedUser[0],
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("UPDATE USER ERROR:", error);
+
+    res.status(500).json({
+      error: "Internal Server Error",
+    });
   }
 }
