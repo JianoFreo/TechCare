@@ -1,9 +1,9 @@
 import { Router } from "express";
 import {
   getAllLaboratoryPaid,
-  getPatientInfo,
   getLaboratoryRequest,
-  getALLLaboratoryQueues,
+  getAllLaboratoryQueues,
+  getRoomSpecificServices,
 } from "../controllers/labstaff/getRequests.controller.js";
 import {
   updateLabRequestStatus,
@@ -20,14 +20,14 @@ if (ENV.IS_PRODUCTION) {
 // GET ROUTES
 router.get("/laboratory-requests", getAllLaboratoryPaid);
 router.get("/laboratory-requests/:request_id", getLaboratoryRequest);
-router.get("/patients/:patient_id", getPatientInfo);
-router.get("/queues", getALLLaboratoryQueues);
+router.get("/queues", getAllLaboratoryQueues);
+router.get("/services/:room", getRoomSpecificServices);
 
 // POST ROUTES
 
 // UPDATE ROUTES
 router.patch("/laboratory-requests/:request_id", updateLabRequestStatus);
-router.patch("/queue/:queue_id", updateQueueStatus);
+router.patch("/queues/:queue_id", updateQueueStatus);
 
 // DELETE ROUTES
 export default router;

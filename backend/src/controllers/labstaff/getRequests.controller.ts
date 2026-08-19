@@ -40,25 +40,25 @@ export async function getLaboratoryRequest(req: Request, res: Response) {
   }
 }
 
-export async function getPatientInfo(req: Request, res: Response) {
-  try {
-    const { patient_id } = req.params;
-    const [patient] = await sql`
-        SELECT patient_id, last_name, first_name, date_of_birth, sex, contact_number, email, address, emergency_contact
-        FROM patients
-        WHERE patient_id = ${patient_id}
-    `;
-    if (!patient) {
-      return res.status(404).json({ message: "Patient not found" });
-    }
-    return res.status(200).json(patient);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-}
+// export async function getPatientInfo(req: Request, res: Response) {
+//   try {
+//     const { patient_id } = req.params;
+//     const [patient] = await sql`
+//         SELECT patient_id, last_name, first_name, date_of_birth, sex, contact_number, email, address, emergency_contact
+//         FROM patients
+//         WHERE patient_id = ${patient_id}
+//     `;
+//     if (!patient) {
+//       return res.status(404).json({ message: "Patient not found" });
+//     }
+//     return res.status(200).json(patient);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// }
 
-export async function getALLLaboratoryQueues(req: Request, res: Response) {
+export async function getAllLaboratoryQueues(req: Request, res: Response) {
   try {
     const laboratoryQueue = await sql`
         SELECT * FROM queue_entries
@@ -71,6 +71,53 @@ export async function getALLLaboratoryQueues(req: Request, res: Response) {
       return res.status(404).json({ message: "No existing Queue" });
     }
     return res.status(200).json(laboratoryQueue);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+export async function getRoomSpecificServices(req: Request, res: Response) {
+  // get /api/admin/services
+  const { room } = req.params;
+  if (!room) {
+    res.status(400).json({
+      message: "Room field is required.",
+    });
+  }
+  try {
+    const services = await sql`
+    SELECT * FROM services
+    WHERE room = ${room}
+    ORDER BY service_id ASC
+      `;
+    if (!services) {
+      res.json({ message: "there are no services" });
+    }
+    res.status(200).json({ services });
+
+    // {
+    //   "services": [
+    //   {
+    //     "service_id": 1,
+    //     "service_name": "Haircut",
+    //     "price": "250.00",
+    //     "discount_pct": "0.00",
+    //     "deleted": false,
+    //     "created_at": "2026-07-02T08:00:00.000Z",
+    //     "updated_at": "2026-07-02T08:00:00.000Z"
+    //   },
+    //   {
+    //     "service_id": 2,
+    //     "service_name": "Hair Coloring",
+    //     "price": "1200.00",
+    //     "discount_pct": "10.00",
+    //     "deleted": false,
+    //     "created_at": "2026-07-02T08:05:00.000Z",
+    //     "updated_at": "2026-07-02T08:05:00.000Z"
+    //   }
+    // ]
+    // }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
