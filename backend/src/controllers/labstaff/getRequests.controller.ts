@@ -58,14 +58,25 @@ export async function getLaboratoryRequest(req: Request, res: Response) {
 //   }
 // }
 
-export async function getAllLaboratoryQueues(req: Request, res: Response) {
+export async function getAllLaboratorySpecificQueues(
+  req: Request,
+  res: Response,
+) {
   try {
+    const { room } = req.params;
+
     const laboratoryQueue = await sql`
-        SELECT * FROM queue_entries
-        WHERE queue_id LIKE 'LAB-%'
-              AND created_at >= CURRENT_DATE
-              AND created_at < CURRENT_DATE + INTERVAL '1 day'
-        ORDER BY queue_number ASC
+      SELECT DISTINCT ON (q.queue_id)
+        q.*,
+        s.room
+      FROM queue_entries q
+      JOIN request_items ri ON ri.queue_id = q.queue_id
+      JOIN services s ON s.service_id = ri.service_id
+      WHERE q.queue_id LIKE 'LAB-%'
+        AND q.created_at >= CURRENT_DATE
+        AND q.created_at < CURRENT_DATE + INTERVAL '1 day'
+        AND s.room = ${room}
+      ORDER BY q.queue_id, q.queue_number ASC
     `;
     if (laboratoryQueue.length === 0) {
       return res.status(404).json({ message: "No existing Queue" });
@@ -94,29 +105,37 @@ export async function getRoomSpecificServices(req: Request, res: Response) {
       res.json({ message: "there are no services" });
     }
     res.status(200).json(services);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
 
-    // {
-    //   "services": [
-    //   {
-    //     "service_id": 1,
-    //     "service_name": "Haircut",
-    //     "price": "250.00",
-    //     "discount_pct": "0.00",
-    //     "deleted": false,
-    //     "created_at": "2026-07-02T08:00:00.000Z",
-    //     "updated_at": "2026-07-02T08:00:00.000Z"
-    //   },
-    //   {
-    //     "service_id": 2,
-    //     "service_name": "Hair Coloring",
-    //     "price": "1200.00",
-    //     "discount_pct": "10.00",
-    //     "deleted": false,
-    //     "created_at": "2026-07-02T08:05:00.000Z",
-    //     "updated_at": "2026-07-02T08:05:00.000Z"
-    //   }
-    // ]
-    // }
+export async function getLaboratoryQueueItems(req: Request, res: Response) {
+  try {
+    const { queue_id } = req.params;
+
+    const laboratoryItems = await sql`
+      SELECT
+        r.id,
+        r.lab_item_id,
+        r.status,
+        r.created_at,
+        r.updated_at,
+        s.service_name,
+        s.service_type
+      FROM request_items r
+      JOIN queue_entries q ON q.queue_id = r.queue_id
+      JOIN services s ON s.service_id = r.service_id
+      WHERE q.queue_id = ${queue_id}
+        AND q.created_at >= CURRENT_DATE
+        AND q.created_at < CURRENT_DATE + INTERVAL '1 day'
+      ORDER BY r.lab_item_id
+    `;
+    if (laboratoryItems.length === 0) {
+      return res.status(404).json({ message: "No existing Queue" });
+    }
+    return res.status(200).json(laboratoryItems);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
