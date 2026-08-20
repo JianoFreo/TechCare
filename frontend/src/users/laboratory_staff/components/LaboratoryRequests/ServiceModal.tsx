@@ -44,25 +44,25 @@ function ServiceModal({ services, room, onClose }: ServiceModalProps) {
             </colgroup>
             <thead>
               <tr className="bg-gray-100 ">
-                <th className="px-1 py-2">Service ID</th>
-                <th className="px-1 py-2">Service Name</th>
-                <th className="px-1 py-2">Service Type</th>
-                <th className="px-1 py-2">Active</th>
+                <th className="px-1 py-3">Service ID</th>
+                <th className="px-1 py-3">Service Name</th>
+                <th className="px-1 py-3">Service Type</th>
+                <th className="px-1 py-3">Active</th>
               </tr>
             </thead>
             <tbody>
               {services.map((service) => (
                 <tr key={service.id} className="border-b border-gray-300">
-                  <td className="px-1 py-1 text-center text-sm">
+                  <td className="px-1 py-2 text-center text-sm">
                     {service.service_id}
                   </td>
-                  <td className="px-1 py-1 text-center text-sm">
+                  <td className="px-1 py-2 text-center text-sm">
                     {service.service_name}
                   </td>
-                  <td className="px-1 py-1 text-center text-sm">
+                  <td className="px-1 py-2 text-center text-sm">
                     {service.service_type}
                   </td>
-                  <td className="px-1 py-1 text-center text-sm">
+                  <td className="px-1 py-2 text-center text-sm">
                     {service.active === true ? "Active" : "Inactive"}
                   </td>
                 </tr>

@@ -189,16 +189,19 @@ function RequestSummary({ services, queues, room }: RequestSummaryProps) {
 
         {/* LOADS EACH QUEUE STATUS SUMMARY */}
         <div className="flex items-center justify-around w-80">
-          {queueStatuses.map(({ label, count, shapeColors, labelColor }) => (
-            <div
-              className={`${shapeColors} border font-semibold w-16 h-16 rounded-sm flex flex-col items-center justify-center`}
-            >
-              <h3 className={`text-lg font-bold ${labelColor}`}>{count}</h3>
-              <h3 className={`text-[10px]  font-light ${labelColor}`}>
-                {label}
-              </h3>
-            </div>
-          ))}
+          {queueStatuses.map(
+            ({ label, count, shapeColors, labelColor }, index) => (
+              <div
+                key={index}
+                className={`${shapeColors} border font-semibold w-16 h-16 rounded-sm flex flex-col items-center justify-center`}
+              >
+                <h3 className={`text-lg font-bold ${labelColor}`}>{count}</h3>
+                <h3 className={`text-[10px]  font-light ${labelColor}`}>
+                  {label}
+                </h3>
+              </div>
+            ),
+          )}
         </div>
       </div>
 
