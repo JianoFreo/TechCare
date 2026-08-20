@@ -7,18 +7,6 @@ import { useSearchParams } from "react-router";
 import LabstaffDashboard from "./pages/LabstaffDashbaord";
 import LaboratoryResults from "./pages/LaboratoryResults";
 
-type LabRequest = {
-  id: number;
-  request_id: string;
-  consultation_id: string | null;
-  patient_id: string;
-  doctor_id: string | null;
-  status: string;
-  requested_at: string;
-  created_at: string;
-  updated_at: string;
-};
-
 type RequestItem = {
   lab_item_id: string;
   request_id: string;
@@ -41,11 +29,23 @@ type Queue = {
   updated_at: string;
 };
 
+type Service = {
+  id: number;
+  service_id: string;
+  service_name: string;
+  service_type: string;
+  price: number;
+  active: boolean;
+  room: string;
+};
+
 function LaboratoryStaff() {
   const [open, setOpen] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const [labRequests, setLabRequests] = useState<LabRequest[]>([]);
+  const [requestItems, setRequestItems] = useState<RequestItem[]>([]);
   const [queues, setQueues] = useState<Queue[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,19 +54,27 @@ function LaboratoryStaff() {
     setSearchParams({ page: newPage });
   }
 
+  const room = "LAB-01";
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await api.get("/api/labstaff/queues");
-      setQueues(response.data ?? []);
+      const queueResponse = await api.get("/api/labstaff/queues");
+      const serviceResponse = await api.get(`/api/labstaff/services/${room}`);
+      const laboratoryRequestResponse = await api.get(
+        `/api/labstaff/services/${room}`,
+      );
+      setQueues(queueResponse.data ?? []);
+      setServices(serviceResponse.data ?? []);
     } catch (err) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Unable to fetch laboratory queue.";
+          ?.message || "Unable to fetch data.";
       setError(message);
       setQueues([]);
+      setServices([]);
     } finally {
       setLoading(false);
     }
@@ -105,9 +113,11 @@ function LaboratoryStaff() {
           open={open}
           setOpen={setOpen}
           queues={queues}
+          services={services}
           loading={loading}
           error={error}
           loadData={() => loadData()}
+          room={room}
         />
       )}
 

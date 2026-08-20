@@ -78,7 +78,6 @@ export async function getAllLaboratoryQueues(req: Request, res: Response) {
 }
 
 export async function getRoomSpecificServices(req: Request, res: Response) {
-  // get /api/admin/services
   const { room } = req.params;
   if (!room) {
     res.status(400).json({
@@ -94,7 +93,7 @@ export async function getRoomSpecificServices(req: Request, res: Response) {
     if (!services) {
       res.json({ message: "there are no services" });
     }
-    res.status(200).json({ services });
+    res.status(200).json(services);
 
     // {
     //   "services": [
