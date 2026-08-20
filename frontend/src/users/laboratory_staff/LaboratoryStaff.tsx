@@ -7,16 +7,6 @@ import { useSearchParams } from "react-router";
 import LabstaffDashboard from "./pages/LabstaffDashbaord";
 import LaboratoryResults from "./pages/LaboratoryResults";
 
-type RequestItem = {
-  lab_item_id: string;
-  request_id: string;
-  service_id: string;
-  queue_id: string | null;
-  status: string;
-  created_at: string;
-  updated_at: string;
-};
-
 type Queue = {
   id: number;
   queue_id: string;
@@ -42,7 +32,6 @@ type Service = {
 function LaboratoryStaff() {
   const [open, setOpen] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [labRequests, setLabRequests] = useState<LabRequest[]>([]);
   const [requestItems, setRequestItems] = useState<RequestItem[]>([]);
   const [queues, setQueues] = useState<Queue[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -61,11 +50,10 @@ function LaboratoryStaff() {
     setError(null);
 
     try {
-      const queueResponse = await api.get("/api/labstaff/queues");
-      const serviceResponse = await api.get(`/api/labstaff/services/${room}`);
-      const laboratoryRequestResponse = await api.get(
-        `/api/labstaff/services/${room}`,
+      const queueResponse = await api.get(
+        `/api/labstaff/laboratory-queues/${room}`,
       );
+      const serviceResponse = await api.get(`/api/labstaff/services/${room}`);
       setQueues(queueResponse.data ?? []);
       setServices(serviceResponse.data ?? []);
     } catch (err) {
@@ -125,7 +113,7 @@ function LaboratoryStaff() {
         <LaboratoryResults
           open={open}
           setOpen={setOpen}
-          requests={labRequests}
+          requests={requestItems}
           loading={loading}
           error={error}
           loadData={() => loadData()}

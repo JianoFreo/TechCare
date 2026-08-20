@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type Dispatch, type SetStateAction } from "react";
 
 type MainFilter = "All" | "Waiting" | "Serving" | "Completed" | "Skipped";
 
@@ -12,6 +12,7 @@ type QueueStatusTabsProps = {
   activeMainFilter: string;
   mainFilterCounts: Record<string, number>;
   onClick: (value: MainFilter) => void;
+  setOpenQueueID: Dispatch<SetStateAction<string | null>>;
 };
 
 function QueueTabs({
@@ -19,6 +20,7 @@ function QueueTabs({
   activeMainFilter,
   mainFilterCounts,
   onClick,
+  setOpenQueueID,
 }: QueueStatusTabsProps) {
   return (
     <div className="flex w-full justify-around h-10 items-end border-b border-gray-300">
@@ -26,7 +28,10 @@ function QueueTabs({
         <button
           key={mainFilter.value}
           type="button"
-          onClick={() => onClick(mainFilter.value)}
+          onClick={() => {
+            onClick(mainFilter.value);
+            setOpenQueueID(null);
+          }}
           className={`px-5 py-1 text-sm ${
             activeMainFilter === mainFilter.value
               ? "text-blue-600 border-blue-600 border-b"
