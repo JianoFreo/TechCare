@@ -1,17 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-
-// type LabRequest = {
-//   request_id: string;
-//   consultation_id: string | null;
-//   patient_id: string;
-//   doctor_id: string | null;
-//   test_type: string;
-//   results: Record<string, unknown> | null;
-//   status: string;
-//   requested_at: string;
-//   updated_at: string;
-// };
+import QueueTabs from "./QueueTabs";
 
 // type RequestItem = {
 //   lab_item_id: string;
@@ -35,13 +24,7 @@ type Queue = {
   updated_at: string;
 };
 
-type MainFilter =
-  | "All"
-  | "Waiting"
-  | "Priority"
-  | "In Progress"
-  | "Completed"
-  | "Skipped";
+type MainFilter = "All" | "Waiting" | "Serving" | "Completed" | "Skipped";
 
 type RequestTableProps = {
   // setRequestIdCard: React.Dispatch<React.SetStateAction<string | null>>;
@@ -54,14 +37,18 @@ type RequestTableProps = {
 
 function LaboratoryRequestTable({ queues, loading, error }: RequestTableProps) {
   const [activeMainFilter, setActiveMainFilter] = useState<MainFilter>("All");
+  const [priorityFilter, setPriorityFilter] = useState("");
+  const [searchFilter, setSerchFilter] = useState("");
+  const [serviceFilter, setServiceFilter] = useState("");
+  const [sortFilter, setSortFilter] = useState("");
 
-  const mainFilters: {
+  const mainFilterValues: {
     label: string;
     value: MainFilter;
   }[] = [
     { label: "All", value: "All" },
     { label: "Waiting", value: "Waiting" },
-    { label: "In Progress", value: "In Progress" },
+    { label: "Serving", value: "Serving" },
     { label: "Completed", value: "Completed" },
     { label: "Skipped", value: "Skipped" },
   ];
@@ -70,7 +57,7 @@ function LaboratoryRequestTable({ queues, loading, error }: RequestTableProps) {
     const matchesActiveMainFilter =
       activeMainFilter === "All" ||
       (activeMainFilter === "Waiting" && queue.status === "Waiting") ||
-      (activeMainFilter === "In Progress" && queue.status === "In Progress") ||
+      (activeMainFilter === "Serving" && queue.status === "Serving") ||
       (activeMainFilter === "Completed" && queue.status === "Completed") ||
       (activeMainFilter === "Skipped" && queue.status === "Skipped");
 
@@ -89,8 +76,8 @@ function LaboratoryRequestTable({ queues, loading, error }: RequestTableProps) {
         counts.Waiting += 1;
       }
 
-      if (queue.status === "In Progress") {
-        counts["In Progress"] += 1;
+      if (queue.status === "Serving") {
+        counts["Serving"] += 1;
       }
 
       if (queue.status === "Completed") {
@@ -107,7 +94,7 @@ function LaboratoryRequestTable({ queues, loading, error }: RequestTableProps) {
       All: 0,
       Waiting: 0,
       Priority: 0,
-      "In Progress": 0,
+      Serving: 0,
       Completed: 0,
       Skipped: 0,
     },
@@ -116,41 +103,51 @@ function LaboratoryRequestTable({ queues, loading, error }: RequestTableProps) {
   return (
     <div className="w-full min-h-20 border rounded-3xl border-gray-300 flex flex-col gap-5 items-center justify-around">
       {/* MAIN FILTERS */}
-      <div className="flex w-full justify-around h-10 items-end border-b border-gray-300">
-        {mainFilters.map((mainFilter) => (
-          <button
-            key={mainFilter.value}
-            type="button"
-            onClick={() => setActiveMainFilter(mainFilter.value)}
-            className={`px-5 py-1 text-sm ${
-              activeMainFilter === mainFilter.value
-                ? "text-blue-600 border-blue-600 border-b"
-                : "text-gray-900"
-            }`}
-          >
-            {mainFilter.label} ({mainFilterCounts[mainFilter.value]})
-          </button>
-        ))}
-      </div>
+      <QueueTabs
+        mainFilterValues={mainFilterValues}
+        activeMainFilter={activeMainFilter}
+        mainFilterCounts={mainFilterCounts}
+        onClick={setActiveMainFilter}
+      />
       {/* SEARCH BAR AND ADDITIONAL FILTERS */}
       <div className="flex w-full items-center justify-start gap-3 px-5">
         <input
           type="text"
-          placeholder="Search..."
+          placeholder="Patient ID, Queue ID..."
+          value={searchFilter}
           className="w-full max-w-56 border rounded-lg px-3 py-1"
+          onChange={(event) => setSerchFilter(event.target.value)}
         />
-        <div className="flex border rounded-lg px-3 py-1 items-center justify-around">
-          <h2>Priority</h2>
-          <ChevronDown size={20} />
-        </div>
-        <div className="flex border min-w-36 rounded-lg px-3 py-1 items-center justify-around">
-          <h2>Services: All</h2>
-          <ChevronDown size={20} />
-        </div>
-        <div className="flex border min-w-44 rounded-lg px-3 py-1 items-center justify-around">
-          <h2>Sort By: Newest</h2>
-          <ChevronDown size={20} />
-        </div>
+        <select
+          className="border rounded-lg px-3 py-2 "
+          id="priority"
+          value={priorityFilter}
+          onChange={(event) => setPriorityFilter(event.target.value)}
+        >
+          <option value="">Priority: None</option>
+          <option value="">Priority</option>
+          <option value="us">Non-priority</option>
+        </select>
+        <select
+          className="border rounded-lg px-3 py-2 "
+          id="priority"
+          value={serviceFilter}
+          onChange={(event) => setServiceFilter(event.target.value)}
+        >
+          <option value="All">Services: All</option>
+          <option value="ph">X-ray</option>
+          <option value="us">Potassium</option>
+        </select>
+        <select
+          className="border rounded-lg px-3 py-2 "
+          id="priority"
+          value={sortFilter}
+          onChange={(event) => setSortFilter(event.target.value)}
+        >
+          <option value="All">Sort by: Newest</option>
+          <option value="ph">Sort by: Oldest</option>
+          <option value="us">Sort by: Newest</option>
+        </select>
       </div>
       {/* TABLE HEADERS */}
       {error ? (
