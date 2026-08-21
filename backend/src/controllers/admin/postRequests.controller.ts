@@ -160,26 +160,10 @@ export async function addUser(req: Request, res: Response) {
     console.log("INSERT RESULT:", signUpResult);
 
     // =========================
-    // TEMPORARY TOKEN GENERATION
-    // =========================
-    // Token generation is currently included for testing purposes.
-    // Normally, a newly created user does not need a token immediately.
-    // The user will receive an access token after successfully logging in.
-    const token = jwt.sign(
-      {
-        user_id: signUpResult[0].user_id,
-      },
-      ENV.JWT_SECRET,
-      {
-        expiresIn: "1h",
-      },
-    );
-
-    // =========================
     // REMOVE SENSITIVE DATA
     // =========================
     // Prevents the password hash from being sent to the client.
-    const { password_hash, ...safeUser } = signUpResult[0];
+    const { password_hash, ...safeUser } = signUpResult[0]; // it just removed the password hash from the response, so that it won't be sent to the client. This is a security measure to protect sensitive information.
 
     // =========================
     // RESPONSE
@@ -187,8 +171,32 @@ export async function addUser(req: Request, res: Response) {
     return res.status(201).json({
       user: safeUser,
       message: "User created successfully!",
-      token,
     });
+    // {
+    //   "user": {
+    //     "user_id": 123,
+    //     "username": "jiano",
+    //     "first_name": "Jiano",
+    //     "middle_name": "Freo",
+    //     "last_name": "Magtangob",
+    //     "suffix": null,
+    //     "sex": "Male",
+    //     "email": "jiano@example.com",
+    //     "contact_number": "09123456789",
+    //     "emergency_contact_name": "Juan Magtangob",
+    //     "emergency_contact": "09987654321",
+    //     "address": "Manila, Philippines",
+    //     "birthdate": "2002-05-15",
+    //     "role": "admin",
+    //     "department": "IT",
+    //     "employment_status": "Full-time",
+    //     "date_hired": "2026-08-21",
+    //     "shift_start": "08:00:00",
+    //     "shift_end": "17:00:00",
+    //     "profile_photo": null
+    //   },
+    //   "message": "User created successfully!"
+    // }
   } catch (error) {
     console.error("ADD USER ERROR:", error);
 
