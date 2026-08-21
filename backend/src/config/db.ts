@@ -226,6 +226,7 @@ const TABLES: {
         "VARCHAR(255) REFERENCES consultation_records(consultation_record_id)",
       patient_id: "VARCHAR(255) NOT NULL REFERENCES patients(patient_id)",
       doctor_id: "VARCHAR(255) REFERENCES users(user_id)",
+      status: "VARCHAR(20) NOT NULL DEFAULT 'Requested'", // ← ADD THIS
       is_paid: "BOOLEAN NOT NULL DEFAULT FALSE",
       requested_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
       updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
