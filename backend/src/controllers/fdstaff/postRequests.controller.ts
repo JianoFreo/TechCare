@@ -2,6 +2,7 @@ import { sql } from "../../config/db.js";
 import bcrypt from "bcryptjs";
 import { calculateAge } from "../../utils/calculateAge.js";
 import { Request, Response } from "express";
+import cloudinary from "../../config/cloudinary.js";
 import {
   generateConsultationQueueId,
   generateLaboratoryQueueId,
@@ -14,14 +15,6 @@ import {
 export async function addPatient(req: Request, res: Response) {
   // POST /api/fdstaff/patients
   try {
-    // console.log(cloudinary.config());
-    // console.log(ENV.CLOUDINARY_CLOUD_NAME);
-    // console.log(ENV.CLOUDINARY_API_KEY);
-    // console.log(ENV.CLOUDINARY_API_SECRET);
-    // console.log("BODY:", req.body);
-    // console.log("FILE:", req.file);
-    // console.log(await cloudinary.api.ping());
-
     const {
       first_name,
       middle_name,
@@ -38,7 +31,8 @@ export async function addPatient(req: Request, res: Response) {
       emergency_contact,
     } = req.body;
 
-    // Validate required fields
+    // Validate required fields (matches NOT NULL columns on `patients`;
+    // civil_status has a DB default so it's optional here)
     if (
       !first_name ||
       !last_name ||
@@ -46,16 +40,15 @@ export async function addPatient(req: Request, res: Response) {
       !sex ||
       !address ||
       !email ||
-      !contact_number ||
-      !civil_status
+      !contact_number
     ) {
       return res.status(400).json({
         message:
-          "First Name, last name, birthdate, sex, email, contact number, and civil status are required.",
+          "First name, last name, birthdate, sex, address, email, and contact number are required.",
       });
     }
 
-    // check if patiengt exists
+    // Check if patient already exists
     const existingPatient = await sql`
       SELECT *
       FROM patients
@@ -74,85 +67,71 @@ export async function addPatient(req: Request, res: Response) {
 
     const patientId = await generatePatientId();
 
-    // PAGAWA NA LANG LOGIC HERE PARA SA UNIQUE PASS PRE IF WANT NNIYOO
     const password = last_name;
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const response = await sql`
-            INSERT INTO patients (
-                patient_id,
-                username,
-                password_hash,
-                first_name,
-                middle_name,
-                last_name,
-                suffix,
-                sex,
-                email,
-                address,
-                contact_number,
-                civil_status,
-                blood_type,
-                birthdate,
-                emergency_contact_name,
-                emergency_contact
+    // Upload photo to Cloudinary if one was attached (multer puts it on req.file)
+    let imageUrl: string | null = null;
+    if (req.file) {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "techcare/patients",
+      });
+      imageUrl = uploadResult.secure_url;
+    }
 
-            )
-            VALUES (
-                ${patientId},
-                ${patientId},
-                ${hashedPassword},
-                ${first_name},
-                ${middle_name ?? null},
-                ${last_name},
-                ${suffix ?? null},
-                ${sex},
-                ${email},
-                ${address},
-                ${contact_number},
-                ${civil_status ?? "Single"},
-                ${blood_type ?? null},
-                ${birthdate},
-                ${emergency_contact_name ?? null},
-                ${emergency_contact ?? null}
-                )
-            RETURNING *;
-        `;
+    const response = await sql`
+      INSERT INTO patients (
+        patient_id,
+        username,
+        password_hash,
+        first_name,
+        middle_name,
+        last_name,
+        suffix,
+        sex,
+        email,
+        address,
+        contact_number,
+        civil_status,
+        blood_type,
+        birthdate,
+        emergency_contact_name,
+        emergency_contact,
+        image_url
+      )
+      VALUES (
+        ${patientId},
+        ${patientId},
+        ${hashedPassword},
+        ${first_name},
+        ${middle_name ?? null},
+        ${last_name},
+        ${suffix ?? null},
+        ${sex},
+        ${email},
+        ${address},
+        ${contact_number},
+        ${civil_status ?? "Single"},
+        ${blood_type ?? null},
+        ${birthdate},
+        ${emergency_contact_name ?? null},
+        ${emergency_contact ?? null},
+        ${imageUrl}
+      )
+      RETURNING *;
+    `;
+
     const age = calculateAge(birthdate);
 
     return res.status(201).json({
       message: "Patient added successfully.",
       patient: { ...response[0], age },
     });
-    // {
-    //     "message": "Patient added successfully.",
-    //     "patient": {
-    //         "patient_id": "P-2024-0427-001",
-    //         "last_name": "Doe",
-    //         "first_name": "John",
-    //         "date_of_birth": "1990-01-01",
-    //         "sex": "Male",
-    //         "contact_number": "09123456789",
-    //         "email": "patient@example.com",
-    //         "address": "123 Main St",
-    //         "emergency_contact": "Jane Doe",
-    //         "created_at": "2024-04-27T12:34:56.789Z",
-    //         "updated_at": "2024-04-27T12:34:56.789Z",
-    //     }
-    // }
   } catch (error: any) {
     console.dir(error, { depth: null });
-
-    if (error.error) {
-      console.dir(error.error, { depth: null });
-    }
-
-    if (error.response) {
-      console.dir(error.response, { depth: null });
-    }
+    return res.status(500).json({ message: "Failed to add patient." });
   }
 }
-
 export async function addBills(req: Request, res: Response) {
   try {
     const {
