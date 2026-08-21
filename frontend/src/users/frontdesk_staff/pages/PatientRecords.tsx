@@ -1,30 +1,13 @@
 // import { useState } from "react";
 import { useState } from "react";
+import type { Patient } from "../../../interface/Patients";
 
 import api from "../../../lib/axios";
 import EditPatientRecord from "../components/PatientRecords/EditPatientRecord";
 import Header from "../../../components/Header";
 
-// adjust path to wherever the file lives
-
-type Patient = {
-    id: number;
-    patient_id: string;
-    first_name: string;
-    last_name: string;
-    date_of_birth: string;
-    sex: string;
-    contact_number: string;
-    email: string;
-    address: string;
-    emergency_contact: string;
-    image_url?: string;
-    created_at: string;
-    updated_at: string;
-}[];
-
 type PatientRecordProps = {
-    patients: Patient;
+    patients: Patient[];
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     loadData: () => Promise<void>;
@@ -38,7 +21,7 @@ function PatientRecords({
     loadData,
     loading
 }: PatientRecordProps) {
-    const [selectedPatient, setSelectedPatient] = useState<Patient[number] | null>(null);
+    const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [showEditPatient, setShowEditPatient] = useState(false);
     function calculateAge(dateOfBirth: string): number {
         const birthDate = new Date(dateOfBirth);
