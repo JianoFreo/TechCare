@@ -82,6 +82,7 @@ const TABLES: {
     table: "patients",
     createSQL: `CREATE TABLE IF NOT EXISTS patients (
       id                      SERIAL PRIMARY KEY,
+      image_url               TEXT,
       patient_id              VARCHAR(255) UNIQUE NOT NULL,
       username                VARCHAR(255) NOT NULL,
       password_hash           VARCHAR(255) NOT NULL,
@@ -103,6 +104,7 @@ const TABLES: {
     )`,
     columns: {
       id: "SERIAL PRIMARY KEY",
+      image_url: "TEXT",
       patient_id: "VARCHAR(255) UNIQUE NOT NULL",
       username: "VARCHAR(255) NOT NULL",
       password_hash: "VARCHAR(255) NOT NULL",

@@ -1,4 +1,4 @@
-import { Bell } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 import UserHeader from "./Header/UserHeader";
 
 type HeaderProps = {
@@ -16,6 +16,11 @@ function Header({
   setOpen,
   loadData,
 }: HeaderProps) {
+  const handleLogout = () => {
+    sessionStorage.clear();
+    window.location.href = "/login";
+  };
+
   return (
     <div className="flex items-center justify-between h-24 gap-4 mb-6 px-6 border-b border-gray-300">
       <div className="flex gap-5">
@@ -45,6 +50,14 @@ function Header({
         </button>
 
         <UserHeader />
+
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 border border-red-300 text-red-700 px-3 py-2 rounded-md cursor-pointer transition-all duration-200 hover:bg-red-50 hover:scale-105 active:scale-95"
+        >
+          <LogOut size={18} strokeWidth={1.5} />
+          <span>Logout</span>
+        </button>
       </div>
     </div>
   );
