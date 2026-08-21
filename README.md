@@ -52,3 +52,14 @@ IS_PRODUCTION=false or true
 | 2 | Prod monolithic | `VITE_IS_DEVELOPMENT=false` | `https://techcare-1.onrender.com` |
 | 3 | Local distributed | `VITE_IS_DEVELOPMENT=true` | `http://localhost:5173` |
 | 4 | Prod distributed | `VITE_IS_DEVELOPMENT=false`<br>`VITE_API_BASE_URL=https://techcare-hui6.onrender.com` | `https://your-frontend-static-site.onrender.com` |
+
+
+
+# for sharing on port forwardng
+VITE_API_BASE_URL=https://wtmr826f-5173.asse.devtunnels.ms/
+
+# for local development 
+VITE_API_BASE_URL=http://localhost:5000
+# for deployment
+#VITE_API_BASE_URL=https://techcare-hui6.onrender.com
+VITE_IS_DEVELOPMENT=false
