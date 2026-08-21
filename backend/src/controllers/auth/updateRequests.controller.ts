@@ -3,7 +3,7 @@ import { sql } from "../../config/db.js";
 
 export async function logout(req: Request, res: Response) {
     try {
-        const { user_id } = req.user;
+        const { user_id } = req.body;
 
         // =========================
         // REQUIRED CREDENTIALS

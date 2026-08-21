@@ -2,11 +2,7 @@ import { sql } from "../config/db.js";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-async function authMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+async function authMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
     let token;
     if (
@@ -18,15 +14,9 @@ async function authMiddleware(
     if (!token) {
       return res.status(401).json({ message: "No token provided" });
     }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    // if your decoded is an object
-    // {
-    //   user_id: 5,
-    //   username: "janno",
-    //   role: "admin",
-    //   iat: 1782680000,
-    //   exp: 1782683600
-    // }
+
     const result = await sql`
       SELECT * from users
       WHERE user_id = ${(decoded as any).user_id}
@@ -38,20 +28,20 @@ async function authMiddleware(
     }
     req.user = user;
 
-    // req.user would be
-    // {
-    //   user_id: 1,
-    //   username: "janno",
-    //   full_name: "Janno MM",
-    //   email: "janno@email.com",
-    //   role: "admin"
-    // }
     next();
-  } catch(error) {
-    res.status(400).json({error: "auth middleware error"});
+  } catch (error) {
+    console.error("AUTH MIDDLEWARE ERROR:", error);
+
+    if (
+      error instanceof jwt.TokenExpiredError ||
+      error instanceof jwt.JsonWebTokenError
+    ) {
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
+
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
-
 export default authMiddleware;
 // export async function authorize(
 //   req: Request,

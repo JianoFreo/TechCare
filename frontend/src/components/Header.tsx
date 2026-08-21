@@ -1,5 +1,6 @@
 import { Bell, LogOut } from "lucide-react";
 import UserHeader from "./Header/UserHeader";
+import api from "../lib/axios";
 
 type HeaderProps = {
   page: string;
@@ -16,9 +17,16 @@ function Header({
   setOpen,
   loadData,
 }: HeaderProps) {
-  const handleLogout = () => {
-    sessionStorage.clear();
-    window.location.href = "/login";
+  const handleLogout = async () => {
+    try {
+      const user_id = JSON.parse(sessionStorage.getItem("user") || "{}").user_id;
+      const result = await api.patch("/api/auth/logout", { user_id });
+      console.log("LOGOUT RESULT:", result.data.message);
+      sessionStorage.clear();
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   return (
