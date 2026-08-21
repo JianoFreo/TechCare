@@ -1,20 +1,8 @@
-﻿import { useState } from "react";
-import Header from "../../../components/Header";
-import InformationCard from "../components/LaboratoryRequests/InformationCard";
+﻿import Header from "../../../components/Header";
 import RequestSummary from "../components/LaboratoryRequests/RequestSummary";
-import LaboratoryRequestTable from "../components/LaboratoryRequests/LaboratoryRequestTable";
-
-type LabRequest = {
-  request_id: string;
-  consultation_id: string | null;
-  patient_id: string;
-  doctor_id: string | null;
-  test_type: string;
-  results: Record<string, unknown> | null;
-  status: string;
-  requested_at: string;
-  updated_at: string;
-};
+import LaboratoryQueuePanel from "../components/LaboratoryRequests/LaboratoryQueuePanel";
+import { useState } from "react";
+import InformationCard from "../components/LaboratoryRequests/InformationCard";
 
 type Queue = {
   id: number;
@@ -28,26 +16,42 @@ type Queue = {
   updated_at: string;
 };
 
+type Service = {
+  id: number;
+  service_id: string;
+  service_name: string;
+  service_type: string;
+  price: number;
+  active: boolean;
+  room: string;
+};
+
 type LaboratoryRequestsProps = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   queues: Queue[];
+  services: Service[];
   loading: boolean;
   error: string | null;
   loadData: () => Promise<void>;
+  room: string;
 };
 
 function LaboratoryRequests({
   open,
   setOpen,
   queues,
+  services,
   loading,
   error,
   loadData,
+  room,
 }: LaboratoryRequestsProps) {
   const [openInformationCard, setOpenInformationCard] = useState(false);
-  const [requestIdCard, setRequestIdCard] = useState<string | null>(null);
-  const [patientIdCard, setPatientIdCard] = useState<string | null>(null);
+  const [queueIdCard, setQueueIdCard] = useState<string | null>(null);
+  const [openQueueAccordion, setOpenQueueAccordion] = useState<string | null>(
+    null,
+  );
 
   return (
     <main className="flex-1 min-w-0 bg-white border-l border-gray-300">
@@ -59,17 +63,21 @@ function LaboratoryRequests({
         loadData={loadData}
       />
       <div className="px-6 overflow-x-auto flex flex-col space-y-6 z-0">
-        <RequestSummary queues={queues} loading={loading} error={error} />
-        <LaboratoryRequestTable
+        <RequestSummary queues={queues} services={services} room={room} />
+        <LaboratoryQueuePanel
           queues={queues}
+          services={services}
           loading={loading}
           error={error}
+          setOpenQueueAccordion={setOpenQueueAccordion}
+          openQueueAccordion={openQueueAccordion}
+          setOpenInformationCard={setOpenInformationCard}
+          setQueueIdCard={setQueueIdCard}
         />
         {openInformationCard && (
           <InformationCard
             onClose={() => setOpenInformationCard(false)}
-            requestIdCard={requestIdCard}
-            patientIdCard={patientIdCard}
+            queueIdCard={queueIdCard}
           />
         )}
       </div>

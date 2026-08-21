@@ -1,15 +1,14 @@
-import React from "react";
+import { useState } from "react";
+import ServiceModal from "./ServiceModal";
 
-type LabRequest = {
-  request_id: string;
-  consultation_id: string | null;
-  patient_id: string;
-  doctor_id: string | null;
-  test_type: string;
-  results: Record<string, unknown> | null;
-  status: string;
-  requested_at: string;
-  updated_at: string;
+type Service = {
+  id: number;
+  service_id: string;
+  service_name: string;
+  service_type: string;
+  price: number;
+  active: boolean;
+  room: string;
 };
 
 type Queue = {
@@ -25,14 +24,108 @@ type Queue = {
 };
 
 type RequestSummaryProps = {
+  services: Service[];
   queues: Queue[];
-  loading: boolean;
-  error: string | null;
+  room: string;
 };
 
-function RequestSummary({ queues, loading, error }: RequestSummaryProps) {
-  const room = "Laboratory Room 1";
+function RequestSummary({ services, queues, room }: RequestSummaryProps) {
   const active = true;
+  const [openServiceModal, setOpenServiceModal] = useState(false);
+
+  // COUNTS FOR SERVICE AND QUEUE SUMMARY
+  const serviceCounts = services.reduce(
+    (counts, service) => {
+      counts.All += 1;
+
+      if (service.active) {
+        counts.Active += 1;
+      }
+
+      if (!service.active) {
+        counts.Inactive += 1;
+      }
+
+      return counts;
+    },
+    {
+      All: 0,
+      Active: 0,
+      Inactive: 0,
+    },
+  );
+  const queueCounts = queues.reduce(
+    (counts, queue) => {
+      if (queue.is_priority) {
+        counts.Priority += 1;
+      }
+      if (queue.status === "Serving") {
+        counts.Serving += 1;
+      }
+      if (queue.status === "Waiting") {
+        counts.Waiting += 1;
+      }
+      if (queue.status === "Completed") {
+        counts.Completed += 1;
+      }
+      return counts;
+    },
+    {
+      Priority: 0,
+      Serving: 0,
+      Waiting: 0,
+      Completed: 0,
+    },
+  );
+
+  // SERVICE AND QUEUE ARRAYS FOR DESIGN DEFINITIONS
+  const serviceStatuses = [
+    {
+      label: "All",
+      count: serviceCounts.All,
+      shapeColors: "text-blue-600 bg-blue-100 border-blue-600",
+      labelColor: "text-blue-600",
+    },
+    {
+      label: "Active",
+      count: serviceCounts.Active,
+      shapeColors: "text-green-600 bg-green-100 border-green-600",
+      labelColor: "text-green-600",
+    },
+    {
+      label: "Inactive",
+      count: serviceCounts.Inactive,
+      shapeColors: "text-yellow-600 bg-yellow-100 border-yellow-600",
+      labelColor: "text-yellow-600",
+    },
+  ];
+
+  const queueStatuses = [
+    {
+      label: "Priority",
+      count: queueCounts.Priority,
+      shapeColors: "text-red-600 bg-red-100 border-red-600",
+      labelColor: "text-red-600",
+    },
+    {
+      label: "Serving",
+      count: queueCounts.Serving,
+      shapeColors: "text-green-600 bg-green-100 border-green-600",
+      labelColor: "text-green-600",
+    },
+    {
+      label: "Waiting",
+      count: queueCounts.Waiting,
+      shapeColors: "text-blue-600 bg-blue-100 border-blue-600",
+      labelColor: "text-blue-600",
+    },
+    {
+      label: "Completed",
+      count: queueCounts.Completed,
+      shapeColors: "text-yellow-600 bg-yellow-100 border-yellow-600",
+      labelColor: "text-yellow-600",
+    },
+  ];
 
   return (
     <div className="w-full h-52 border rounded-3xl border-gray-300 flex items-center justify-around">
@@ -40,7 +133,11 @@ function RequestSummary({ queues, loading, error }: RequestSummaryProps) {
         <div className="w-24 h-24 bg-blue-100 rounded-full"></div>
         <div>
           <h3 className="text-lg text-gray-500">You are in</h3>
-          <h1 className="text-3xl font-bold">{room}</h1>
+          <h1 className="text-3xl font-bold">
+            {room.split("-")[0] === "LAB"
+              ? `Laboratory ${room.split("-")[1]}`
+              : room}
+          </h1>
           <div className="flex items-end gap-2 mt-2">
             <div
               className={`flex items-center rounded-sm px-5 py-1 text-xs border-2  ${
@@ -65,54 +162,57 @@ function RequestSummary({ queues, loading, error }: RequestSummaryProps) {
       <div className="border-l border-r border-gray-300 flex flex-col gap-5 px-5">
         <div className="flex gap-2">
           <h3>Services Offered in this Room:</h3>
-          <h3 className="underline text-blue-400">View All Services</h3>
+          <h3
+            className="underline text-blue-400 cursor-pointer"
+            onClick={() => setOpenServiceModal(true)}
+          >
+            View All Services
+          </h3>
         </div>
+
+        {/* LOADS EACH SERVICE STATUS SUMMARY */}
         <div className="flex items-center justify-around">
-          <div className="flex flex-col items-center gap-2">
-            <div className="text-blue-600 bg-blue-100 border border-blue-600 font-semibold px-9 py-1 rounded-sm">
-              53
+          {serviceStatuses.map(({ label, count, shapeColors, labelColor }) => (
+            <div key={label} className="flex flex-col items-center gap-2">
+              <div
+                className={`rounded-sm border px-9 py-1 font-semibold ${shapeColors}`}
+              >
+                {count}
+              </div>
+              <h3 className={`text-xs ${labelColor}`}>{label}</h3>
             </div>
-            <h3 className="text-xs text-blue-600">All</h3>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="text-green-600 bg-green-100 border border-green-600 font-semibold px-9 py-1 rounded-sm">
-              48
-            </div>
-            <h3 className="text-xs text-green-600">Active</h3>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="text-yellow-600 bg-yellow-100 border border-yellow-600 font-semibold px-9 py-1 rounded-sm">
-              5
-            </div>
-            <h3 className="text-xs text-yellow-600">Inactive</h3>
-          </div>
+          ))}
         </div>
       </div>
       <div className="flex flex-col gap-3">
         <h3 className="font-bold text-gray-600">Queue Summary</h3>
+
+        {/* LOADS EACH QUEUE STATUS SUMMARY */}
         <div className="flex items-center justify-around w-80">
-          <div className="text-red-600 bg-red-100 border border-red-600 font-semibold w-16 h-16 rounded-sm flex flex-col items-center justify-center">
-            <h3 className="text-lg font-bold text-red-600">1</h3>
-            <h3 className="text-[10px]  font-light text-red-600">Priority</h3>
-          </div>
-          <div className="text-yellow-600 bg-yellow-100 border border-yellow-600 font-semibold w-16 h-16 rounded-sm flex flex-col items-center justify-center">
-            <h3 className="text-lg font-bold text-yellow-600">3</h3>
-            <h3 className="text-[10px] font-light text-yellow-600">
-              In Progress
-            </h3>
-          </div>
-          <div className="text-blue-600 bg-blue-100 border border-blue-600 font-semibold w-16 h-16 rounded-sm flex flex-col items-center justify-center">
-            <h3 className="text-lg font-bold text-blue-600">7</h3>
-            <h3 className="text-[10px]  font-light text-blue-600">Waiting</h3>
-          </div>
-          <div className="text-green-600 bg-green-100 border border-green-600 font-semibold w-16 h-16 rounded-sm flex flex-col items-center justify-center">
-            <h3 className="text-lg font-bold text-green-600">10</h3>
-            <h3 className="text-[10px]  font-light text-green-600">
-              Completed
-            </h3>
-          </div>
+          {queueStatuses.map(
+            ({ label, count, shapeColors, labelColor }, index) => (
+              <div
+                key={index}
+                className={`${shapeColors} border font-semibold w-16 h-16 rounded-sm flex flex-col items-center justify-center`}
+              >
+                <h3 className={`text-lg font-bold ${labelColor}`}>{count}</h3>
+                <h3 className={`text-[10px]  font-light ${labelColor}`}>
+                  {label}
+                </h3>
+              </div>
+            ),
+          )}
         </div>
       </div>
+
+      {/* SERVICE MODAL FOR SERVICES OFFERED IN SPECIFIC LAB ROOM */}
+      {openServiceModal && (
+        <ServiceModal
+          services={services}
+          room={room}
+          onClose={() => setOpenServiceModal(false)}
+        />
+      )}
     </div>
   );
 }
