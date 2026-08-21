@@ -8,6 +8,7 @@ import {
   generateServiceId,
   generateActivityId,
 } from "../../utils/generateId.js";
+import { ENV } from "../../config/env.js";
 
 ///// the tokenantion on ad user is just for testing purposes,
 /// it will be removed later on. optional lang kasi no need tokens right after sign up, its usually on login========
@@ -90,12 +91,9 @@ export async function addUser(req: Request, res: Response) {
     let profile_photo: string | null = null;
 
     if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(
-        req.file.path,
-        {
-          folder: "techcare/user_photos",
-        }
-      );
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "techcare/user_photos",
+      });
 
       profile_photo = uploadResult.secure_url;
     }
@@ -103,11 +101,9 @@ export async function addUser(req: Request, res: Response) {
     // =========================
     // SHIFT DEFAULTS
     // =========================
-    const finalShiftStart =
-      shift_start || "08:00:00";
+    const finalShiftStart = shift_start || "08:00:00";
 
-    const finalShiftEnd =
-      shift_end || "17:00:00";
+    const finalShiftEnd = shift_end || "17:00:00";
 
     // =========================
     // INSERT USER
@@ -169,12 +165,12 @@ export async function addUser(req: Request, res: Response) {
     // =========================
     const token = jwt.sign(
       {
-        id: signUpResult[0].id,
+        user_id: signUpResult[0].user_id,
       },
-      process.env.JWT_SECRET!,
+      ENV.JWT_SECRET,
       {
         expiresIn: "1h",
-      }
+      },
     );
 
     // =========================
