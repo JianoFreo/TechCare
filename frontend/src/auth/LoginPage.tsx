@@ -48,7 +48,7 @@ const login = async () => {
 
     const token = response.data.token;
     const role = response.data.user.role;
-
+    localStorage.setItem("user", JSON.stringify(response.data.user));
     localStorage.setItem("token", token);
     localStorage.setItem("role", role);
 
