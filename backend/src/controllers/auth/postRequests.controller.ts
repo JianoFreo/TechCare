@@ -32,12 +32,19 @@ export async function login(req: Request, res: Response) {
     const refreshToken = jwt.sign(
       { user_id: user.user_id },
       ENV.JWT_REFRESH_TOKEN,
-      { expiresIn: "1d" },
-    ); // it goingg to make a token out of user id
+      {
+        expiresIn: "1d",
+      },
+    );
 
-    res
-      .status(200)
-      .json({ message: "Login successful", user, token, refreshToken });
+    const { password_hash, ...safeUser } = user;
+
+    res.status(200).json({
+      message: "Login successful",
+      user: safeUser,
+      token,
+      refreshToken,
+    });
     //   {
     //   "message": "Login successful",
     //   "user": {
