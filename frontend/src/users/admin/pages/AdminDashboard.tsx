@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import Header from "../../../components/Header";
-import type { User } from "../../../../interface/User";
+import type { User } from "../../../interface/User";
 
 type AdminDashboardProps = {
     users: User[];

@@ -18,6 +18,17 @@ type Queue = {
   created_at: string;
   updated_at: string;
 };
+type LabRequest = {
+  request_id: string;
+  consultation_id: string | null;
+  patient_id: string;
+  doctor_id: string | null;
+  test_type: string;
+  results: Record<string, unknown> | null;
+  status: string;
+  requested_at: string;
+  updated_at: string;
+};
 
 type Service = {
   id: number;
@@ -32,7 +43,7 @@ type Service = {
 function LaboratoryStaff() {
   const [open, setOpen] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [requestItems, setRequestItems] = useState<RequestItem[]>([]);
+  const [requestItems, setRequestItems] = useState<LabRequest[]>([]);
   const [queues, setQueues] = useState<Queue[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);

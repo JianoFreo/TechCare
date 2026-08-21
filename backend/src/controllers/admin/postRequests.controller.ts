@@ -8,6 +8,7 @@ import {
   generateServiceId,
   generateActivityId,
 } from "../../utils/generateId.js";
+import { ENV } from "../../config/env.js";
 
 ///// the tokenantion on ad user is just for testing purposes,
 /// it will be removed later on. optional lang kasi no need tokens right after sign up, its usually on login========
@@ -90,12 +91,9 @@ export async function addUser(req: Request, res: Response) {
     let profile_photo: string | null = null;
 
     if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(
-        req.file.path,
-        {
-          folder: "techcare/user_photos",
-        }
-      );
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "techcare/user_photos",
+      });
 
       profile_photo = uploadResult.secure_url;
     }
@@ -103,11 +101,8 @@ export async function addUser(req: Request, res: Response) {
     // =========================
     // SHIFT DEFAULTS
     // =========================
-    const finalShiftStart =
-      shift_start || "08:00:00";
-
-    const finalShiftEnd =
-      shift_end || "17:00:00";
+    const finalShiftStart = shift_start || "08:00:00";
+    const finalShiftEnd = shift_end || "17:00:00";
 
     // =========================
     // INSERT USER
@@ -165,26 +160,43 @@ export async function addUser(req: Request, res: Response) {
     console.log("INSERT RESULT:", signUpResult);
 
     // =========================
-    // GENERATE TOKEN
+    // REMOVE SENSITIVE DATA
     // =========================
-    const token = jwt.sign(
-      {
-        id: signUpResult[0].id,
-      },
-      process.env.JWT_SECRET!,
-      {
-        expiresIn: "1h",
-      }
-    );
+    // Prevents the password hash from being sent to the client.
+    const { password_hash, ...safeUser } = signUpResult[0]; // it just removed the password hash from the response, so that it won't be sent to the client. This is a security measure to protect sensitive information.
 
     // =========================
     // RESPONSE
     // =========================
     return res.status(201).json({
-      user: signUpResult[0],
+      user: safeUser,
       message: "User created successfully!",
-      token,
     });
+    // {
+    //   "user": {
+    //     "user_id": 123,
+    //     "username": "jiano",
+    //     "first_name": "Jiano",
+    //     "middle_name": "Freo",
+    //     "last_name": "Magtangob",
+    //     "suffix": null,
+    //     "sex": "Male",
+    //     "email": "jiano@example.com",
+    //     "contact_number": "09123456789",
+    //     "emergency_contact_name": "Juan Magtangob",
+    //     "emergency_contact": "09987654321",
+    //     "address": "Manila, Philippines",
+    //     "birthdate": "2002-05-15",
+    //     "role": "admin",
+    //     "department": "IT",
+    //     "employment_status": "Full-time",
+    //     "date_hired": "2026-08-21",
+    //     "shift_start": "08:00:00",
+    //     "shift_end": "17:00:00",
+    //     "profile_photo": null
+    //   },
+    //   "message": "User created successfully!"
+    // }
   } catch (error) {
     console.error("ADD USER ERROR:", error);
 
@@ -193,6 +205,7 @@ export async function addUser(req: Request, res: Response) {
     });
   }
 }
+
 export async function addService(req: Request, res: Response) {
   // post /api/admin/services
   try {

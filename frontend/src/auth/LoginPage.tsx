@@ -48,9 +48,9 @@ const login = async () => {
 
     const token = response.data.token;
     const role = response.data.user.role;
-
-    localStorage.setItem("token", token);
-    localStorage.setItem("role", role);
+    sessionStorage.setItem("user", JSON.stringify(response.data.user));
+    sessionStorage.setItem("token", token);
+    sessionStorage.setItem("role", role);
 
     navigate(`/${role}`);
   } catch (error) {
