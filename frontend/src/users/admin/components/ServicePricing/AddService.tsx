@@ -1,79 +1,144 @@
-import { useState } from 'react'
-import api from '../../../../lib/axios'
+import { useState } from "react";
+import api from "../../../../lib/axios";
 
 type Props = {
     onClose: () => void;
     loadData: () => void;
 };
+
+const ROOM_OPTIONS = [
+    "Consultation Room",
+    "Laboratory Room 1",
+    "Laboratory Room 2",
+];
+
 function AddService({ loadData, onClose }: Props) {
-    const [serviceName, setServiceName] = useState<string>("")
-    // const [serviceId, setServiceId] = useState<string>("")
-    const [price, setPrice] = useState<number>(0)
-    const [serviceType, setServiceType] = useState<string>("")
-    const addService = async () => {
-        const response = await api.post("/api/admin/services", {
-            service_type: serviceType,
-            service_name: serviceName,
-            price
-        })
-        loadData()
-        alert(response.data.message)
-        onClose()
+    const [serviceName, setServiceName] = useState("");
+    const [price, setPrice] = useState("");
+    const [serviceType, setServiceType] = useState("");
+    const [room, setRoom] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+
+    async function addService() {
+        if (!serviceName || price === "" || !serviceType || !room) {
+            alert("Please fill out all fields.");
+            return;
+        }
+
+        if (isNaN(Number(price))) {
+            alert("Price must be a number.");
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const response = await api.post("/api/admin/services", {
+                service_type: serviceType,
+                service_name: serviceName,
+                price: Number(price),
+                room,
+            });
+            alert(response.data.message);
+            loadData();
+            onClose();
+        } catch (error: unknown) {
+            alert(
+                (
+                    error as { response?: { data?: { message?: string } } }
+                ).response?.data?.message || "Something went wrong"
+            );
+            console.error(error);
+        } finally {
+            setSubmitting(false);
+        }
     }
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-md -lg bg-white p-6 shadow-xl">
-                <h2 className="text-2xl font-bold mb-4 flex justify-between">
-                    Add new service
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md bg-white p-6 shadow-xl">
+                <div className="mb-5 flex items-center justify-between">
+                    <h2 className="text-xl font-semibold">Add New Service</h2>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 border "
+                        className="border px-3 py-1 text-sm hover:bg-gray-100"
                     >
                         X
                     </button>
-                </h2>
+                </div>
 
                 <div className="space-y-4">
-                    <input
-                        type="text"
-                        placeholder="service name"
-                        className="w-full border p-2"
-                        onChange={(e) => setServiceName(e.target.value)}
-                        value={serviceName}
-                    />
+                    <div>
+                        <label className="mb-1 block text-xs text-gray-500">
+                            Service name
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="e.g. Complete Blood Count"
+                            className="w-full border border-gray-300 p-2 text-sm focus:border-gray-900 focus:outline-none"
+                            onChange={(e) => setServiceName(e.target.value)}
+                            value={serviceName}
+                        />
+                    </div>
 
-                    {/* <input
-                        type="text"
-                        placeholder="Full name"
-                        className="w-full border p-2"
-                        onChange={(e) => setServiceId(e.target.value)}
-                        value={serviceId}
+                    <div>
+                        <label className="mb-1 block text-xs text-gray-500">
+                            Price
+                        </label>
+                        <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            className="w-full border border-gray-300 p-2 text-sm focus:border-gray-900 focus:outline-none"
+                            onChange={(e) => setPrice(e.target.value)}
+                            value={price}
+                        />
+                    </div>
 
+                    <div>
+                        <label className="mb-1 block text-xs text-gray-500">
+                            Service type
+                        </label>
+                        <select
+                            className="w-full border border-gray-300 p-2 text-sm focus:border-gray-900 focus:outline-none"
+                            onChange={(e) => setServiceType(e.target.value)}
+                            value={serviceType}
+                        >
+                            <option value="">Select a service type</option>
+                            <option value="consultation">Consultation</option>
+                            <option value="laboratory">Laboratory</option>
+                        </select>
+                    </div>
 
-                    /> */}
-                    <input
-                        type="text"
-                        placeholder="Contact Number"
-                        className="w-full border p-2"
-                        onChange={(e) => setPrice(Number(e.target.value))}
-                        value={price}
-                    />
-                    <select
-                        className="w-full border p-2"
-                        onChange={(e) => setServiceType(e.target.value)}
+                    <div>
+                        <label className="mb-1 block text-xs text-gray-500">
+                            Room
+                        </label>
+                        <select
+                            className="w-full border border-gray-300 p-2 text-sm focus:border-gray-900 focus:outline-none"
+                            onChange={(e) => setRoom(e.target.value)}
+                            value={room}
+                        >
+                            <option value="">Select a room</option>
+                            {ROOM_OPTIONS.map((r) => (
+                                <option key={r} value={r}>
+                                    {r}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <button
+                        className="w-full border border-gray-900 py-2 text-sm font-medium hover:bg-gray-900 hover:text-white disabled:opacity-40"
+                        onClick={addService}
+                        disabled={submitting}
                     >
-                        <option value="">Select a service type</option>
-                        <option value="consultation">Consultation</option>
-                        <option value="laboratory">Laboratory</option>
-                    </select>
-                    <button className="px-4 py-2 bg-gray-200 hover:cursor-pointer hover:bg-gray-400"
-                        onClick={() => addService()}>
-                        add service
+                        {submitting ? "Adding..." : "Add service"}
                     </button>
                 </div>
             </div>
         </div>
-
-    )
+    );
 }
-export default AddService
+
+export default AddService;
