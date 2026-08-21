@@ -1,4 +1,5 @@
 import Header from "../../../components/Header";
+import type { Patient } from "../../../interface/Patient";
 
 type Bill = {
     id: number;
@@ -10,19 +11,6 @@ type Bill = {
     status: string;
     receipt_id: string;
     billed_at: string;
-}[];
-type Patient = {
-    id: number;
-    patient_id: string;
-    first_name: string;
-    last_name: string;
-    date_of_birth: string;
-    contact_number: string;
-    email: string;
-    address: string;
-    emergency_contact: string;
-    created_at: string;
-    updated_at: string;
 }[];
 
 type Queue = {
@@ -40,7 +28,7 @@ type Queue = {
 type FrontdeskDashboardProps = {
     billing: Bill;
     loading: boolean;
-    patients: Patient;
+    patients: Patient[];
     queues: Queue;
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;

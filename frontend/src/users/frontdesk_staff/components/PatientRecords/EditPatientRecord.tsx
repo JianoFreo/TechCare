@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import type { Patient } from "../../../../interface/Patients";
+import type { Patient } from "../../../../interface/Patient";
 import { X, Mail, Phone, MapPin, Save, ArrowLeft, Camera } from "lucide-react";
 import api from "../../../../lib/axios";
 
