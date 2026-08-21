@@ -18,8 +18,9 @@ type ServiceModalProps = {
 
 function ServiceModal({ services, room, onClose }: ServiceModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <main
         className="shadow-lg w-6/11 absolute rounded-2xl bg-gray-100 overflow-hidden flex flex-col gap-5 items-center
       "
       >
@@ -70,7 +71,7 @@ function ServiceModal({ services, room, onClose }: ServiceModalProps) {
             </tbody>
           </table>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

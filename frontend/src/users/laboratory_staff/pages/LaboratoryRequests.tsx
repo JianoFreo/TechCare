@@ -1,9 +1,8 @@
-﻿// import { useState } from "react";
-import Header from "../../../components/Header";
-// import InformationCard from "../components/LaboratoryRequests/InformationCard";
+﻿import Header from "../../../components/Header";
 import RequestSummary from "../components/LaboratoryRequests/RequestSummary";
 import LaboratoryQueuePanel from "../components/LaboratoryRequests/LaboratoryQueuePanel";
 import { useState } from "react";
+import InformationCard from "../components/LaboratoryRequests/InformationCard";
 
 // type LabRequest = {
 //   request_id: string;
@@ -60,10 +59,11 @@ function LaboratoryRequests({
   loadData,
   room,
 }: LaboratoryRequestsProps) {
-  // const [openInformationCard, setOpenInformationCard] = useState(false);
-  // const [requestIdCard, setRequestIdCard] = useState<string | null>(null);
-  // const [patientIdCard, setPatientIdCard] = useState<string | null>(null);
-  const [openQueueID, setOpenQueueID] = useState<string | null>(null);
+  const [openInformationCard, setOpenInformationCard] = useState(false);
+  const [queueIdCard, setQueueIdCard] = useState<string | null>(null);
+  const [openQueueAccordion, setOpenQueueAccordion] = useState<string | null>(
+    null,
+  );
 
   return (
     <main className="flex-1 min-w-0 bg-white border-l border-gray-300">
@@ -81,16 +81,17 @@ function LaboratoryRequests({
           services={services}
           loading={loading}
           error={error}
-          setOpenQueueID={setOpenQueueID}
-          openQueueID={openQueueID}
+          setOpenQueueAccordion={setOpenQueueAccordion}
+          openQueueAccordion={openQueueAccordion}
+          setOpenInformationCard={setOpenInformationCard}
+          setQueueIdCard={setQueueIdCard}
         />
-        {/* {openInformationCard && (
-          // <InformationCard
-          //   onClose={() => setOpenInformationCard(false)}
-          //   // requestIdCard={requestIdCard}
-          //   // patientIdCard={patientIdCard}
-          // />
-        )} */}
+        {openInformationCard && (
+          <InformationCard
+            onClose={() => setOpenInformationCard(false)}
+            queueIdCard={queueIdCard}
+          />
+        )}
       </div>
     </main>
   );

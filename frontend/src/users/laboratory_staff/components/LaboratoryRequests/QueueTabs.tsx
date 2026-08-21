@@ -12,7 +12,7 @@ type QueueStatusTabsProps = {
   activeMainFilter: string;
   mainFilterCounts: Record<string, number>;
   onClick: (value: MainFilter) => void;
-  setOpenQueueID: Dispatch<SetStateAction<string | null>>;
+  setOpenQueueAccordion: Dispatch<SetStateAction<string | null>>;
 };
 
 function QueueTabs({
@@ -20,7 +20,7 @@ function QueueTabs({
   activeMainFilter,
   mainFilterCounts,
   onClick,
-  setOpenQueueID,
+  setOpenQueueAccordion,
 }: QueueStatusTabsProps) {
   return (
     <div className="flex w-full justify-around h-10 items-end border-b border-gray-300">
@@ -30,7 +30,7 @@ function QueueTabs({
           type="button"
           onClick={() => {
             onClick(mainFilter.value);
-            setOpenQueueID(null);
+            setOpenQueueAccordion(null);
           }}
           className={`px-5 py-1 text-sm ${
             activeMainFilter === mainFilter.value

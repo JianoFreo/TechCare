@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { type Dispatch, type SetStateAction } from "react";
+import React, { type Dispatch, type SetStateAction } from "react";
 
 type Queue = {
   id: number;
@@ -28,8 +28,10 @@ type QueueTableProps = {
   laboratoryItems: LaboratoryItem[];
   accordionError: string | null;
   accordionLoading: boolean;
-  setOpenQueueID: Dispatch<SetStateAction<string | null>>;
-  openQueueID: string | null;
+  setOpenQueueAccordion: Dispatch<SetStateAction<string | null>>;
+  openQueueAccordion: string | null;
+  setOpenInformationCard: Dispatch<SetStateAction<boolean>>;
+  setQueueIdCard: Dispatch<SetStateAction<string | null>>;
 };
 
 function QueueTable({
@@ -37,11 +39,13 @@ function QueueTable({
   laboratoryItems,
   accordionLoading,
   accordionError,
-  setOpenQueueID,
-  openQueueID,
+  setOpenQueueAccordion,
+  openQueueAccordion,
+  setOpenInformationCard,
+  setQueueIdCard,
 }: QueueTableProps) {
   const handleToggleAccordion = (queue_id: string) => {
-    setOpenQueueID((currentQueueId) =>
+    setOpenQueueAccordion((currentQueueId) =>
       currentQueueId === queue_id ? null : queue_id,
     );
   };
@@ -70,10 +74,10 @@ function QueueTable({
       </thead>
       <tbody className="">
         {filterQueues.map((queue) => (
-          <>
-            <tr key={queue.id} className="border-b border-gray-300">
+          <React.Fragment key={queue.id}>
+            <tr className="border-b border-gray-300">
               <td className="px-3 py-3">
-                {openQueueID === queue.queue_id ? (
+                {openQueueAccordion === queue.queue_id ? (
                   <ChevronUp
                     size={20}
                     className="cursor-pointer text-gray-300 transition-all duration-75 hover:text-black"
@@ -108,7 +112,13 @@ function QueueTable({
               </td>
               <td className="px-1 py-3 text-sm text-center">{queue.status}</td>
               <td className="px-1 py-3 flex items-center justify-center gap-3 ">
-                <button className="cursor-pointer px-4 py-2 text-xs rounded-sm border-2 border-blue-500 text-blue-500 transition-all duration-300 hover:scale-105 hover:bg-blue-100">
+                <button
+                  className="cursor-pointer px-4 py-2 text-xs rounded-sm border-2 border-blue-500 text-blue-500 transition-all duration-300 hover:scale-105 hover:bg-blue-100"
+                  onClick={() => {
+                    setOpenInformationCard(true);
+                    setQueueIdCard(queue.queue_id);
+                  }}
+                >
                   View
                 </button>
                 <button className="cursor-pointer px-4 py-2 text-xs  rounded-sm border-2 border-green-500 text-green-500 transition-all duration-300 hover:scale-105 hover:bg-green-100">
@@ -119,7 +129,7 @@ function QueueTable({
                 </button>
               </td>
             </tr>
-            {openQueueID === queue.queue_id && (
+            {openQueueAccordion === queue.queue_id && (
               <tr className="border-b border-gray-300 bg-gray-50">
                 <td colSpan={7} className="p-4">
                   {accordionLoading ? (
@@ -201,7 +211,7 @@ function QueueTable({
                 </td>
               </tr>
             )}
-          </>
+          </React.Fragment>
         ))}
       </tbody>
     </table>

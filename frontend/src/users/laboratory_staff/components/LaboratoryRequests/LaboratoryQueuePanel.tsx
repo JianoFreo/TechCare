@@ -45,8 +45,10 @@ type RequestTableProps = {
   services: Service[];
   loading: boolean;
   error: string | null;
-  setOpenQueueID: Dispatch<SetStateAction<string | null>>;
-  openQueueID: string | null;
+  setOpenQueueAccordion: Dispatch<SetStateAction<string | null>>;
+  openQueueAccordion: string | null;
+  setOpenInformationCard: Dispatch<SetStateAction<boolean>>;
+  setQueueIdCard: Dispatch<SetStateAction<string | null>>;
 };
 
 function LaboratoryQueuePanel({
@@ -54,8 +56,10 @@ function LaboratoryQueuePanel({
   services,
   loading,
   error,
-  setOpenQueueID,
-  openQueueID,
+  setOpenQueueAccordion,
+  openQueueAccordion,
+  setOpenInformationCard,
+  setQueueIdCard,
 }: RequestTableProps) {
   // MAIN STATUS TABS AND ADDITIONAL FILTER AND SORT
   const [activeMainTab, setActiveMainTab] = useState<MainFilter>("All");
@@ -73,7 +77,7 @@ function LaboratoryQueuePanel({
 
   // FOR FETCHING ITEMS WHEN QUEUE ACCORDION IS OPENED
   useEffect(() => {
-    if (!openQueueID) {
+    if (!openQueueAccordion) {
       return;
     }
 
@@ -83,7 +87,7 @@ function LaboratoryQueuePanel({
         setAccordionError(null);
 
         const itemResponse = await api.get(
-          `/api/labstaff/laboratory-queues/${openQueueID}/items`,
+          `/api/labstaff/laboratory-queues/${openQueueAccordion}/items`,
         );
         setLaboratoryItems(itemResponse.data ?? []);
       } catch (err) {
@@ -98,7 +102,7 @@ function LaboratoryQueuePanel({
     }
 
     fetchLaboratoryItems();
-  }, [openQueueID]);
+  }, [openQueueAccordion]);
 
   const mainFilterValues: {
     label: string;
@@ -191,7 +195,7 @@ function LaboratoryQueuePanel({
         mainFilterValues={mainFilterValues}
         activeMainFilter={activeMainTab}
         mainFilterCounts={mainFilterCounts}
-        setOpenQueueID={setOpenQueueID}
+        setOpenQueueAccordion={setOpenQueueAccordion}
         onClick={setActiveMainTab}
       />
       {/* SEARCH BAR AND ADDITIONAL FILTERS */}
@@ -262,8 +266,10 @@ function LaboratoryQueuePanel({
             laboratoryItems={laboratoryItems}
             accordionError={accordionError}
             accordionLoading={accordionLoading}
-            setOpenQueueID={setOpenQueueID}
-            openQueueID={openQueueID}
+            setOpenQueueAccordion={setOpenQueueAccordion}
+            openQueueAccordion={openQueueAccordion}
+            setOpenInformationCard={setOpenInformationCard}
+            setQueueIdCard={setQueueIdCard}
           />
         </div>
       )}
