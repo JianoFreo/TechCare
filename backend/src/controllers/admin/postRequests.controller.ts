@@ -102,7 +102,6 @@ export async function addUser(req: Request, res: Response) {
     // SHIFT DEFAULTS
     // =========================
     const finalShiftStart = shift_start || "08:00:00";
-
     const finalShiftEnd = shift_end || "17:00:00";
 
     // =========================
@@ -161,8 +160,11 @@ export async function addUser(req: Request, res: Response) {
     console.log("INSERT RESULT:", signUpResult);
 
     // =========================
-    // GENERATE TOKEN
+    // TEMPORARY TOKEN GENERATION
     // =========================
+    // Token generation is currently included for testing purposes.
+    // Normally, a newly created user does not need a token immediately.
+    // The user will receive an access token after successfully logging in.
     const token = jwt.sign(
       {
         user_id: signUpResult[0].user_id,
@@ -174,10 +176,16 @@ export async function addUser(req: Request, res: Response) {
     );
 
     // =========================
+    // REMOVE SENSITIVE DATA
+    // =========================
+    // Prevents the password hash from being sent to the client.
+    const { password_hash, ...safeUser } = signUpResult[0];
+
+    // =========================
     // RESPONSE
     // =========================
     return res.status(201).json({
-      user: signUpResult[0],
+      user: safeUser,
       message: "User created successfully!",
       token,
     });
@@ -189,6 +197,7 @@ export async function addUser(req: Request, res: Response) {
     });
   }
 }
+
 export async function addService(req: Request, res: Response) {
   // post /api/admin/services
   try {
