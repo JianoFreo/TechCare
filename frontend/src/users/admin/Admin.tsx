@@ -12,14 +12,7 @@ import ServicePricingManagement from "./pages/ServicePricing";
 import ActivityMonitoring from "./pages/ActivityMonitoring";
 import api from "../../lib/axios";
 import type { User } from "../../interface/User";
-type Service = {
-    id: number;
-    service_id: string;
-    service_name: string;
-    price: number;
-    active: boolean,
-    service_type: string
-};
+import type { Service } from "../../interface/Service";
 type Activities = {
     id: number;
     activity_id: string;
