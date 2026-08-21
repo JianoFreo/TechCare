@@ -45,6 +45,7 @@ const TABLES: {
       last_login              TIMESTAMP,
       account_status          BOOLEAN NOT NULL DEFAULT TRUE,
       profile_photo           TEXT,
+      active                  BOOLEAN NOT NULL DEFAULT FALSE,
       created_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
@@ -73,6 +74,7 @@ const TABLES: {
       last_login: "TIMESTAMP",
       account_status: "BOOLEAN NOT NULL DEFAULT TRUE",
       profile_photo: "TEXT",
+      active: "BOOLEAN NOT NULL DEFAULT FALSE",
       created_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
       updated_at: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
     },
