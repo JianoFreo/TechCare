@@ -1,5 +1,4 @@
 import { neon } from "@neondatabase/serverless";
-
 import "dotenv/config";
 
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -10,13 +9,10 @@ if (!DATABASE_URL) {
 
 export const sql = neon(DATABASE_URL);
 
-// -----------------------------------------------------------------------
+// =======================================================================
 // TABLE DEFINITIONS
-// Each entry pairs a "CREATE TABLE IF NOT EXISTS" statement with the
-// desired columns object used by syncSchema() below. Edit these when you
-// add/remove a column, then call syncSchema() yourself when you want the
-// change applied to the actual DB (see bottom of file for how to trigger).
-// -----------------------------------------------------------------------
+// =======================================================================
+
 const TABLES: {
   table: string;
   createSQL: string;
@@ -345,13 +341,13 @@ const TABLES: {
   {
     table: "packages",
     createSQL: `CREATE TABLE IF NOT EXISTS packages (
-    package_id    SERIAL PRIMARY KEY,
-    package_name  VARCHAR(255) NOT NULL,
-    package_price NUMERIC(10,2) NOT NULL,
-    service_ids   VARCHAR(255)[] NOT NULL,
-    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-  )`,
+      package_id    SERIAL PRIMARY KEY,
+      package_name  VARCHAR(255) NOT NULL,
+      package_price NUMERIC(10,2) NOT NULL,
+      service_ids   VARCHAR(255)[] NOT NULL,
+      created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
     columns: {
       package_id: "SERIAL PRIMARY KEY",
       package_name: "VARCHAR(255) NOT NULL",
@@ -362,185 +358,219 @@ const TABLES: {
     },
   },
 ];
-// -----------------------------------------------------------------------
-// connectNeon: original behavior only. Just creates tables that don't
-// exist yet. Does NOT add or drop any columns on tables that already
-// exist. Safe to run on every server start.
-// -----------------------------------------------------------------------
+
+// =======================================================================
+// INITIAL DATABASE CONNECTION
+// Creates tables that don't exist.
+// Does NOT modify existing tables.
+// =======================================================================
+
 export async function connectNeon(): Promise<void> {
   try {
-    for (const { createSQL } of TABLES) {
+    for (const { table, createSQL } of TABLES) {
+      console.log(`[database] checking table "${table}"`);
+
       await sql.query(createSQL);
     }
+
     console.log("Database initialized successfully");
   } catch (error) {
-    console.error("Error initializing DB", error);
+    console.error("Error initializing DB:", error);
     process.exit(1);
   }
 }
 
-// -----------------------------------------------------------------------
-// syncSchema: NOT called automatically anywhere. Call this yourself,
-// on demand, whenever you want the DB's actual columns brought in line
-// with the `columns` objects defined above (adds missing, drops extra).
+// =======================================================================
+// SCHEMA SYNC
 //
-// WARNING: dropping a column permanently deletes its data immediately.
-// WARNING: adding a NOT NULL column to a table with existing rows needs
-// a DEFAULT in its type string, or the ALTER will throw.
+// Behavior:
+// - Missing table  -> CREATE
+// - Missing column -> ADD
+// - Extra column   -> WARNING ONLY
+// - Existing data  -> PRESERVED
+// - No changes     -> NOTHING
 //
-// Example ways to trigger it:
-//   import { syncSchema } from "./config/db.js";
-//   await syncSchema();                 // sync everything
-//   await syncSchema(["users"]);        // sync just one table
-// -----------------------------------------------------------------------
-export async function syncSchema(onlyTables?: string[]): Promise<void> {
-  const configuredTables = onlyTables
-    ? TABLES.filter((tableDefinition) =>
-        onlyTables.includes(tableDefinition.table),
-      )
-    : TABLES;
+// IMPORTANT:
+// Adding a NOT NULL column to a table that already contains data cannot
+// be done automatically unless a valid value/default exists.
+// =======================================================================
 
-  const configuredTableNames = configuredTables.map(
-    (tableDefinition) => tableDefinition.table,
-  );
+export async function syncSchema(
+  onlyTables?: string[],
+): Promise<void> {
+  try {
+    const configuredTables = onlyTables
+      ? TABLES.filter((tableDefinition) =>
+          onlyTables.includes(tableDefinition.table),
+        )
+      : TABLES;
 
-  // -----------------------------------------------------------------------
-  // 1. GET ALL EXISTING TABLES FROM THE DATABASE
-  // -----------------------------------------------------------------------
-  const existingTableRows = (await sql`
-    SELECT table_name
-    FROM information_schema.tables
-    WHERE table_schema = 'public'
-      AND table_type = 'BASE TABLE'
-  `) as { table_name: string }[];
+    // ================================================================
+    // 1. GET EXISTING TABLES
+    // ================================================================
 
-  const existingTableNames = existingTableRows.map((row) => row.table_name);
-
-  // -----------------------------------------------------------------------
-  // 2. DROP TABLES THAT ARE NOT IN TABLES CONFIG
-  // -----------------------------------------------------------------------
-  const tablesToDrop = existingTableNames.filter(
-    (tableName) => !configuredTableNames.includes(tableName),
-  );
-
-  for (const tableName of tablesToDrop) {
-    console.log(`[schema-sync] dropping table "${tableName}"`);
-
-    await sql.query(`DROP TABLE IF EXISTS "${tableName}" CASCADE`);
-  }
-
-  // -----------------------------------------------------------------------
-  // 3. CREATE TABLES THAT DON'T EXIST
-  // -----------------------------------------------------------------------
-  for (const tableDefinition of configuredTables) {
-    const {
-      table: tableName,
-      createSQL,
-      columns: desiredColumns,
-    } = tableDefinition;
-
-    if (!existingTableNames.includes(tableName)) {
-      console.log(`[schema-sync] ${tableName}: creating table`);
-
-      await sql.query(createSQL);
-
-      // Table was just created with the correct columns.
-      continue;
-    }
-
-    // ---------------------------------------------------------------------
-    // 4. TABLE EXISTS → CHECK ITS COLUMNS
-    // ---------------------------------------------------------------------
-
-    const existingColumnRows = (await sql`
-      SELECT column_name
-      FROM information_schema.columns
+    const existingTableRows = (await sql`
+      SELECT table_name
+      FROM information_schema.tables
       WHERE table_schema = 'public'
-        AND table_name = ${tableName}
-    `) as { column_name: string }[];
+        AND table_type = 'BASE TABLE'
+    `) as { table_name: string }[];
 
-    const existingColumnNames = existingColumnRows.map(
-      (row) => row.column_name,
+    const existingTableNames = existingTableRows.map(
+      (row) => row.table_name,
     );
 
-    // ---------------------------------------------------------------------
-    // 5. FIND MISSING COLUMNS
-    // ---------------------------------------------------------------------
+    // ================================================================
+    // 2. CREATE MISSING TABLES
+    // ================================================================
 
-    const columnsToAdd = Object.keys(desiredColumns).filter(
-      (columnName) => !existingColumnNames.includes(columnName),
+    for (const tableDefinition of configuredTables) {
+      const {
+        table: tableName,
+        createSQL,
+        columns: desiredColumns,
+      } = tableDefinition;
+
+      // --------------------------------------------------------------
+      // TABLE DOES NOT EXIST
+      // --------------------------------------------------------------
+
+      if (!existingTableNames.includes(tableName)) {
+        console.log(
+          `[schema-sync] ${tableName}: table missing → creating`,
+        );
+
+        await sql.query(createSQL);
+
+        console.log(
+          `[schema-sync] ${tableName}: created successfully`,
+        );
+
+        continue;
+      }
+
+      // ==============================================================
+      // 3. TABLE EXISTS → CHECK COLUMNS
+      // ==============================================================
+
+      const existingColumnRows = (await sql`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = ${tableName}
+      `) as { column_name: string }[];
+
+      const existingColumnNames = existingColumnRows.map(
+        (row) => row.column_name,
+      );
+
+      // ==============================================================
+      // 4. FIND MISSING COLUMNS
+      // ==============================================================
+
+      const columnsToAdd = Object.keys(desiredColumns).filter(
+        (columnName) =>
+          !existingColumnNames.includes(columnName),
+      );
+
+      // ==============================================================
+      // 5. FIND EXTRA COLUMNS
+      // ==============================================================
+
+      const columnsToKeep = existingColumnNames.filter(
+        (columnName) =>
+          !(columnName in desiredColumns),
+      );
+
+      // ==============================================================
+      // 6. ADD MISSING COLUMNS
+      // ==============================================================
+
+      for (const columnName of columnsToAdd) {
+        const definition = desiredColumns[columnName];
+
+        console.log(
+          `[schema-sync] ${tableName}: missing column "${columnName}"`,
+        );
+
+        // ------------------------------------------------------------
+        // Check if the column is NOT NULL
+        // ------------------------------------------------------------
+
+        const isNotNull = definition
+          .toUpperCase()
+          .includes("NOT NULL");
+
+        // ------------------------------------------------------------
+        // Check if the column has a DEFAULT
+        // ------------------------------------------------------------
+
+        const hasDefault = definition
+          .toUpperCase()
+          .includes("DEFAULT");
+
+        // ------------------------------------------------------------
+        // If NOT NULL without DEFAULT:
+        // We cannot safely add it to a table containing data.
+        // ------------------------------------------------------------
+
+        if (isNotNull && !hasDefault) {
+          console.warn(
+            `[schema-sync] ${tableName}.${columnName}: ` +
+              `NOT NULL column cannot be safely added to an existing ` +
+              `table without a default value. Skipping.`,
+          );
+
+          continue;
+        }
+
+        // ------------------------------------------------------------
+        // Otherwise add it normally
+        // ------------------------------------------------------------
+
+        await sql.query(
+          `ALTER TABLE "${tableName}" ` +
+            `ADD COLUMN IF NOT EXISTS "${columnName}" ${definition}`,
+        );
+
+        console.log(
+          `[schema-sync] ${tableName}.${columnName}: added`,
+        );
+      }
+
+      // ==============================================================
+      // 7. REPORT EXTRA COLUMNS
+      // ==============================================================
+
+      for (const columnName of columnsToKeep) {
+        console.warn(
+          `[schema-sync] ${tableName}: extra column "${columnName}" exists in database`,
+        );
+      }
+
+      // ==============================================================
+      // 8. RESULT
+      // ==============================================================
+
+      if (
+        columnsToAdd.length === 0 &&
+        columnsToKeep.length === 0
+      ) {
+        console.log(
+          `[schema-sync] ${tableName}: already in sync`,
+        );
+      }
+    }
+
+    console.log(
+      "[schema-sync] database schema synchronization complete",
+    );
+  } catch (error) {
+    console.error(
+      "[schema-sync] Error synchronizing database:",
+      error,
     );
 
-    // ---------------------------------------------------------------------
-    // 6. FIND EXTRA COLUMNS
-    // ---------------------------------------------------------------------
-
-    const columnsToDrop = existingColumnNames.filter(
-      (columnName) => !(columnName in desiredColumns),
-    );
-
-    // ---------------------------------------------------------------------
-    // 7. ADD MISSING COLUMNS
-    // ---------------------------------------------------------------------
-
-    for (const columnName of columnsToAdd) {
-      console.log(`[schema-sync] ${tableName}: adding column "${columnName}"`);
-
-      await sql.query(
-        `ALTER TABLE "${tableName}" ADD COLUMN IF NOT EXISTS "${columnName}" ${desiredColumns[columnName]}`,
-      );
-    }
-
-    // ---------------------------------------------------------------------
-    // 8. DROP EXTRA COLUMNS
-    // ---------------------------------------------------------------------
-
-    for (const columnName of columnsToDrop) {
-      console.log(
-        `[schema-sync] ${tableName}: dropping column "${columnName}"`,
-      );
-
-      await sql.query(
-        `ALTER TABLE "${tableName}" DROP COLUMN IF EXISTS "${columnName}" CASCADE`,
-      );
-    }
-
-    // ---------------------------------------------------------------------
-    // 9. LOG RESULT
-    // ---------------------------------------------------------------------
-
-    if (columnsToAdd.length === 0 && columnsToDrop.length === 0) {
-      console.log(`[schema-sync] ${tableName}: already in sync`);
-    }
+    throw error;
   }
-
-  console.log("[schema-sync] database schema synchronized");
 }
-// To change columns, do this:
-
-// 1. **Edit two spots for the table you're changing**, inside the `TABLES` array:
-//    - The `createSQL` string (so a *brand-new* DB gets it right from scratch)
-//    - The `columns` object (so `syncSchema()` knows what to add/drop on an *existing* DB)
-
-//    Example — adding an `avatar_url` column to `users`:
-//    ```ts
-//    createSQL: `CREATE TABLE IF NOT EXISTS users (
-//      ...
-//      avatar_url     TEXT,
-//      ...
-//    )`,
-//    columns: {
-//      ...
-//      avatar_url: "TEXT",
-//      ...
-//    },
-//    ```
-//    To remove a column, just delete it from both places.
-
-// 2. **Run `syncSchema()`** to apply it to the actual Neon DB. Since it's not auto-triggered, you need to call it yourself — e.g. a quick one-off:
-//    ```bash
-//    npx tsx -e "import('./src/config/db.js').then(m => m.syncSchema())"
-//    ```
-//    or `await syncSchema(["users"])` to only touch that one table.
-
-// That's it — edit both spots, then call `syncSchema()`.
