@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { Search, UserPlus } from "lucide-react";
+
 import Header from "../../../components/Header";
 import type { User } from "../../../interface/User";
 import AddUserModal from "../components/UserManagement/AddUserModal";
-import UpdateUserModal from "../components/UserManagement/UpdateUserModal"
+import UpdateUserModal from "../components/UserManagement/UpdateUserModal";
 import UserCardSquare from "../components/UserManagement/UserCardSquare";
 import UserProfile from "../components/UserManagement/UserProfile";
 
@@ -19,21 +21,28 @@ function UserManagement({
     loadData,
     open,
     setOpen,
-    loading
+    loading,
 }: UserManagementProps) {
     const [showAddUser, setShowAddUser] = useState(false);
     const [showUpdateUser, setShowUpdateUser] = useState(false);
     const [showUserProfile, setShowUserProfile] = useState(false);
     const [search, setSearch] = useState("");
     const [selectedUser, setSelectedUser] = useState<User>(users[0]);
+
     useEffect(() => {
         loadData();
     }, [loadData]);
 
-    const filteredUsers = users.filter((user) =>
-        user.username.toLowerCase().includes(search.toLowerCase()) ||
-        user.email.toLowerCase().includes(search.toLowerCase())
-    );
+    const filteredUsers = users.filter((user) => {
+        const searchValue = search.toLowerCase().trim();
+
+        return (
+            user.username?.toLowerCase().includes(searchValue) ||
+            user.email?.toLowerCase().includes(searchValue) ||
+            user.role?.toLowerCase().includes(searchValue) ||
+            user.contact_number?.toLowerCase().includes(searchValue)
+        );
+    });
 
     return (
         <main className="flex-1 min-w-0 p-6">
@@ -45,59 +54,120 @@ function UserManagement({
                 page="User Management"
             />
 
-            <h2 className="text-2xl font-bold mb-4">
-                Total Users: {filteredUsers.length}
-            </h2>
+            {/* =========================
+    SEARCH / ACTION BAR
+========================== */}
+            <div className="flex items-center gap-6 mb-6">
 
-            <div className="flex items-center gap-3 mb-4">
-                <p className="p-2 mb-4 text-4xl">🔎︎</p>
+                {/* Users */}
+                <div className="shrink-0">
+                    <h2 className="text-2xl font-semibold">
+                        Users
+                    </h2>
 
-                <input
-                    placeholder="Search users..."
-                    className="p-2 mb-4 border w-100"
-                    onChange={(e) => setSearch(e.target.value)}
-                />
+                    <p className="text-sm text-gray-500 mt-1">
+                        Showing {filteredUsers.length} of {users.length} users
+                    </p>
+                </div>
 
+                {/* Search */}
+                <div className="relative flex-1 max-w-xl">
+                    <Search
+                        size={19}
+                        strokeWidth={1.5}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    />
+
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search users..."
+                        className="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2.5 outline-none focus:border-gray-500"
+                    />
+                </div>
+
+                {/* Add User */}
                 <button
                     onClick={() => setShowAddUser(true)}
-                    className="ml-3 p-4 mb-4 bg-gray-200 hover:bg-gray-400"
+                    className="flex items-center justify-center gap-2 shrink-0 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                 >
+                    <UserPlus
+                        size={18}
+                        strokeWidth={1.5}
+                    />
+
                     Add User
                 </button>
 
-                {showAddUser && (
-                    <AddUserModal
-                        onClose={() => setShowAddUser(false)}
-                        loadData={loadData}
-                    />
-                )}
-                {showUpdateUser && (
-                    <UpdateUserModal
-                        user={selectedUser}
-                        onClose={() => setShowUpdateUser(false)}
-                        loadData={loadData}
-                    />
-                )}
-                {showUserProfile && (
-                    <UserProfile
-                        user={selectedUser}
-                        onBack={() => setShowUserProfile(false)}
-                        setShowUpdateUser={() => setShowUpdateUser(true)}
-                    />
-                )}
+            </div>
 
-            </div>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
-                {users.map((user) => (
-                    <UserCardSquare
-                        key={user.user_id}
-                        user={user}
-                        setSelectedUser={setSelectedUser}
-                        setShowUserProfile={setShowUserProfile}
+            {/* =========================
+                MODALS
+            ========================== */}
+
+            {showAddUser && (
+                <AddUserModal
+                    onClose={() => setShowAddUser(false)}
+                    loadData={loadData}
+                />
+            )}
+
+            {showUpdateUser && (
+                <UpdateUserModal
+                    user={selectedUser}
+                    onClose={() => setShowUpdateUser(false)}
+                    loadData={loadData}
+                />
+            )}
+
+            {showUserProfile && (
+                <UserProfile
+                    user={selectedUser}
+                    onBack={() => setShowUserProfile(false)}
+                    setShowUpdateUser={() => setShowUpdateUser(true)}
+                />
+            )}
+
+            {/* =========================
+                USER GRID
+            ========================== */}
+
+            {filteredUsers.length > 0 ? (
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
+                    {filteredUsers.map((user) => (
+                        <UserCardSquare
+                            key={user.user_id}
+                            user={user}
+                            setSelectedUser={setSelectedUser}
+                            setShowUserProfile={setShowUserProfile}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div className="border border-gray-300 rounded-xl py-16 text-center">
+                    <Search
+                        size={32}
+                        strokeWidth={1.5}
+                        className="mx-auto text-gray-400 mb-3"
                     />
-                ))}
-            </div>
-            {/* <div className="w-full overflow-x-auto">
+
+                    <h3 className="text-lg font-semibold">
+                        No users found
+                    </h3>
+
+                    <p className="text-sm text-gray-500 mt-1">
+                        No users match "{search}"
+                    </p>
+                </div>
+            )}
+
+            {/* 
+            =========================
+            PREVIOUS TABLE IMPLEMENTATION
+            =========================
+
+            <div className="w-full overflow-x-auto">
                 <table className="min-w-full border border-gray-300">
                     <thead className="bg-gray-200">
                         <tr>
@@ -113,22 +183,45 @@ function UserManagement({
 
                     <tbody>
                         {filteredUsers.map((user) => (
-                            <tr key={user.user_id} className="hover:bg-gray-100">
-                                <td className="border p-3">{user.user_id}</td>
-                                <td className="border p-3">{user.username}</td>
-                                <td className="border p-3">{user.role}</td>
-                                <td className="border p-3">{user.contact_number}</td>
-                                <td className="border p-3">{user.email}</td>
+                            <tr
+                                key={user.user_id}
+                                className="hover:bg-gray-100"
+                            >
                                 <td className="border p-3">
-                                    {new Date(user.created_at).toLocaleString()} PHT
+                                    {user.user_id}
                                 </td>
+
+                                <td className="border p-3">
+                                    {user.username}
+                                </td>
+
+                                <td className="border p-3">
+                                    {user.role}
+                                </td>
+
+                                <td className="border p-3">
+                                    {user.contact_number}
+                                </td>
+
+                                <td className="border p-3">
+                                    {user.email}
+                                </td>
+
+                                <td className="border p-3">
+                                    {new Date(
+                                        user.created_at
+                                    ).toLocaleString()} PHT
+                                </td>
+
                                 <td className="border p-3">
                                     <div className="flex justify-center items-center gap-2">
-                                        <button className="bg-gray-200 px-4 py-2 hover:bg-gray-400"
+                                        <button
+                                            className="bg-gray-200 px-4 py-2 hover:bg-gray-400"
                                             onClick={() => {
                                                 setSelectedUser(user);
-                                                setShowUpdateUser(true)
-                                            }}>
+                                                setShowUpdateUser(true);
+                                            }}
+                                        >
                                             Edit
                                         </button>
                                     </div>
@@ -137,8 +230,8 @@ function UserManagement({
                         ))}
                     </tbody>
                 </table>
-            </div> */}
-
+            </div>
+            */}
         </main>
     );
 }

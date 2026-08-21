@@ -47,6 +47,11 @@ export async function login(req: Request, res: Response) {
         message: "Invalid password",
       });
     }
+    const response = await sql`
+            UPDATE users
+            SET active = TRUE
+            WHERE user_id = ${user.user_id}
+        `;
 
     // =========================
     // GENERATE ACCESS TOKEN

@@ -84,6 +84,7 @@ function UserProfile({
 
                             <div className="-mt-16 flex items-end justify-between">
 
+                                {/* Profile Image */}
                                 <div>
                                     {user.profile_photo ? (
                                         <img
@@ -98,28 +99,43 @@ function UserProfile({
                                     )}
                                 </div>
 
+                                {/* Status + Edit */}
                                 <div className="flex items-center gap-3">
 
-                                    {!user.deleted && (
-                                        <span className="flex items-center gap-2 rounded-full bg-green-50 px-4 py-2 text-sm font-medium text-green-700">
-                                            <span className="h-2 w-2 rounded-full bg-green-500" />
-                                            Active
-                                        </span>
-                                    )}
+                                    {/* Active Status */}
+                                    <span
+                                        className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${
+                                            user.active
+                                                ? "bg-green-50 text-green-700"
+                                                : "bg-gray-100 text-gray-600"
+                                        }`}
+                                    >
+                                        <span
+                                            className={`h-2 w-2 rounded-full ${
+                                                user.active
+                                                    ? "bg-green-500"
+                                                    : "bg-gray-400"
+                                            }`}
+                                        />
 
-                                    {!user.deleted && (
-                                        <button
-                                            onClick={handleEdit}
-                                            className="flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
-                                        >
-                                            <Pencil size={16} />
-                                            Edit
-                                        </button>
-                                    )}
+                                        {user.active
+                                            ? "Active"
+                                            : "Not Active"}
+                                    </span>
+
+                                    {/* Edit */}
+                                    <button
+                                        onClick={handleEdit}
+                                        className="flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+                                    >
+                                        <Pencil size={16} />
+                                        Edit
+                                    </button>
 
                                 </div>
                             </div>
 
+                            {/* Name */}
                             <div className="mt-5">
                                 <h1 className="text-2xl font-bold tracking-tight text-gray-900">
                                     {fullName}

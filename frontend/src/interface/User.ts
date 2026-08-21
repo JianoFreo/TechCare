@@ -19,6 +19,7 @@ export type User = {
   shift_start: string;
   shift_end: string;
   profile_photo: string | null;
+  active: boolean;
   deleted: boolean;
   created_at: string;
   updated_at: string;

@@ -1,11 +1,17 @@
 import type { User } from "../../../../interface/User";
 import { Phone } from "lucide-react";
+
 type Props = {
   user: User;
   setSelectedUser: React.Dispatch<React.SetStateAction<User>>;
   setShowUserProfile: React.Dispatch<React.SetStateAction<boolean>>;
 };
-function UserCardSquare({ user, setSelectedUser, setShowUserProfile }: Props) {
+
+function UserCardSquare({
+  user,
+  setSelectedUser,
+  setShowUserProfile,
+}: Props) {
   const fullName = [
     user.first_name,
     user.middle_name,
@@ -20,12 +26,13 @@ function UserCardSquare({ user, setSelectedUser, setShowUserProfile }: Props) {
   }`;
 
   return (
-    <div 
-    className="w-full max-w-sm rounded-3xl bg-white p-2 shadow-md"
-    onClick={() => {
-      setSelectedUser(user);
-      setShowUserProfile(true);
-    }}>
+    <div
+      className="w-full max-w-sm rounded-3xl bg-white p-2 shadow-md cursor-pointer"
+      onClick={() => {
+        setSelectedUser(user);
+        setShowUserProfile(true);
+      }}
+    >
       {/* Profile Image */}
       <div className="relative h-64 w-full overflow-hidden rounded-[1.4rem] bg-gray-100">
         {user.profile_photo ? (
@@ -41,27 +48,21 @@ function UserCardSquare({ user, setSelectedUser, setShowUserProfile }: Props) {
         )}
 
         {/* Online / Active indicator */}
-        {!user.deleted && (
-          <div className="absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow">
-            <div className="h-3 w-3 rounded-full bg-green-500" />
-          </div>
-        )}
+        <div className="absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow">
+          <div
+            className={`h-3 w-3 rounded-full ${
+              user.active ? "bg-green-500" : "bg-gray-400"
+            }`}
+          />
+        </div>
       </div>
 
       {/* Information */}
       <div className="px-3 pb-3 pt-4">
         {/* Name */}
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {fullName}
-          </h2>
-
-          {!user.deleted && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs text-white">
-              ✓
-            </span>
-          )}
-        </div>
+        <h2 className="text-lg font-semibold text-gray-900">
+          {fullName}
+        </h2>
 
         {/* Role */}
         <p className="mt-1 text-sm text-gray-500">
@@ -69,25 +70,34 @@ function UserCardSquare({ user, setSelectedUser, setShowUserProfile }: Props) {
           {user.department && ` • ${user.department}`}
         </p>
 
-        {/* Description / Contact */}
+        {/* User ID */}
         <p className="mt-2 line-clamp-2 text-sm leading-5 text-gray-500">
           {user.user_id}
         </p>
+
+        {/* Email */}
         <p className="mt-2 line-clamp-2 text-sm leading-5 text-gray-500">
           {user.email}
         </p>
 
         {/* Stats */}
         <div className="mt-4 flex items-center gap-5 text-sm text-gray-500">
+          {/* Contact */}
           <div className="flex items-center gap-1">
-            <span><Phone className="w-4" /></span>
+            <Phone className="w-4" />
             <span>{user.contact_number}</span>
           </div>
 
+          {/* Active Status */}
           <div className="flex items-center gap-1">
-            <span>●</span>
+            <span
+              className={`h-2 w-2 rounded-full ${
+                user.active ? "bg-green-500" : "bg-gray-400"
+              }`}
+            />
+
             <span>
-              {user.employment_status || "Active"}
+              {user.active ? "Active" : "Not Active"}
             </span>
           </div>
         </div>
