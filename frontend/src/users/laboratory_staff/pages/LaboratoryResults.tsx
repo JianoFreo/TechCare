@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Header from "../../../components/Header";
 import ReleasingSide from "../components/LaboratoryResults/ReleasingSide";
-import LaboratoryResultTable, {type LaboratoryResult} from "../components/LaboratoryResults/LaboratoryResultTable";
+import LaboratoryResultTable, {
+  type LaboratoryResult,
+} from "../components/LaboratoryResults/LaboratoryResultTable";
 import api from "../../../lib/axios";
 
 type LabRequest = {
@@ -41,47 +43,47 @@ const createDefaultResults = (): LaboratoryResult[] =>
     status: "",
   }));
 
-
-function LaboratoryResults({ 
-  open, 
-  setOpen, 
-  requests, 
-  loading, 
-  error, 
-  loadData 
+function LaboratoryResults({
+  open,
+  setOpen,
+  requests,
+  loading,
+  error,
+  loadData,
 }: LaboratoryResultsProps) {
- const [selectedRequest, setSelectedRequest] =
-    useState<LabRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<LabRequest | null>(
+    null,
+  );
 
-  const [laboratoryResults, setLaboratoryResults] =
-    useState<LaboratoryResult[]>([]);
+  const [laboratoryResults, setLaboratoryResults] = useState<
+    LaboratoryResult[]
+  >([]);
 
   const [saving, setSaving] = useState(false);
 
-   const releasingRequests = useMemo(
+  const releasingRequests = useMemo(
     () =>
       requests.filter(
         (request) =>
-          request.status === "Completed" ||
-          request.status === "Lab Result",
+          request.status === "Completed" || request.status === "Lab Result",
       ),
     [requests],
   );
 
-   useEffect(() => {
+  useEffect(() => {
     if (!selectedRequest && releasingRequests.length > 0) {
       setSelectedRequest(releasingRequests[0]);
     }
   }, [releasingRequests, selectedRequest]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (!selectedRequest) {
       setLaboratoryResults([]);
       return;
     }
 
     const savedResults = selectedRequest.results;
-     if (savedResults && Array.isArray(savedResults.parameters)) {
+    if (savedResults && Array.isArray(savedResults.parameters)) {
       const parameters = savedResults.parameters as LaboratoryResult[];
 
       setLaboratoryResults(parameters);
@@ -91,7 +93,7 @@ function LaboratoryResults({
     setLaboratoryResults(createDefaultResults());
   }, [selectedRequest]);
 
-   const handleResultChange = (
+  const handleResultChange = (
     parameter: string,
     field: "result" | "referenceRange" | "status",
     value: string,
@@ -108,7 +110,7 @@ function LaboratoryResults({
     );
   };
 
-   const validateResults = () => {
+  const validateResults = () => {
     if (!selectedRequest) {
       throw new Error("Please select a laboratory request.");
     }
@@ -122,7 +124,7 @@ function LaboratoryResults({
     }
   };
 
-   const saveResults = async (status: string) => {
+  const saveResults = async (status: string) => {
     if (!selectedRequest) {
       throw new Error("No laboratory request selected.");
     }
@@ -164,15 +166,15 @@ function LaboratoryResults({
     }
   };
 
-   const handleRelease = async () => {
+  const handleRelease = async () => {
     await saveResults("Released");
   };
 
-   const handleSendToDoctor = async () => {
+  const handleSendToDoctor = async () => {
     await saveResults("Released");
   };
 
-   const handlePrint = () => {
+  const handlePrint = () => {
     if (!selectedRequest) {
       window.alert("Please select a laboratory request first.");
       return;
@@ -364,7 +366,7 @@ function LaboratoryResults({
               />
             </>
           ) : (
-            <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-gray-300 bg-white">
+            <div className="flex min-h-100 items-center justify-center rounded-2xl border border-gray-300 bg-white">
               <div className="text-center">
                 <h2 className="text-lg font-semibold text-slate-700">
                   No Laboratory Request Selected
@@ -381,6 +383,5 @@ function LaboratoryResults({
     </main>
   );
 }
-
 
 export default LaboratoryResults;
