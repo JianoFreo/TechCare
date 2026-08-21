@@ -20,7 +20,7 @@ if (ENV.IS_PRODUCTION) {
 }
 // GET ROUTES
 router.get("/laboratory-requests", getAllLaboratoryPaid);
-router.get("/laboratory-requests/:request_id", getLaboratoryRequest);
+router.get("/laboratory-requests/:queue_id", getLaboratoryRequest);
 router.get("/laboratory-queues/:room", getAllLaboratorySpecificQueues);
 router.get("/services/:room", getRoomSpecificServices);
 router.get("/laboratory-queues/:queue_id/items", getLaboratoryQueueItems);
