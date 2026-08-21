@@ -1,7 +1,7 @@
 import { ChevronDown } from "lucide-react";
 
 function UserHeader() {
-  const storedUser = localStorage.getItem("user");
+  const storedUser = sessionStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
 
   return (
