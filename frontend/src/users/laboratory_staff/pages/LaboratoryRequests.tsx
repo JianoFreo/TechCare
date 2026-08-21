@@ -4,18 +4,6 @@ import LaboratoryQueuePanel from "../components/LaboratoryRequests/LaboratoryQue
 import { useState } from "react";
 import InformationCard from "../components/LaboratoryRequests/InformationCard";
 
-// type LabRequest = {
-//   request_id: string;
-//   consultation_id: string | null;
-//   patient_id: string;
-//   doctor_id: string | null;
-//   test_type: string;
-//   results: Record<string, unknown> | null;
-//   status: string;
-//   requested_at: string;
-//   updated_at: string;
-// };
-
 type Queue = {
   id: number;
   queue_id: string;
