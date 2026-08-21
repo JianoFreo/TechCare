@@ -1,5 +1,4 @@
 import { neon } from "@neondatabase/serverless";
-
 import "dotenv/config";
 
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -10,13 +9,10 @@ if (!DATABASE_URL) {
 
 export const sql = neon(DATABASE_URL);
 
-// -----------------------------------------------------------------------
+// =======================================================================
 // TABLE DEFINITIONS
-// Each entry pairs a "CREATE TABLE IF NOT EXISTS" statement with the
-// desired columns object used by syncSchema() below. Edit these when you
-// add/remove a column, then call syncSchema() yourself when you want the
-// change applied to the actual DB (see bottom of file for how to trigger).
-// -----------------------------------------------------------------------
+// =======================================================================
+
 const TABLES: {
   table: string;
   createSQL: string;
@@ -345,13 +341,13 @@ const TABLES: {
   {
     table: "packages",
     createSQL: `CREATE TABLE IF NOT EXISTS packages (
-    package_id    SERIAL PRIMARY KEY,
-    package_name  VARCHAR(255) NOT NULL,
-    package_price NUMERIC(10,2) NOT NULL,
-    service_ids   VARCHAR(255)[] NOT NULL,
-    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-  )`,
+      package_id    SERIAL PRIMARY KEY,
+      package_name  VARCHAR(255) NOT NULL,
+      package_price NUMERIC(10,2) NOT NULL,
+      service_ids   VARCHAR(255)[] NOT NULL,
+      created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
     columns: {
       package_id: "SERIAL PRIMARY KEY",
       package_name: "VARCHAR(255) NOT NULL",
@@ -372,7 +368,9 @@ const TABLES: {
 // -----------------------------------------------------------------------
 export async function connectNeon(): Promise<void> {
   try {
-    for (const { createSQL } of TABLES) {
+    for (const { table, createSQL } of TABLES) {
+      console.log(`[database] checking table "${table}"`);
+
       await sql.query(createSQL);
     }
 
