@@ -44,9 +44,11 @@ export async function getLaboratoryRequest(req: Request, res: Response) {
         'sex', p.sex,
         'email', p.email,
         'contact_number', p.contact_number,
-        'civil_status', p.civil_status,
+        'address', p.address,
         'blood_type', p.blood_type,
         'birthdate', p.birthdate,
+        'emergency_contact_name', p.emergency_contact_name,
+        'emergency_contact', p.emergency_contact,
         'requested_at', lr.requested_at,
         'updated_at', lr.updated_at
       ),
@@ -57,10 +59,8 @@ export async function getLaboratoryRequest(req: Request, res: Response) {
           'created_at', r.created_at,
           'updated_at', r.updated_at,
           'service', json_build_object(
-            'service_id', s.service_id,
             'service_name', s.service_name,
             'service_type', s.service_type,
-            'price', s.price,
             'room', s.room
           )
         )
@@ -92,11 +92,12 @@ export async function getLaboratoryRequest(req: Request, res: Response) {
     p.sex,
     p.email,
     p.contact_number,
-    p.civil_status,
+    p.address,
     p.blood_type,
-    p.birthdate;
+    p.birthdate,
+    p.emergency_contact_name,
+    p.emergency_contact;
 `;
-
     if (result.length === 0) {
       return res.status(404).json({ message: "Laboratory request not found" });
     }
