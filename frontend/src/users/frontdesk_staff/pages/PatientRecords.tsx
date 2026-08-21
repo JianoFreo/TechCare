@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Patient } from "../../../interface/Patients";
+import type { Patient } from "../../../interface/Patient";
 
 import api from "../../../lib/axios";
 import EditPatientRecord from "../components/PatientRecords/EditPatientRecord";

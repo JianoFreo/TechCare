@@ -1,4 +1,4 @@
-import type { Patient } from "../../../../interface/Patients";
+import type { Patient } from "../../../../interface/Patient";
 import { Phone, Pencil, Trash2 } from "lucide-react";
 
 type Props = {

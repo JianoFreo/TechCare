@@ -231,8 +231,20 @@ export async function addService(req: Request, res: Response) {
     }
     const serviceId = await generateServiceId();
     const newService = await sql`
-      INSERT INTO services (service_id, service_name, price, service_type, room)
-      VALUES (${serviceId}, ${service_name}, ${price}, ${service_type}, ${room})
+      INSERT INTO services (
+        service_id,
+        service_type, 
+        service_name, 
+        price, 
+        room
+      )
+      VALUES (
+        ${serviceId},
+        ${service_type},  
+        ${service_name}, 
+        ${price}, 
+        ${room}
+      )
       RETURNING *;
     `;
     res
