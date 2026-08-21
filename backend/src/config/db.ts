@@ -368,9 +368,7 @@ const TABLES: {
 // -----------------------------------------------------------------------
 export async function connectNeon(): Promise<void> {
   try {
-    for (const { table, createSQL } of TABLES) {
-      console.log(`[database] checking table "${table}"`);
-
+    for (const { createSQL } of TABLES) {
       await sql.query(createSQL);
     }
 
