@@ -17,6 +17,7 @@ function Header({
   setOpen,
   loadData,
 }: HeaderProps) {
+  const role = sessionStorage.getItem("role")
   const handleLogout = async () => {
     try {
       const user_id = JSON.parse(sessionStorage.getItem("user") || "{}").user_id;
@@ -41,7 +42,7 @@ function Header({
 
         <div className="flex flex-col">
           <h1 className="text-lg font-semibold">{page}</h1>
-          <h2 className="text-gray-500">Laboratory Staff</h2>
+          <h2 className="text-gray-500">{role}</h2>
         </div>
       </div>
 
