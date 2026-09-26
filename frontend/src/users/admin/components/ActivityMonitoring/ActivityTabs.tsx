@@ -16,6 +16,7 @@ function ActivityTabs({ activeTab, onChange }: Props) {
     <div className="flex gap-6 border-b border-gray-200 mb-4">
       {TABS.map((tab) => {
         const isActive = tab.key === activeTab;
+
         return (
           <button
             key={tab.key}

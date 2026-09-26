@@ -119,8 +119,18 @@ function ActivityMonitoring({
         page="Activity Monitoring"
       />
       <div className="mx-6">
-        <h1 className="font-bold text-3xl">Activity Logs</h1>
-        <h3 className="font-light mb-6">Track Activities</h3>
+        <div className="flex items-start justify-between gap-4 mb-6">
+          <div>
+            <h1 className="font-bold text-3xl">Activity Logs</h1>
+            <h3 className="font-light">Track Activities</h3>
+          </div>
+          <button
+            type="button"
+            className="shrink-0 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-600 active:bg-sky-700 cursor-pointer"
+          >
+            Add to Queue
+          </button>
+        </div>
         <div>
           <ActivityStats stats={stats} />
         </div>
@@ -136,21 +146,18 @@ function ActivityMonitoring({
           severity={severity}
           setSeverity={setSeverity}
         />
-        <ActivityTable
-          activities={filteredActivities}
-          setSelectedForm={setSelectedFormId}
-          setShowActivityDetails={setShowActivityDetails}
-        />
-        {showActivityDetails && selectedActivity && (
-          <ActivityDetails
-            activity={selectedActivity}
-            onClose={() => setShowActivityDetails(false)}
-          />
-        )}
+        <div className="flex flex-col gap-4 lg:flex-row">
+          <div className="min-w-0 flex-1">
+            <ActivityTable
+              activities={filteredActivities}
+              selectedActivityId={selectedFormId}
+              setSelectedForm={setSelectedFormId}
+              setShowActivityDetails={setShowActivityDetails}
+            />
+          </div>
+          <ActivityDetails activity={selectedActivity} />
+        </div>
       </div>
-      {/* <button
-        onClick={() => setShowActivityDetails(true)}
-      >Show </button> */}
     </main>
   );
 }

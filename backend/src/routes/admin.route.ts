@@ -20,6 +20,9 @@ import {
   updateUser,
   updateUserStatus,
 } from "../controllers/admin/updateRequests.controller.js";
+import {
+  deleteTemplate,
+} from "../controllers/admin/deleteRequest.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import adminMiddleware from "../middlewares/admin.middleware.js";
@@ -50,4 +53,5 @@ router.put("/form-templates/:form_id", updateFormTemplate);
 router.patch("/users/:user_id", upload.single("image"), updateUser);
 router.patch("/users/:user_id/status", updateUserStatus);
 
+router.delete("/form-templates/:form_id", deleteTemplate);
 export default router;
