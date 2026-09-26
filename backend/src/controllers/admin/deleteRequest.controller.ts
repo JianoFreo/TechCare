@@ -5,20 +5,20 @@ import { Request, Response } from "express";
 // DELETE TEMPLATE
 // =========================
 export async function deleteTemplate(
-  req: Request<{ template_id: string }>,
+  req: Request<{ form_id: string }>,
   res: Response,
 ) {
   // DELETE /api/admin/templates/:template_id
 
   try {
-    const { template_id } = req.params;
+    const { form_id } = req.params;
 
-     if (!template_id) {
-      return res.status(400).json({ message: "template_id is required." });
+     if (!form_id) {
+      return res.status(400).json({ message: "form_id is required." });
     }
 
     const [existingTemplate] = await sql`
-      SELECT form_id FROM form_templates WHERE form_id = ${template_id}
+      SELECT form_id FROM form_templates WHERE form_id = ${form_id}
     `;
 
     if (!existingTemplate) {
@@ -32,12 +32,12 @@ export async function deleteTemplate(
     // form_components.form_id has no ON DELETE CASCADE, so child rows
     // must be removed first or the delete below violates the FK constraint.
     await sql`
-      DELETE FROM form_components WHERE form_id = ${template_id}
+      DELETE FROM form_components WHERE form_id = ${form_id}
     `;
 
     const [deletedTemplate] = await sql`
       DELETE FROM form_templates
-      WHERE form_id = ${template_id}
+      WHERE form_id = ${form_id}
       RETURNING *;
     `;
 

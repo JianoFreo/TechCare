@@ -53,5 +53,5 @@ router.put("/form-templates/:form_id", updateFormTemplate);
 router.patch("/users/:user_id", upload.single("image"), updateUser);
 router.patch("/users/:user_id/status", updateUserStatus);
 
-router.delete("/form-templates/:template_id", deleteTemplate);
+router.delete("/form-templates/:form_id", deleteTemplate);
 export default router;
