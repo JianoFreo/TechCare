@@ -124,12 +124,6 @@ function ActivityMonitoring({
             <h1 className="font-bold text-3xl">Activity Logs</h1>
             <h3 className="font-light">Track Activities</h3>
           </div>
-          <button
-            type="button"
-            className="shrink-0 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-600 active:bg-sky-700 cursor-pointer"
-          >
-            Add to Queue
-          </button>
         </div>
         <div>
           <ActivityStats stats={stats} />
