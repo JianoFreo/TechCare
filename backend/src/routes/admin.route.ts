@@ -20,20 +20,18 @@ import {
   updateUser,
   updateUserStatus,
 } from "../controllers/admin/updateRequests.controller.js";
-import {
-  deleteTemplate,
-} from "../controllers/admin/deleteRequest.controller.js";
+import { deleteTemplate } from "../controllers/admin/deleteRequest.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import adminMiddleware from "../middlewares/admin.middleware.js";
 const router = Router();
 
-if (ENV.IS_PRODUCTION) {
-  router.use(authMiddleware, adminMiddleware);
-  console.log("Admin routes enabled");
-}
+// if (ENV.IS_PRODUCTION) {
+//   router.use(authMiddleware, adminMiddleware);
+//   console.log("Admin routes enabled");
+// }
 
-// router.use(authMiddleware, adminMiddleware);
+router.use(authMiddleware, adminMiddleware);
 
 router.get("/services", getAllservices);
 router.get("/activity", getMyActivities);
