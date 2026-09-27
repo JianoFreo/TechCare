@@ -49,7 +49,7 @@ router.post("/form-templates", addFormTemplates);
 router.put("/form-templates/:form_id", updateFormTemplate);
 
 router.patch("/users/:user_id", upload.single("image"), updateUser);
-router.patch("/users/:user_id/status", updateUserStatus);
+router.patch("/users/status/:user_id", updateUserStatus);
 
 router.delete("/form-templates/:form_id", deleteTemplate);
 export default router;

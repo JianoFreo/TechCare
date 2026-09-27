@@ -50,7 +50,7 @@ function UserProfile({
     try {
       const newStatus = !user.account_status;
       const response = await api.patch(
-        `api/admin/users/${user.user_id}/status`,
+        `api/admin/users/status/${user.user_id}`,
         { account_status: newStatus },
       );
 
