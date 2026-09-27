@@ -2,66 +2,46 @@ import { sql } from "../../config/db.js";
 import { Request, Response } from "express";
 
 // =========================
-// ARCHIVE TEMPLATE
-// =========================
-export async function archiveTemplate(
-  req: Request<{ template_id: string }>,
-  res: Response,
-) {
-  // PATCH /api/admin/templates/:template_id/archive
-
-  try {
-    const { template_id } = req.params;
-
-    const archivedTemplate = await sql`
-      UPDATE form_templates
-      SET status = 'Archived', updated_at = CURRENT_TIMESTAMP
-      WHERE template_id = ${template_id}
-      RETURNING *;
-    `;
-
-    if (archivedTemplate.length === 0) {
-      return res.status(404).json({
-        message: "Template not found",
-      });
-    }
-
-    return res.status(200).json({
-      message: "Template archived successfully!",
-      template: archivedTemplate[0],
-    });
-  } catch (error) {
-    console.error("ARCHIVE TEMPLATE ERROR:", error);
-
-    return res.status(500).json({
-      message: "Failed to archive template",
-    });
-  }
-}
-
-// =========================
 // DELETE TEMPLATE
 // =========================
 export async function deleteTemplate(
-  req: Request<{ template_id: string }>,
+  req: Request<{ form_id: string }>,
   res: Response,
 ) {
   // DELETE /api/admin/templates/:template_id
 
   try {
-    const { template_id } = req.params;
+    const { form_id } = req.params;
 
-    const deletedTemplate = await sql`
-      DELETE FROM form_templates
-      WHERE template_id = ${template_id}
-      RETURNING *;
+     if (!form_id) {
+      return res.status(400).json({ message: "form_id is required." });
+    }
+
+    const [existingTemplate] = await sql`
+      SELECT form_id FROM form_templates WHERE form_id = ${form_id}
     `;
 
-    if (deletedTemplate.length === 0) {
+    if (!existingTemplate) {
       return res.status(404).json({
         message: "Template not found",
       });
     }
+
+    await sql.query("BEGIN");
+
+    // form_components.form_id has no ON DELETE CASCADE, so child rows
+    // must be removed first or the delete below violates the FK constraint.
+    await sql`
+      DELETE FROM form_components WHERE form_id = ${form_id}
+    `;
+
+    const [deletedTemplate] = await sql`
+      DELETE FROM form_templates
+      WHERE form_id = ${form_id}
+      RETURNING *;
+    `;
+
+    await sql.query("COMMIT");
 
     return res.status(200).json({
       message: "Template deleted successfully!",
@@ -69,6 +49,7 @@ export async function deleteTemplate(
     });
   } catch (error) {
     console.error("DELETE TEMPLATE ERROR:", error);
+    await sql.query("ROLLBACK"); // Rollback the transaction in case of an error
 
     return res.status(500).json({
       message: "Failed to delete template",
