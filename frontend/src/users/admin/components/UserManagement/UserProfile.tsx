@@ -48,16 +48,10 @@ function UserProfile({
     setUpdating(true);
 
     try {
-      const token = sessionStorage.getItem("token");
       const newStatus = !user.account_status;
       const response = await api.patch(
         `api/admin/users/${user.user_id}/status`,
         { account_status: newStatus },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
       );
 
       setSelectedUser((currentUser) => ({
