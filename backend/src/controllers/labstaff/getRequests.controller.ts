@@ -1,28 +1,6 @@
 import { sql } from "../../config/db.js";
 import { Request, Response } from "express";
 
-export async function getAllLaboratoryPaid(req: Request, res: Response) {
-  try {
-    const labRequests = await sql`
-        SELECT request_id, patient_id, doctor_id, test_type, status, requested_at, updated_at
-        FROM lab_requests
-        WHERE is_paid = TRUE AND
-              status != 'Requested' AND
-              requested_at >= CURRENT_DATE
-              AND requested_at < CURRENT_DATE + INTERVAL '1 day'
-        ORDER BY updated_at ASC;
-    `;
-    if (labRequests.length === 0) {
-      return res.status(200).json([]);
-    }
-
-    res.status(200).json(labRequests);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-}
-
 export async function getLaboratoryRequest(req: Request, res: Response) {
   try {
     const { queue_id } = req.params;
@@ -67,8 +45,8 @@ export async function getLaboratoryRequest(req: Request, res: Response) {
       )
     ) AS response
   FROM queue_entries q
-  JOIN request_items r ON r.queue_id = q.queue_id
-  JOIN lab_requests lr ON lr.request_id = r.request_id
+  JOIN laboratory_request_items r ON r.queue_id = q.queue_id
+  JOIN laboratory_requests lr ON lr.request_id = r.request_id
   JOIN patients p ON p.patient_id = lr.patient_id
   JOIN services s ON s.service_id = r.service_id
   WHERE q.queue_id = ${queue_id}
@@ -143,7 +121,7 @@ export async function getAllLaboratorySpecificQueues(
         q.*,
         s.room
       FROM queue_entries q
-      JOIN request_items ri ON ri.queue_id = q.queue_id
+      JOIN laboratory_request_items ri ON ri.queue_id = q.queue_id
       JOIN services s ON s.service_id = ri.service_id
       WHERE q.queue_id LIKE 'LAB-%'
         AND q.created_at >= CURRENT_DATE
@@ -212,5 +190,31 @@ export async function getLaboratoryQueueItems(req: Request, res: Response) {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+export async function getAnalysisReadyRequests(req: Request, res: Response) {
+  try {
+    const analysisReadyRequests = await sql`
+      SELECT
+        ri.lab_item_id,
+        ri.request_id,
+        ri.service_id,
+        s.room,
+        ri.queue_id,
+        ri.processed_by,
+        ri.status,
+        ri.created_at,
+        ri.updated_at
+      FROM laboratory_request_items ri
+      JOIN services s ON s.service_id = ri.service_id
+      WHERE ri.status = 'Specimen Collected'
+      ORDER BY ri.created_at ASC
+    `;
+
+    return res.status(200).json(analysisReadyRequests);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }

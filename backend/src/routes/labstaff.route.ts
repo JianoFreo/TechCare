@@ -1,10 +1,11 @@
 import { Router } from "express";
 import {
-  getAllLaboratoryPaid,
+  // getAllLaboratoryPaid,
   getLaboratoryRequest,
   getRoomSpecificServices,
   getAllLaboratorySpecificQueues,
   getLaboratoryQueueItems,
+  getAnalysisReadyRequests,
 } from "../controllers/labstaff/getRequests.controller.js";
 import {
   updateLabRequestStatus,
@@ -19,11 +20,11 @@ if (ENV.IS_PRODUCTION) {
   console.log("Lab Staff routes enabled");
 }
 // GET ROUTES
-router.get("/laboratory-requests", getAllLaboratoryPaid);
 router.get("/laboratory-requests/:queue_id", getLaboratoryRequest);
 router.get("/laboratory-queues/:room", getAllLaboratorySpecificQueues);
 router.get("/services/:room", getRoomSpecificServices);
 router.get("/laboratory-queues/:queue_id/items", getLaboratoryQueueItems);
+router.get("/laboratory-requests/items/", getAnalysisReadyRequests);
 
 // POST ROUTES
 
