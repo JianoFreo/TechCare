@@ -1,92 +1,65 @@
 import { sql } from "../../config/db.js";
 import { json, Request, Response } from "express";
 
-export async function updateLabRequestStatus(req: Request, res: Response) {
-  try {
-    const { request_id } = req.params;
-    const { status, results } = req.body;
-
-    if (!request_id) {
-      return res.status(400).json({
-        message: "Request ID are required!",
-      });
-    }
-
-    if (!status) {
-      return res.status(400).json({
-        message: "Status is required!",
-      });
-    }
-
-    const updatedLabRequestStatus = await sql`
-        UPDATE lab_requests
-        SET 
-          status = ${status},
-          results = ${results ? JSON.stringify(results) : null},
-          updates_at = NOW()
-        WHERE request_id = ${request_id} AND
-              is_paid = TRUE
-        RETURNING *
-    `;
-
-    if (updatedLabRequestStatus.length === 0) {
-      return res.status(400).json({
-        message: "Laboratory request doesn't exist.",
-      });
-    }
-
-    return res.status(200).json({
-      message: `Laboratory request status changed to ${status}.`,
-      request: updatedLabRequestStatus[0],
-    });
-  } catch (error) {
-    console.error("Unable to update laboratory request", error);
-
-    return res.status(500).json({
-      message: "Internal Server Error",
-    });
-  }
-}
-
 export async function updateQueueStatus(req: Request, res: Response) {
   try {
     const { queue_id } = req.params;
+    const { room } = req.body as { room?: string };
 
     if (!queue_id) {
-      return res.status(400).json({
-        message: "Queue ID is required!",
-      });
+      return res.status(400).json({ message: "Queue ID is required!" });
+    }
+    if (!room) {
+      return res.status(400).json({ message: "room is required" });
     }
 
-    const updatedQueueStatus = await sql`
-      UPDATE queue_entries
-      SET 
+    const [updated] = await sql`
+      UPDATE queue_entries q
+      SET
         status = CASE
-          WHEN status = 'Waiting' THEN 'Serving'
-          WHEN status = 'Skipped' THEN 'Serving'
-          WHEN status = 'Serving' THEN 'Completed'
+          WHEN LOWER(q.status) IN ('waiting', 'skipped') THEN 'Serving'
+          WHEN LOWER(q.status) = 'serving' THEN 'Completed'
         END,
         updated_at = NOW()
-      WHERE queue_id = ${queue_id}
-        AND status IN ('Waiting', 'Skipped', 'Serving')
-      RETURNING *;
+      FROM services s
+      WHERE q.queue_id = ${queue_id}
+        AND q.queue_id LIKE 'LAB-%'
+        AND s.service_id = q.service_id
+        AND s.room = ${room}
+        AND LOWER(q.status) IN ('waiting', 'skipped', 'serving')
+      RETURNING q.*
     `;
 
-    if (updatedQueueStatus.length === 0) {
-      return res.status(400).json({
-        message: "Queue entry doesn't exist or cannot be updated anymore.",
+    if (!updated) {
+      // Work out why, so the client gets an accurate status code
+      const [existing] = await sql`
+        SELECT q.status, s.room
+        FROM queue_entries q
+        JOIN services s ON s.service_id = q.service_id
+        WHERE q.queue_id = ${queue_id}
+          AND q.queue_id LIKE 'LAB-%'
+      `;
+
+      if (!existing) {
+        return res.status(404).json({ message: "Queue entry not found." });
+      }
+      if (existing.room !== room) {
+        return res
+          .status(403)
+          .json({ message: "This queue belongs to a different room." });
+      }
+      return res.status(409).json({
+        message: `Queue is already ${existing.status} and can't be updated.`,
       });
     }
 
     return res.status(200).json({
-      message: `Queue entry status changed to ${updatedQueueStatus[0].status}.`,
-      request: updatedQueueStatus,
+      message: `Queue entry status changed to ${updated.status}.`,
+      queue: updated,
     });
   } catch (error) {
     console.error("Unable to update queue status", error);
-    res.status(500).json({
-      message: "Internal Server Error",
-    });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }
 

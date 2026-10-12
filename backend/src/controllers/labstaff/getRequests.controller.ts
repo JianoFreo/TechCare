@@ -1,141 +1,112 @@
 import { sql } from "../../config/db.js";
 import { Request, Response } from "express";
 
-export async function getLaboratoryRequest(req: Request, res: Response) {
+export async function getLaboratoryRequestDetails(req: Request, res: Response) {
   try {
     const { queue_id } = req.params;
+    const room = typeof req.query.room === "string" ? req.query.room : "";
+
+    if (!room) {
+      return res.status(400).json({ message: "room is required" });
+    }
 
     const result = await sql`
-  SELECT
-    json_build_object(
-      'request', json_build_object(
-        'request_id', lr.request_id,
-        'consultation_record_id', lr.consultation_record_id,
-        'doctor_id', lr.doctor_id,
-        'is_priority', q.is_priority,
-        'status', q.status,
-        'patient_id', p.patient_id,
-        'first_name', p.first_name,
-        'last_name', p.last_name,
-        'middle_name', p.middle_name,
-        'suffix', p.suffix,
-        'sex', p.sex,
-        'email', p.email,
-        'contact_number', p.contact_number,
-        'address', p.address,
-        'blood_type', p.blood_type,
-        'birthdate', p.birthdate,
-        'emergency_contact_name', p.emergency_contact_name,
-        'emergency_contact', p.emergency_contact,
-        'requested_at', lr.requested_at,
-        'updated_at', lr.updated_at
-      ),
-      'items', json_agg(
+      SELECT
         json_build_object(
-          'lab_item_id', r.lab_item_id,
-          'status', r.status,
-          'created_at', r.created_at,
-          'updated_at', r.updated_at,
-          'service', json_build_object(
-            'service_name', s.service_name,
-            'service_type', s.service_type,
-            'room', s.room
-          )
-        )
+          'request', json_build_object(
+            'request_id', lr.request_id,
+            'consultation_record_id', lr.consultation_record_id,
+            'requested_by', lr.requested_by,
+            'is_priority', q.is_priority,
+            'status', q.status,
+            'is_paid', lr.is_paid,
+            'patient_id', p.patient_id,
+            'first_name', p.first_name,
+            'last_name', p.last_name,
+            'middle_name', p.middle_name,
+            'suffix', p.suffix,
+            'sex', p.sex,
+            'email', p.email,
+            'contact_number', p.contact_number,
+            'address', p.address,
+            'blood_type', p.blood_type,
+            'birthdate', p.birthdate,
+            'emergency_contact_name', p.emergency_contact_name,
+            'emergency_contact', p.emergency_contact,
+            'requested_at', lr.requested_at,
+            'updated_at', lr.updated_at
+          ),
+          'items', COALESCE((
+            SELECT json_agg(
+              json_build_object(
+                'lab_item_id', ri.lab_item_id,
+                'queue_id', ri.queue_id,
+                'status', ri.status,
+                'processed_by', ri.processed_by,
+                'created_at', ri.created_at,
+                'updated_at', ri.updated_at,
+                'in_current_room', (s.room = ${room}),
+                'service', json_build_object(
+                  'service_id', s.service_id,
+                  'service_name', s.service_name,
+                  'service_type', s.service_type,
+                  'service_category', s.service_category,
+                  'room', s.room
+                )
+              )
+              ORDER BY (s.room = ${room}) DESC, ri.created_at ASC
+            )
+            FROM laboratory_request_items ri
+            JOIN services s ON s.service_id = ri.service_id
+            WHERE ri.request_id = lr.request_id
+          ), '[]'::json)
+        ) AS response
+      FROM queue_entries q
+      JOIN laboratory_requests lr ON lr.request_id = (
+        SELECT ri2.request_id
+        FROM laboratory_request_items ri2
+        WHERE ri2.queue_id = q.queue_id
+        LIMIT 1
       )
-    ) AS response
-  FROM queue_entries q
-  JOIN laboratory_request_items r ON r.queue_id = q.queue_id
-  JOIN laboratory_requests lr ON lr.request_id = r.request_id
-  JOIN patients p ON p.patient_id = lr.patient_id
-  JOIN services s ON s.service_id = r.service_id
-  WHERE q.queue_id = ${queue_id}
-  GROUP BY
-    lr.request_id,
-    lr.consultation_record_id,
-    lr.doctor_id,
-    lr.requested_at,
-    lr.updated_at,
-    q.queue_id,
-    q.queue_number,
-    q.is_priority,
-    q.status,
-    q.created_at,
-    q.updated_at,
-    p.patient_id,
-    p.first_name,
-    p.last_name,
-    p.middle_name,
-    p.suffix,
-    p.sex,
-    p.email,
-    p.contact_number,
-    p.address,
-    p.blood_type,
-    p.birthdate,
-    p.emergency_contact_name,
-    p.emergency_contact;
-`;
+      JOIN patients p ON p.patient_id = lr.patient_id
+      WHERE q.queue_id = ${queue_id}
+    `;
+
     if (result.length === 0) {
       return res.status(404).json({ message: "Laboratory request not found" });
     }
 
-    // result[0].response is already the nested object you want
     return res.status(200).json(result[0].response);
   } catch (error) {
-    console.error("getLaboratoryRequest:", error);
-
-    return res.status(500).json({
-      error: "Internal Server Error",
-    });
+    console.error("getLaboratoryRequestDetails:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }
 
-// export async function getPatientInfo(req: Request, res: Response) {
-//   try {
-//     const { patient_id } = req.params;
-//     const [patient] = await sql`
-//         SELECT patient_id, last_name, first_name, date_of_birth, sex, contact_number, email, address, emergency_contact
-//         FROM patients
-//         WHERE patient_id = ${patient_id}
-//     `;
-//     if (!patient) {
-//       return res.status(404).json({ message: "Patient not found" });
-//     }
-//     return res.status(200).json(patient);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "Internal Server Error" });
-//   }
-// }
-
-export async function getAllLaboratorySpecificQueues(
-  req: Request,
-  res: Response,
-) {
+export async function getLaboratoryQueues(req: Request, res: Response) {
   try {
     const { room } = req.params;
 
-    const laboratoryQueue = await sql`
-      SELECT DISTINCT ON (q.queue_id)
+    const queues = await sql`
+      SELECT
         q.*,
+        s.service_name,
+        s.service_type,
+        s.service_category,
         s.room
       FROM queue_entries q
-      JOIN laboratory_request_items ri ON ri.queue_id = q.queue_id
-      JOIN services s ON s.service_id = ri.service_id
+      JOIN services s ON s.service_id = q.service_id
       WHERE q.queue_id LIKE 'LAB-%'
+        AND s.room = ${room}
         AND q.created_at >= CURRENT_DATE
         AND q.created_at < CURRENT_DATE + INTERVAL '1 day'
-        AND s.room = ${room}
-      ORDER BY q.queue_id, q.queue_number ASC
+      ORDER BY q.queue_number ASC
     `;
-    if (laboratoryQueue.length === 0) {
-      return res.status(404).json({ message: "No existing Queue" });
-    }
-    return res.status(200).json(laboratoryQueue);
+
+    return res.status(200).json(queues);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }
 
@@ -166,30 +137,30 @@ export async function getLaboratoryQueueItems(req: Request, res: Response) {
   try {
     const { queue_id } = req.params;
 
-    const laboratoryItems = await sql`
+    const items = await sql`
       SELECT
-        r.id,
-        r.lab_item_id,
-        r.status,
-        r.created_at,
-        r.updated_at,
+        ri.lab_item_id,
+        ri.request_id,
+        ri.queue_id,
+        ri.service_id,
+        ri.processed_by,
+        ri.status,
+        ri.created_at,
+        ri.updated_at,
         s.service_name,
-        s.service_type
-      FROM request_items r
-      JOIN queue_entries q ON q.queue_id = r.queue_id
-      JOIN services s ON s.service_id = r.service_id
-      WHERE q.queue_id = ${queue_id}
-        AND q.created_at >= CURRENT_DATE
-        AND q.created_at < CURRENT_DATE + INTERVAL '1 day'
-      ORDER BY r.lab_item_id
+        s.service_type,
+        s.service_category,
+        s.room
+      FROM laboratory_request_items ri
+      JOIN services s ON s.service_id = ri.service_id
+      WHERE ri.queue_id = ${queue_id}
+      ORDER BY ri.created_at ASC
     `;
-    if (laboratoryItems.length === 0) {
-      return res.status(404).json({ message: "No existing Queue" });
-    }
-    return res.status(200).json(laboratoryItems);
+
+    return res.status(200).json(items);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }
 

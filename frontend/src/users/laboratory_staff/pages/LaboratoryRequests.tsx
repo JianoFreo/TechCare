@@ -3,13 +3,13 @@ import RequestSummary from "../components/LaboratoryRequests/RequestSummary";
 import LaboratoryQueuePanel from "../components/LaboratoryRequests/LaboratoryQueuePanel";
 import { useState } from "react";
 import InformationCard from "../components/LaboratoryRequests/InformationCard";
-import type { Queue } from "../../../interface/Queue";
+import type { QueueEntry } from "../../../interface/Queue";
 import type { Service } from "../../../interface/Service";
 
 type LaboratoryRequestsProps = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  queues: Queue[];
+  queues: QueueEntry[];
   services: Service[];
   loading: boolean;
   error: string | null;
@@ -53,11 +53,14 @@ function LaboratoryRequests({
           openQueueAccordion={openQueueAccordion}
           setOpenInformationCard={setOpenInformationCard}
           setQueueIdCard={setQueueIdCard}
+          room={room}
+          loadData={loadData}
         />
         {openInformationCard && (
           <InformationCard
             onClose={() => setOpenInformationCard(false)}
             queueIdCard={queueIdCard}
+            room={room}
           />
         )}
       </div>
