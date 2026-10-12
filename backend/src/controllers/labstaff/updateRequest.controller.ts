@@ -31,7 +31,6 @@ export async function updateQueueStatus(req: Request, res: Response) {
     `;
 
     if (!updated) {
-      // Work out why, so the client gets an accurate status code
       const [existing] = await sql`
         SELECT q.status, s.room
         FROM queue_entries q
