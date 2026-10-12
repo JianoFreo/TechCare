@@ -1,7 +1,8 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
-import React, { type Dispatch, type SetStateAction } from "react";
+import React, { useState, type Dispatch, type SetStateAction } from "react";
 import type { LaboratoryItem } from "../../../../interface/LaboratoryItem";
 import type { Queue } from "../../../../interface/Queue";
+import api from "#lib/axios";
 
 type QueueTableProps = {
   filterQueues: Queue[];
@@ -12,6 +13,8 @@ type QueueTableProps = {
   openQueueAccordion: string | null;
   setOpenInformationCard: Dispatch<SetStateAction<boolean>>;
   setQueueIdCard: Dispatch<SetStateAction<string | null>>;
+  loadData: () => Promise<void>;
+  room: string;
 };
 
 function QueueTable({
@@ -23,11 +26,41 @@ function QueueTable({
   openQueueAccordion,
   setOpenInformationCard,
   setQueueIdCard,
+  room,
+  loadData,
 }: QueueTableProps) {
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [acceptError, setAcceptError] = useState<string | null>(null);
   const handleToggleAccordion = (queue_id: string) => {
     setOpenQueueAccordion((currentQueueId) =>
       currentQueueId === queue_id ? null : queue_id,
     );
+  };
+
+  const handleQueueAction = async (
+    queue_id: string,
+    action: "accept" | "complete" | "skip",
+  ) => {
+    if (acceptingId) return;
+
+    try {
+      setAcceptingId(queue_id);
+      setAcceptError(null);
+
+      await api.patch(
+        `/api/labstaff/laboratory-queues/${encodeURIComponent(queue_id)}/status`,
+        { room, action },
+      );
+
+      await loadData();
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Unable to update queue.";
+      setAcceptError(message);
+    } finally {
+      setAcceptingId(null);
+    }
   };
 
   return (
@@ -55,7 +88,12 @@ function QueueTable({
       <tbody className="">
         {filterQueues.map((queue) => (
           <React.Fragment key={queue.id}>
-            <tr className="border-b border-gray-300">
+            <tr
+              key={queue.id}
+              className={`border-b border-gray-300 ${
+                queue.status === "Serving" ? "bg-green-50" : ""
+              }`}
+            >
               <td className="px-3 py-3">
                 {openQueueAccordion === queue.queue_id ? (
                   <ChevronUp
@@ -101,12 +139,48 @@ function QueueTable({
                 >
                   View
                 </button>
-                <button className="cursor-pointer px-4 py-2 text-xs  rounded-sm border-2 border-green-500 text-green-500 transition-all duration-300 hover:scale-105 hover:bg-green-100">
-                  Accept
-                </button>
-                <button className="cursor-pointer px-4 py-2 text-xs rounded-sm border-2 border-yellow-500 text-yellow-500 transition-all duration-300 hover:scale-105 hover:bg-yellow-100">
-                  Skip
-                </button>
+                {(() => {
+                  const status = queue.status?.toLowerCase();
+                  const busy = acceptingId === queue.queue_id;
+
+                  return (
+                    <>
+                      {(status === "waiting" || status === "skipped") && (
+                        <button
+                          disabled={busy}
+                          onClick={() =>
+                            handleQueueAction(queue.queue_id, "accept")
+                          }
+                          className="cursor-pointer px-4 py-2 text-xs rounded-sm border-2 border-green-500 text-green-500 transition-all duration-300 hover:scale-105 hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Accept
+                        </button>
+                      )}
+                      {status === "serving" && (
+                        <button
+                          disabled={busy}
+                          onClick={() =>
+                            handleQueueAction(queue.queue_id, "complete")
+                          }
+                          className="cursor-pointer px-4 py-2 text-xs rounded-sm border-2 border-green-500 text-green-500 transition-all duration-300 hover:scale-105 hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Complete
+                        </button>
+                      )}
+                      {status === "waiting" && (
+                        <button
+                          disabled={busy}
+                          onClick={() =>
+                            handleQueueAction(queue.queue_id, "skip")
+                          }
+                          className="cursor-pointer px-4 py-2 text-xs rounded-sm border-2 border-yellow-500 text-yellow-500 transition-all duration-300 hover:scale-105 hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Skip
+                        </button>
+                      )}
+                    </>
+                  );
+                })()}
               </td>
             </tr>
             {openQueueAccordion === queue.queue_id && (
