@@ -6,6 +6,7 @@ import {
   getAllLaboratorySpecificQueues,
   getLaboratoryQueueItems,
   getAnalysisReadyRequests,
+  getAvailableFormTemplates,
 } from "../controllers/labstaff/getRequests.controller.js";
 import {
   updateLabRequestStatus,
@@ -25,7 +26,7 @@ router.get("/laboratory-queues/:room", getAllLaboratorySpecificQueues);
 router.get("/services/:room", getRoomSpecificServices);
 router.get("/laboratory-queues/:queue_id/items", getLaboratoryQueueItems);
 router.get("/laboratory-requests/items/", getAnalysisReadyRequests);
-
+router.get("/laboratory-results/form-templates/", getAvailableFormTemplates);
 // POST ROUTES
 
 // UPDATE ROUTES

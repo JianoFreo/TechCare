@@ -218,3 +218,29 @@ export async function getAnalysisReadyRequests(req: Request, res: Response) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+export async function getAvailableFormTemplates(req: Request, res: Response) {
+  try {
+    const templates = await sql`
+      SELECT
+        ft.form_id,
+        ft.form_name,
+        ft.form_description,
+        ft.service_id,
+        s.service_name,
+        ft.version,
+        ft.created_by,
+        ft.created_at,
+        ft.updated_at
+      FROM form_templates ft
+      JOIN services s ON s.service_id = ft.service_id
+      WHERE ft.status = 'Published'
+      ORDER BY ft.version DESC, ft.form_name ASC
+    `;
+
+    return res.status(200).json(templates);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
