@@ -1,8 +1,25 @@
+export type LaboratoryRequestItem = {
+  lab_item_id: string;
+  queue_id: string | null;
+  status: string;
+  processed_by: string | null;
+  in_current_room: boolean;
+  created_at: string;
+  updated_at: string;
+  service: {
+    service_id: string;
+    service_name: string;
+    service_type: string;
+    service_category: string | null;
+    room: string;
+  };
+};
+
 export type LaboratoryRequestDetail = {
   request: {
     request_id: string;
     consultation_record_id: string | null;
-    doctor_id: string | null;
+    requested_by: string;
     is_paid: boolean;
     is_priority: boolean;
     status: string;
@@ -22,15 +39,5 @@ export type LaboratoryRequestDetail = {
     requested_at: string;
     updated_at: string;
   };
-  items: {
-    lab_item_id: string;
-    status: string;
-    created_at: string;
-    updated_at: string;
-    service: {
-      service_name: string;
-      service_type: string;
-      room: string;
-    };
-  }[];
+  items: LaboratoryRequestItem[];
 };

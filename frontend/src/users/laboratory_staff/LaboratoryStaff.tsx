@@ -6,7 +6,7 @@ import SideBar from "../../components/SideBar";
 import { useSearchParams } from "react-router";
 import LabstaffDashboard from "./pages/LabstaffDashboard";
 import LaboratoryResults from "./pages/LaboratoryResults";
-import type { Queue } from "../../interface/Queue";
+import type { QueueEntry } from "../../interface/Queue";
 import type { Service } from "../../interface/Service";
 
 type LabRequest = {
@@ -25,7 +25,7 @@ function LaboratoryStaff() {
   const [open, setOpen] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const [requestItems, setRequestItems] = useState<LabRequest[]>([]);
-  const [queues, setQueues] = useState<Queue[]>([]);
+  const [queues, setQueues] = useState<QueueEntry[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,7 @@ function LaboratoryStaff() {
     setSearchParams({ page: newPage });
   }
 
-  const room = "LAB-01";
+  const room = "Laboratory Room 2";
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -43,7 +43,7 @@ function LaboratoryStaff() {
 
     try {
       const queueResponse = await api.get(
-        `/api/labstaff/laboratory-queues/${room}`,
+        `/api/labstaff/laboratory-queues/room/${room}`,
       );
       const serviceResponse = await api.get(`/api/labstaff/services/${room}`);
       setQueues(queueResponse.data ?? []);
