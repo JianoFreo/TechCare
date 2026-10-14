@@ -62,18 +62,27 @@ export async function updateQueueStatus(req: Request, res: Response) {
   }
 }
 
+
 export async function skipQueueEntry(req: Request, res: Response) {
   try {
     // Get the queue_id of the patient who wants to skip.
     const { queue_id } = req.params;
 
-    // Find the patient's current queue number and service type.
-    // We need the service_type so we only touch the same queue,
-    // and the queue_number so we know who is immediately behind them.
+    // Validate the queue ID.
+    if (!queue_id) {
+      return res.status(400).json({
+        message: "Queue ID is required!",
+      });
+    }
+
+    // Find the patient's current queue entry.
+    // We need the service_id and queue_number to identify
+    // the correct queue and determine the patient's position.
     const queue = await sql`
-      SELECT queue_number, service_type
+      SELECT queue_id, queue_number, service_id, status
       FROM queue_entries
-      WHERE queue_id = ${queue_id};
+      WHERE queue_id = ${queue_id}
+      LIMIT 1;
     `;
 
     // Stop if the queue entry doesn't exist.
@@ -83,48 +92,62 @@ export async function skipQueueEntry(req: Request, res: Response) {
       });
     }
 
-    const { queue_number: currentQueueNumber, service_type } = queue[0];
+    const {
+      queue_number: currentQueueNumber,
+      service_id,
+      status,
+    } = queue[0];
 
-    // Move the patient behind forward by one position.
+    // Only waiting or serving entries can be skipped.
+    if (!["waiting", "serving"].includes(String(status).toLowerCase())) {
+      return res.status(409).json({
+        message: `Queue entry cannot be skipped because its status is ${status}.`,
+      });
+    }
+
+    // Move the next waiting patient forward by one position.
     //
     // Example:
-    // Charlie = #3
-    // David = #4
+    // Charlie = #3 (skipped)
+    // David = #4 (waiting)
     //
     // David becomes #3.
     //
-    // Scoped to the same service_type and status = 'waiting' so this
-    // doesn't accidentally shift patients in other queues (e.g. Lab)
-    // or already-served/cancelled entries that happen to share the
-    // same queue_number.
+    // Scoped to the same service_id and waiting status so this
+    // doesn't shift patients from other services or completed queues.
     await sql`
       UPDATE queue_entries
-      SET queue_number = queue_number - 1
-      WHERE
-        queue_number = ${currentQueueNumber + 1}
-        AND service_type = ${service_type}
-        AND status = 'waiting';
+      SET
+        queue_number = queue_number - 1,
+        updated_at = NOW()
+      WHERE queue_number = ${currentQueueNumber + 1}
+        AND service_id = ${service_id}
+        AND LOWER(status) = 'waiting';
     `;
 
-    // Move the skipped patient back by one position.
+    // Move the skipped patient back one position and mark the entry
+    // as skipped so it can be called again later.
     //
-    // Charlie becomes #4.
+    // Charlie becomes #4 with status = 'skipped'.
     const updatedQueue = await sql`
       UPDATE queue_entries
-      SET queue_number = ${currentQueueNumber + 1}
+      SET
+        queue_number = ${currentQueueNumber + 1},
+        status = 'skipped',
+        updated_at = NOW()
       WHERE queue_id = ${queue_id}
       RETURNING *;
     `;
 
     return res.status(200).json({
-      message: "Queue skipped successfully.",
+      message: "Queue skipped successfully and returned to the queue.",
       queue: updatedQueue[0],
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error in skipQueueEntry controller:", error);
 
     return res.status(500).json({
-      message: "Error in skipQueueEntry controller.",
+      message: "Internal Server Error",
     });
   }
 }
