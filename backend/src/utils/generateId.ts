@@ -1,5 +1,5 @@
+
 import { sql } from "../config/db.js";
-import type { PoolClient } from "@neondatabase/serverless";
 
 export async function generateUserId() {
   const now = new Date();
@@ -31,6 +31,7 @@ export async function generateUserId() {
   const sequence = String(nextNumber).padStart(4, "0");
   return `U-${prefix}-${sequence}`;
 }
+
 export async function generatePatientId() {
   const now = new Date();
 
@@ -119,7 +120,7 @@ export async function generateActivityId() {
   const result = await sql`
     SELECT activity_id
     FROM system_activity
-    WHERE activity_id LIKE ${`S-${prefix}-%`}
+    WHERE activity_id LIKE ${`ACT-${prefix}-%`}
     ORDER BY activity_id DESC
     LIMIT 1
   `;
@@ -137,7 +138,7 @@ export async function generateActivityId() {
   return `ACT-${prefix}-${sequence}`;
 }
 
-export async function generateLaboratoryRequestID(client: PoolClient) {
+export async function generateLaboratoryRequestID() {
   const now = new Date();
 
   const year = String(now.getFullYear()).slice(-2);
@@ -145,22 +146,23 @@ export async function generateLaboratoryRequestID(client: PoolClient) {
   const day = String(now.getDate()).padStart(2, "0");
 
   const prefix = `${year}-${month}${day}`;
-  const { rows: labRequestsCreatedToday } = await client.query(
-    `SELECT request_id
-     FROM laboratory_requests
-     WHERE request_id LIKE $1
-     ORDER BY request_id DESC
-     LIMIT 1`,
-    [`LR-${prefix}-%`],
-  );
+  const labRequestsCreatedToday = await sql`
+    SELECT request_id
+    FROM laboratory_requests
+    WHERE request_id LIKE ${`LR-${prefix}-%`}
+    ORDER BY request_id DESC
+    LIMIT 1
+  `;
+
   const nextNumber =
     labRequestsCreatedToday.length > 0
       ? Number(labRequestsCreatedToday[0].request_id.slice(-4)) + 1
       : 1;
+
   return `LR-${prefix}-${String(nextNumber).padStart(4, "0")}`;
 }
 
-export async function generateLaboratoryItemID(client: PoolClient) {
+export async function generateLaboratoryItemID() {
   const now = new Date();
 
   const year = String(now.getFullYear()).slice(-2);
@@ -168,23 +170,23 @@ export async function generateLaboratoryItemID(client: PoolClient) {
   const day = String(now.getDate()).padStart(2, "0");
 
   const prefix = `${year}-${month}${day}`;
-  const { rows: labItemsCreatedToday } = await client.query(
-    `SELECT lab_item_id
-     FROM laboratory_request_items
-     WHERE lab_item_id LIKE $1
-     ORDER BY lab_item_id DESC
-     LIMIT 1`,
-    [`LI-${prefix}-%`],
-  );
+  const labItemsCreatedToday = await sql`
+    SELECT lab_item_id
+    FROM laboratory_request_items
+    WHERE lab_item_id LIKE ${`LI-${prefix}-%`}
+    ORDER BY lab_item_id DESC
+    LIMIT 1
+  `;
 
   const nextNumber =
     labItemsCreatedToday.length > 0
       ? Number(labItemsCreatedToday[0].lab_item_id.slice(-4)) + 1
       : 1;
+
   return `LI-${prefix}-${String(nextNumber).padStart(4, "0")}`;
 }
 
-export async function generatePrescriptionId(client: PoolClient) {
+export async function generatePrescriptionId() {
   const now = new Date();
 
   const year = String(now.getFullYear()).slice(-2);
@@ -192,19 +194,19 @@ export async function generatePrescriptionId(client: PoolClient) {
   const day = String(now.getDate()).padStart(2, "0");
 
   const prefix = `${year}-${month}${day}`;
-  const { rows: prescriptionCreatedToday } = await client.query(
-    `SELECT prescription_id
-     FROM prescription_records
-     WHERE prescription_id LIKE $1
-     ORDER BY lab_item_id DESC
-     LIMIT 1`,
-    [`RX-${prefix}-%`],
-  );
+  const prescriptionCreatedToday = await sql`
+    SELECT prescription_id
+    FROM prescription_records
+    WHERE prescription_id LIKE ${`RX-${prefix}-%`}
+    ORDER BY prescription_id DESC
+    LIMIT 1
+  `;
 
   const nextNumber =
     prescriptionCreatedToday.length > 0
       ? Number(prescriptionCreatedToday[0].prescription_id.slice(-4)) + 1
       : 1;
+
   return `RX-${prefix}-${String(nextNumber).padStart(4, "0")}`;
 }
 
@@ -281,38 +283,66 @@ export async function generatePrescriptionId(client: PoolClient) {
 // }
 ///=======================================================================================
 
-async function nextQueueId(client: PoolClient, prefix: "CONS" | "LAB") {
-  const { rows } = await client.query(
-    `SELECT queue_id
-     FROM queue_entries
-     WHERE queue_id LIKE $1
-     ORDER BY queue_id DESC
-     LIMIT 1`,
-    [`${prefix}-%`],
-  );
-  const last = rows[0]?.queue_id as string | undefined;
-  const next = last ? Number(last.split("-")[1]) + 1 : 1;
-  return `${prefix}-${String(next).padStart(4, "0")}`;
+export async function generateConsultationQueueId() {
+  const queue = await sql`
+    SELECT queue_id
+    FROM queue_entries
+    WHERE queue_id LIKE 'CONS-%'
+    ORDER BY queue_id DESC
+    LIMIT 1
+  `;
+
+  let nextNumber = 1;
+  const last = queue[0]?.queue_id;
+
+  if (last) {
+    nextNumber = Number(last.split("-")[1]) + 1;
+  }
+
+  const sequence = String(nextNumber).padStart(4, "0");
+  return `CONS-${sequence}`;
 }
 
-async function nextQueueNumber(client: PoolClient, prefix: "CONS" | "LAB") {
-  const { rows } = await client.query(
-    `SELECT COALESCE(MAX(queue_number), 0) + 1 AS next
-     FROM queue_entries
-     WHERE queue_id LIKE $1   
-     AND (created_at AT TIME ZONE 'Asia/Manila')::date =
-      (NOW() AT TIME ZONE 'Asia/Manila')::date`,
+export async function generateLaboratoryQueueId() {
+  const queue = await sql`
+    SELECT queue_id
+    FROM queue_entries
+    WHERE queue_id LIKE 'LAB-%'
+    ORDER BY queue_id DESC
+    LIMIT 1
+  `;
 
-    [`${prefix}-%`],
-  );
-  return Number(rows[0].next);
+  let nextNumber = 1;
+  const last = queue[0]?.queue_id;
+
+  if (last) {
+    nextNumber = Number(last.split("-")[1]) + 1;
+  }
+
+  const sequence = String(nextNumber).padStart(4, "0");
+  return `LAB-${sequence}`;
 }
 
-export const generateConsultationQueueId = (c: PoolClient) =>
-  nextQueueId(c, "CONS");
-export const generateLaboratoryQueueId = (c: PoolClient) =>
-  nextQueueId(c, "LAB");
-export const generateQueueNumberConsultation = (c: PoolClient) =>
-  nextQueueNumber(c, "CONS");
-export const generateQueueNumberLaboratory = (c: PoolClient) =>
-  nextQueueNumber(c, "LAB");
+export async function generateQueueNumberConsultation() {
+  const queue = await sql`
+    SELECT COALESCE(MAX(queue_number), 0) + 1 AS next
+    FROM queue_entries
+    WHERE queue_id LIKE 'CONS-%'
+      AND (created_at AT TIME ZONE 'Asia/Manila')::date =
+          (NOW() AT TIME ZONE 'Asia/Manila')::date
+  `;
+
+  return Number(queue[0].next);
+}
+
+export async function generateQueueNumberLaboratory() {
+  const queue = await sql`
+    SELECT COALESCE(MAX(queue_number), 0) + 1 AS next
+    FROM queue_entries
+    WHERE queue_id LIKE 'LAB-%'
+      AND (created_at AT TIME ZONE 'Asia/Manila')::date =
+          (NOW() AT TIME ZONE 'Asia/Manila')::date
+  `;
+
+  return Number(queue[0].next);
+}
