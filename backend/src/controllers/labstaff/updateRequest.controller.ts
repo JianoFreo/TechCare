@@ -151,3 +151,75 @@ export async function skipQueueEntry(req: Request, res: Response) {
     });
   }
 }
+
+export async function cancelQueueEntry(req: Request, res: Response) {
+  try {
+    // Get the queue_id of the patient whose queue needs to be cancelled.
+    const { queue_id } = req.params;
+
+    // Validate the queue ID.
+    if (!queue_id) {
+      return res.status(400).json({
+        message: "Queue ID is required!",
+      });
+    }
+
+    // Find the patient's current queue entry.
+    const queue = await sql`
+      SELECT queue_id, queue_number, service_id, status
+      FROM queue_entries
+      WHERE queue_id = ${queue_id}
+      LIMIT 1;
+    `;
+
+    // Stop if the queue entry doesn't exist.
+    if (queue.length === 0) {
+      return res.status(404).json({
+        message: "Queue entry not found.",
+      });
+    }
+
+    const { status } = queue[0];
+
+    // Only waiting, skipped, or serving entries can be cancelled.
+    if (
+      !["waiting", "skipped", "serving"].includes(
+        String(status).toLowerCase(),
+      )
+    ) {
+      return res.status(409).json({
+        message: `Queue entry cannot be cancelled because its status is ${status}.`,
+      });
+    }
+
+    // Cancel the queue entry.
+    const updatedQueue = await sql`
+      UPDATE queue_entries
+      SET
+        status = 'Cancelled',
+        updated_at = NOW()
+      WHERE queue_id = ${queue_id}
+        AND LOWER(status) IN ('waiting', 'skipped', 'serving')
+      RETURNING *;
+    `;
+
+    // Handle cases where the status changed before the update.
+    if (updatedQueue.length === 0) {
+      return res.status(409).json({
+        message: "Queue entry status changed. Please try again.",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Queue cancelled successfully.",
+      queue: updatedQueue[0],
+    });
+  } catch (error) {
+    console.error("Error in cancelQueueEntry controller:", error);
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+}
+
