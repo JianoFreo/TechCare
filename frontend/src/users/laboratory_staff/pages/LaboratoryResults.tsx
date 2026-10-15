@@ -1,9 +1,13 @@
-﻿import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Header from "../../../components/Header";
 import type { AnalysisRequest } from "../../../interface/LaboratoryAnalysis";
 import AnalysisList from "../components/LaboratoryResults/AnalysisList";
 import ResultEntry from "../components/LaboratoryResults/ResultEntry";
-import { apiMessage, fetchAnalysisRequests } from "../components/LaboratoryResults/laboratoryResultsApi";
+import PrintResultView from "../components/LaboratoryResults/PrintResultView";
+import {
+  apiMessage,
+  fetchAnalysisRequests,
+} from "../components/LaboratoryResults/laboratoryResultsApi";
 
 type LaboratoryResultsProps = {
   open: boolean;
@@ -11,9 +15,16 @@ type LaboratoryResultsProps = {
   room: string;
 };
 
-export default function LaboratoryResults({ open, setOpen, room }: LaboratoryResultsProps) {
+function LaboratoryResults({
+  open,
+  setOpen,
+  room,
+}: LaboratoryResultsProps) {
   const [requests, setRequests] = useState<AnalysisRequest[]>([]);
-  const [selectedRequest, setSelectedRequest] = useState<AnalysisRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<AnalysisRequest | null>(
+    null,
+  );
+  const [printRequest, setPrintRequest] = useState<AnalysisRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const pendingRequest = useRef<AbortController | null>(null);
@@ -24,16 +35,22 @@ export default function LaboratoryResults({ open, setOpen, room }: LaboratoryRes
     pendingRequest.current = controller;
     setLoading(true);
     setError(null);
+
     try {
       const items = await fetchAnalysisRequests(room, controller.signal);
-      if (!controller.signal.aborted) setRequests(items);
+
+      if (!controller.signal.aborted) {
+        setRequests(items);
+      }
     } catch (cause) {
       if (!controller.signal.aborted) {
         setRequests([]);
         setError(apiMessage(cause, "Unable to load laboratory requests."));
       }
     } finally {
-      if (!controller.signal.aborted) setLoading(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
     }
   }, [room]);
 
@@ -42,19 +59,54 @@ export default function LaboratoryResults({ open, setOpen, room }: LaboratoryRes
     return () => pendingRequest.current?.abort();
   }, [loadRequests]);
 
-  function returnToList() {
-    setSelectedRequest(null);
-    requestAnimationFrame(() => document.getElementById("analysis-heading")?.focus());
+  function reloadRequests() {
+    void loadRequests();
   }
 
-  return <main className="min-w-0 flex-1 bg-white">
-    <Header page="Laboratory Results" loading={loading} open={open} setOpen={setOpen} loadData={() => { void loadRequests(); }} />
-    <div className="px-3 pb-9 sm:px-6 xl:px-7">
-      <div hidden={Boolean(selectedRequest)}>
-        <AnalysisList requests={requests} loading={loading} error={error} room={room}
-          onEnter={setSelectedRequest} onRetry={() => { void loadRequests(); }} />
+  function returnToList() {
+    setSelectedRequest(null);
+    setPrintRequest(null);
+    requestAnimationFrame(() => {
+      document.getElementById("analysis-heading")?.focus();
+    });
+  }
+
+  return (
+    <main className="min-w-0 flex-1 bg-white">
+      <Header
+        page="Laboratory Results"
+        loading={loading}
+        open={open}
+        setOpen={setOpen}
+        loadData={reloadRequests}
+      />
+      <div className="px-3 pb-9 sm:px-6 xl:px-7">
+        <div hidden={Boolean(selectedRequest || printRequest)}>
+          <AnalysisList
+            requests={requests}
+            loading={loading}
+            error={error}
+            room={room}
+            onEnter={setSelectedRequest}
+            onPrintPreview={setPrintRequest}
+            onRetry={reloadRequests}
+          />
+        </div>
+        {selectedRequest && (
+          <ResultEntry
+            key={`${selectedRequest.requestId}:${selectedRequest.status}`}
+            request={selectedRequest}
+            onCancel={returnToList}
+            onSaved={reloadRequests}
+          />
+        )}
+
+        {printRequest && (
+          <PrintResultView request={printRequest} onBack={returnToList} />
+        )}
       </div>
-      {selectedRequest && <ResultEntry key={`${selectedRequest.requestId}:${selectedRequest.status}`} request={selectedRequest} onCancel={returnToList} onSaved={() => { void loadRequests(); }} />}
-    </div>
-  </main>;
+    </main>
+  );
 }
+
+export default LaboratoryResults;

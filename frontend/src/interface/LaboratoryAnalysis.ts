@@ -32,6 +32,18 @@ export interface AnalysisRequest {
 
 export type ReportTemplate = FormTemplate & { category: string; version?: number; testNames: string[] };
 export type ResultValues = Record<string, unknown>;
+
+/** The template must be the snapshot used to save this result, not a newer revision. */
+export interface LaboratoryReportData {
+  request: AnalysisRequest;
+  template: ReportTemplate;
+  values: ResultValues;
+  remarks: string;
+  resultId?: string;
+  savedAt?: string;
+  verifiedBy?: string;
+  verifiedAt?: string;
+}
 export interface ResultEntryPayload {
   request_id: string;
   patient_id: string;
