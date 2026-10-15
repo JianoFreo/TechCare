@@ -7,7 +7,7 @@ import {
   getLaboratoryQueues,
   getLaboratoryRequestDetails,
 } from "../controllers/labstaff/getRequests.controller.js";
-import { updateQueueStatus, skipQueueEntry } from "../controllers/labstaff/updateRequest.controller.js";
+import { updateQueueStatus, skipQueueEntry, cancelQueueEntry } from "../controllers/labstaff/updateRequest.controller.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import labstaffMiddleware from "../middlewares/labstaff.middleware.js";
 import { ENV } from "../config/env.js";
