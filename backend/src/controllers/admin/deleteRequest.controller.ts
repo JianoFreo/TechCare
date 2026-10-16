@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
 import { sql } from "../../config/db.js";
-import type { deleteTemplate as DeleteTemplateDTO } from "./dto/delete.dto.js";
+import type { deleteTemplate  } from "./dto/delete.dto.js";
 
 export async function deleteTemplate(
-  req: Request<DeleteTemplateDTO.request>,
+  req: Request<deleteTemplate.request>,
   res: Response<
-    DeleteTemplateDTO.response | DeleteTemplateDTO.error
+    deleteTemplate.response | deleteTemplate.error
   >,
 ) {
   try {
-    const { form_id } = req.params as DeleteTemplateDTO.request;
+    const { form_id } = req.params as deleteTemplate.request;
 
     if (!form_id) {
       return res.status(400).json({
@@ -31,7 +31,7 @@ export async function deleteTemplate(
 
     return res.status(200).json({
       message: "Form template deleted successfully!",
-      template: template as DeleteTemplateDTO.template,
+      template: template as deleteTemplate.template,
     });
   } catch (error) {
     console.error("Error deleting form template:", error);

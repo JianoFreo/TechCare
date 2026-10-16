@@ -1,4 +1,3 @@
-
 import { sql } from "../../config/db.js";
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
@@ -6,7 +5,10 @@ import jwt from "jsonwebtoken";
 import { ENV } from "../../config/env.js";
 import { login } from "./dto/post.dto.js";
 
-export async function login(req: Request, res: Response) {
+export async function login(
+  req: Request<login.request>,
+  res: Response<login.response | login.error>,
+) {
   try {
     const { username, password } = req.body as login.request;
 
@@ -96,10 +98,7 @@ export async function login(req: Request, res: Response) {
     // =========================
     // VERIFY PASSWORD
     // =========================
-    const isMatch = await bcrypt.compare(
-      password,
-      account.password_hash
-    );
+    const isMatch = await bcrypt.compare(password, account.password_hash);
 
     if (!isMatch) {
       return res.status(401).json({
@@ -110,10 +109,7 @@ export async function login(req: Request, res: Response) {
     // =========================
     // CHECK ACCOUNT STATUS
     // =========================
-    if (
-      accountType === "user" &&
-      account.account_status === false
-    ) {
+    if (accountType === "user" && account.account_status === false) {
       return res.status(403).json({
         message:
           "Your account has been deactivated. Please contact the administrator.",
@@ -147,9 +143,7 @@ export async function login(req: Request, res: Response) {
     // The token is used to authenticate requests to protected endpoints.
     // The account_type claim distinguishes employees from patients.
     const accountId =
-      accountType === "user"
-        ? account.user_id
-        : account.patient_id;
+      accountType === "user" ? account.user_id : account.patient_id;
 
     const token = jwt.sign(
       {
@@ -159,7 +153,7 @@ export async function login(req: Request, res: Response) {
       ENV.JWT_SECRET,
       {
         expiresIn: ENV.JWT_EXPIRES_IN,
-      }
+      },
     );
 
     // =========================
@@ -177,7 +171,7 @@ export async function login(req: Request, res: Response) {
       ENV.JWT_REFRESH_TOKEN,
       {
         expiresIn: ENV.JWT_REFRESH_EXPIRES_IN,
-      }
+      },
     );
 
     // =========================
@@ -220,7 +214,7 @@ export async function login(req: Request, res: Response) {
       user: safeAccount,
       token,
       refreshToken,
-    } as login.response ); 
+    } as login.response);
   } catch (error) {
     console.error(error);
 
