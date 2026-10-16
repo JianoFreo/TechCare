@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { ENV } from "../../config/env.js";
-import { login } from "./dto/post/login.dto.js";
+import { login } from "./dto/post.dto.js";
 
 export async function login(req: Request, res: Response) {
   try {
