@@ -1,24 +1,29 @@
+
 import { sql } from "../../config/db.js";
 import bcrypt from "bcryptjs";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { ENV } from "../../config/env.js";
-import { login } from "./dto/post.dto.js";
+import type { login } from "./dto/post.dto.js";
 
 export async function login(
-  req: Request<login.request>,
+  req: Request<
+    {},
+    login.response | login.error,
+    login.body
+  >,
   res: Response<login.response | login.error>,
 ) {
   try {
-    const { username, password } = req.body as login.request;
+    const { username, password } = req.body;
 
     // =========================
     // REQUIRED CREDENTIALS
     // =========================
     if (!username || !password) {
-      return res
-        .status(400)
-        .json({ message: "Username and password are required" });
+      return res.status(400).json({
+        message: "Username and password are required",
+      });
     }
 
     // Explicitly enabled local development shortcut. Never used in production.
@@ -69,7 +74,7 @@ export async function login(
     `;
 
     let account = validUsers[0];
-    let accountType: "user" | "patient" = "user";
+    let accountType: login.accountType = "user";
 
     // =========================
     // FIND PATIENT IF USER DOES NOT EXIST
@@ -179,29 +184,6 @@ export async function login(
     // =========================
     // Prevents the password hash from being sent to the client.
     const { password_hash, ...safeAccount } = account;
-
-    // "user": {
-    //     "user_id": 123,
-    //     "username": "jiano",
-    //     "first_name": "Jiano",
-    //     "middle_name": "Freo",
-    //     "last_name": "Magtangob",
-    //     "suffix": null,
-    //     "sex": "Male",
-    //     "email": "jiano@example.com",
-    //     "contact_number": "09123456789",
-    //     "emergency_contact_name": "Juan Magtangob",
-    //     "emergency_contact": "09987654321",
-    //     "address": "Manila, Philippines",
-    //     "birthdate": "2002-05-15",
-    //     "role": "admin",
-    //     "department": "IT",
-    //     "employment_status": "Full-time",
-    //     "date_hired": "2026-08-21",
-    //     "shift_start": "08:00:00",
-    //     "shift_end": "17:00:00",
-    //     "profile_photo": null
-    //   }
 
     // =========================
     // RESPONSE
