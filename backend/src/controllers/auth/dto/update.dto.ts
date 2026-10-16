@@ -1,6 +1,7 @@
+
 export namespace logout {
-  export interface request {
-    user_id: string;
+  export interface body {
+    user_id?: string;
   }
 
   export interface response {
