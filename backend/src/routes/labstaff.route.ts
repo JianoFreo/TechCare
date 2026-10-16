@@ -14,7 +14,6 @@ import {
   skipQueueEntry,
   cancelQueueEntry,
   completeQueueEntry,
-  releaseLaboratoryResult,
 } from "../controllers/labstaff/updateRequest.controller.js";
 
 import {
@@ -50,6 +49,5 @@ router.patch("/laboratory-queues/:queue_id/accept", acceptQueueEntry);
 router.patch("/laboratory-queues/:queue_id/skip", skipQueueEntry);
 router.patch("/laboratory-queues/:queue_id/cancel", cancelQueueEntry);
 router.patch("/laboratory-queues/:queue_id/complete", completeQueueEntry);
-router.patch("/laboratory-results/:result_id/release", releaseLaboratoryResult);
 
 export default router;
