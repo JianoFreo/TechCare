@@ -1,4 +1,5 @@
 import { Router } from "express";
+
 import {
   getRoomSpecificServices,
   getLaboratoryQueueItems,
@@ -13,9 +14,13 @@ import {
   skipQueueEntry,
   cancelQueueEntry,
   completeQueueEntry,
-
 } from "../controllers/labstaff/updateRequest.controller.js";
-import { saveLaboratoryResult } from "../controllers/labstaff/postRequests.controller.js";
+
+import {
+  saveLaboratoryResult,
+  addLaboratoryRequest,
+} from "../controllers/labstaff/postRequests.controller.js";
+
 import authMiddleware from "../middlewares/auth.middleware.js";
 import labstaffMiddleware from "../middlewares/labstaff.middleware.js";
 import { ENV } from "../config/env.js";
@@ -36,6 +41,7 @@ router.get("/laboratory-requests/items/", getAnalysisReadyRequests);
 router.get("/laboratory-results/form-templates/", getAvailableFormTemplates);
 
 // POST ROUTES
+router.post("/laboratory-requests", addLaboratoryRequest);
 router.post("/laboratory-results/:lab_item_id", saveLaboratoryResult);
 
 // PATCH ROUTES
