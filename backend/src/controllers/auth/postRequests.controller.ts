@@ -4,10 +4,11 @@ import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { ENV } from "../../config/env.js";
+import { login } from "./dto/post/login.dto.js";
 
 export async function login(req: Request, res: Response) {
   try {
-    const { username, password } = req.body;
+    const { username, password } = req.body as login.request;
 
     // =========================
     // REQUIRED CREDENTIALS
@@ -219,7 +220,7 @@ export async function login(req: Request, res: Response) {
       user: safeAccount,
       token,
       refreshToken,
-    });
+    } as login.response ); 
   } catch (error) {
     console.error(error);
 
