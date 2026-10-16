@@ -3,11 +3,15 @@ import { Dialog } from "@base-ui/react/dialog";
 import { Check, X } from "lucide-react";
 
 type ResultSuccessContentProps = {
+  title?: string;
+  description?: string;
   onBackToList: () => void;
   primaryActionRef?: RefObject<HTMLButtonElement | null>;
 };
 
 export function ResultSuccessContent({
+  title = "Result Saved Successfully",
+  description = "The laboratory result has been saved. Close this message to review the result, or return to the laboratory request list.",
   onBackToList,
   primaryActionRef,
 }: ResultSuccessContentProps) {
@@ -27,11 +31,10 @@ export function ResultSuccessContent({
           <Check size={29} strokeWidth={1.2} />
         </span>
         <Dialog.Title className="mt-3 text-sm font-semibold leading-5 text-[#172033]">
-          Result Saved Successfully
+          {title}
         </Dialog.Title>
         <Dialog.Description className="sr-only">
-          The laboratory result has been saved. Close this message to review the
-          result, or return to the laboratory request list.
+          {description}
         </Dialog.Description>
       </div>
       <footer className="flex items-center justify-end gap-2 px-3 pb-2.5">
@@ -52,6 +55,8 @@ export function ResultSuccessContent({
 }
 
 type ResultSuccessOverlayProps = {
+  title?: string;
+  description?: string;
   open: boolean;
   onClose: () => void;
   onBackToList: () => void;
@@ -59,6 +64,8 @@ type ResultSuccessOverlayProps = {
 };
 
 export default function ResultSuccessOverlay({
+  title,
+  description,
   open,
   onClose,
   onBackToList,
@@ -84,6 +91,8 @@ export default function ResultSuccessOverlay({
             className="relative max-h-[calc(100dvh-2rem)] w-full max-w-[348px] overflow-y-auto rounded-xl border-2 border-[#70b7d4] bg-white shadow-xl outline-none"
           >
             <ResultSuccessContent
+              title={title}
+              description={description}
               primaryActionRef={primaryActionRef}
               onBackToList={onBackToList}
             />

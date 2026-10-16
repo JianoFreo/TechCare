@@ -1,0 +1,269 @@
+import { useEffect, useRef, useState, type RefObject } from "react";
+import { Dialog } from "@base-ui/react/dialog";
+import { Globe, LoaderCircle, Send, X } from "lucide-react";
+import type {
+  LaboratoryReportData,
+  ResultReleaseResponse,
+} from "../../../../interface/LaboratoryAnalysis";
+import { AnalysisButton, AnalysisNotice } from "./AnalysisUi";
+import { formatLabDate } from "./AnalysisList";
+import {
+  apiMessage,
+  releaseLaboratoryResult,
+  resultReleaseApi,
+} from "./laboratoryResultsApi";
+import ResultSuccessOverlay from "./ResultSuccessOverlay";
+
+type ReleaseConfirmationContentProps = {
+  report: LaboratoryReportData;
+  unavailableReason: string;
+  pending: boolean;
+  error: string;
+  onConfirm: () => void;
+  cancelRef?: RefObject<HTMLButtonElement | null>;
+};
+
+export function ReleaseConfirmationContent({
+  report,
+  unavailableReason,
+  pending,
+  error,
+  onConfirm,
+  cancelRef,
+}: ReleaseConfirmationContentProps) {
+  return (
+    <div className="font-sans text-xs text-[#253c60]">
+      <header className="flex items-start gap-3 border-b border-[#e0eafa] p-5">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e1f5ff] text-[#1aa8ff]">
+          <Globe size={21} />
+        </span>
+        <div>
+          <Dialog.Title className="text-base font-bold">
+            Release Laboratory Result
+          </Dialog.Title>
+          <Dialog.Description className="mt-1 text-[11px] leading-relaxed text-[#839abe]">
+            Releasing makes this result available online for the patient to
+            view.
+          </Dialog.Description>
+        </div>
+        <Dialog.Close
+          disabled={pending}
+          aria-label="Close release confirmation"
+          className="ml-auto cursor-pointer rounded p-1 text-[#8ca1bf] hover:bg-sky-50 focus-visible:outline-sky-500 disabled:cursor-not-allowed"
+        >
+          <X size={17} />
+        </Dialog.Close>
+      </header>
+      <div className="p-5">
+        <dl className="grid grid-cols-2 gap-4 rounded border border-[#dce9fa] bg-[#f0f7fd] p-3 text-[11px] [&_dt]:mb-1 [&_dt]:text-[10px] [&_dt]:text-[#839abe] [&_dd]:wrap-anywhere">
+          <div>
+            <dt>Patient</dt>
+            <dd className="font-semibold">
+              {report.request.patientName || report.request.patientId}
+            </dd>
+          </div>
+          <div>
+            <dt>Request No.</dt>
+            <dd>{report.request.requestId}</dd>
+          </div>
+          <div>
+            <dt>Laboratory Result</dt>
+            <dd>{report.template.form_name}</dd>
+          </div>
+          <div>
+            <dt>Result No.</dt>
+            <dd>{report.resultId || "Not saved"}</dd>
+          </div>
+        </dl>
+        <p className="my-4 text-[11px] leading-relaxed">
+          Review the patient details and result before confirming release.
+        </p>
+        {unavailableReason && (
+          <AnalysisNotice>{unavailableReason}</AnalysisNotice>
+        )}
+        {error && <AnalysisNotice error>{error}</AnalysisNotice>}
+      </div>
+      <footer className="flex flex-wrap justify-end gap-2 border-t border-[#e0eafa] p-4">
+        <Dialog.Close
+          ref={cancelRef}
+          disabled={pending}
+          className="cursor-pointer rounded border border-[#e1eaf6] px-4 py-2 text-[11px] text-[#188bff] hover:bg-sky-50 focus-visible:outline-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Cancel
+        </Dialog.Close>
+        <AnalysisButton
+          disabled={pending || Boolean(unavailableReason)}
+          onClick={onConfirm}
+        >
+          {pending ? (
+            <LoaderCircle
+              size={14}
+              className="animate-spin motion-reduce:animate-none"
+            />
+          ) : (
+            <Send size={14} />
+          )}
+          {pending ? "Releasing..." : "Confirm Release"}
+        </AnalysisButton>
+      </footer>
+    </div>
+  );
+}
+
+type ResultReleaseControlProps = {
+  report: LaboratoryReportData;
+  onBackToList: () => void;
+};
+
+export default function ResultReleaseControl({
+  report,
+  onBackToList,
+}: ResultReleaseControlProps) {
+  const [open, setOpen] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [releasing, setReleasing] = useState(false);
+  const [error, setError] = useState("");
+  const [confirmed, setConfirmed] = useState<ResultReleaseResponse | null>(
+    null,
+  );
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const pendingRequest = useRef<AbortController | null>(null);
+  const available =
+    confirmed?.online_available === true || report.onlineAvailable === true;
+  const releasedAt = confirmed?.released_at || report.releasedAt;
+  const unavailableReason = !report.resultId
+    ? "Save this result before releasing it."
+    : !resultReleaseApi.releaseResult
+      ? "Releasing is not available yet."
+      : "";
+  const status = available
+    ? "Available online"
+    : !report.resultId || report.onlineAvailable === false
+      ? "Not available online"
+      : "Online availability not recorded";
+
+  useEffect(() => () => pendingRequest.current?.abort(), []);
+
+  async function confirmRelease() {
+    if (
+      pendingRequest.current ||
+      unavailableReason ||
+      available ||
+      !report.resultId
+    )
+      return;
+    const controller = new AbortController();
+    pendingRequest.current = controller;
+    setReleasing(true);
+    setError("");
+    try {
+      const result = await releaseLaboratoryResult(
+        {
+          result_id: report.resultId,
+          request_id: report.request.requestId,
+          patient_id: report.request.patientId,
+        },
+        controller.signal,
+      );
+      if (!controller.signal.aborted) {
+        setConfirmed(result);
+        setOpen(false);
+        setShowSuccess(true);
+      }
+    } catch (cause) {
+      if (!controller.signal.aborted)
+        setError(
+          apiMessage(cause, "Unable to release this result. Please try again."),
+        );
+    } finally {
+      if (!controller.signal.aborted) setReleasing(false);
+      if (pendingRequest.current === controller) pendingRequest.current = null;
+    }
+  }
+
+  return (
+    <>
+      <section
+        aria-label="Result release and online availability"
+        className="mt-4 flex flex-wrap items-center gap-3 rounded border border-[#dce9fa] bg-[#f8fcff] p-4"
+      >
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#e1f5ff] text-[#1aa8ff]">
+          <Globe size={18} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-xs font-semibold">Online Availability</h2>
+          <p className="mt-1 text-[11px] text-[#839abe]">
+            {available
+              ? "This result is available online for the patient."
+              : "Release the saved laboratory result for the patient to view online."}
+          </p>
+          {releasedAt && (
+            <p className="mt-1 text-[10px] text-[#839abe]">
+              Released: {formatLabDate(releasedAt)}
+            </p>
+          )}
+        </div>
+        <span
+          role="status"
+          className={`rounded-full px-2.5 py-1 text-[10px] ${available ? "bg-green-50 text-green-700" : "bg-[#edf3f9] text-[#6e86a6]"}`}
+        >
+          {status}
+        </span>
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-disabled={available}
+          onClick={() => {
+            if (available) return;
+            setError("");
+            setOpen(true);
+          }}
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded border border-[#188bff] bg-[#188bff] px-4 py-2 text-[11px] font-medium text-white hover:bg-[#0879eb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+        >
+          <Send size={13} />
+          {available ? "Available online" : "Release Result"}
+        </button>
+      </section>
+      <Dialog.Root
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (!pendingRequest.current) setOpen(nextOpen);
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/60" />
+          <Dialog.Viewport className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto p-4">
+            <Dialog.Popup
+              initialFocus={cancelRef}
+              finalFocus={triggerRef}
+              className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-xl border border-[#dce9fa] bg-white shadow-xl outline-none"
+            >
+              <ReleaseConfirmationContent
+                report={report}
+                unavailableReason={unavailableReason}
+                pending={releasing}
+                error={error}
+                onConfirm={() => {
+                  void confirmRelease();
+                }}
+                cancelRef={cancelRef}
+              />
+            </Dialog.Popup>
+          </Dialog.Viewport>
+        </Dialog.Portal>
+      </Dialog.Root>
+      <ResultSuccessOverlay
+        open={showSuccess}
+        title="Result Released Successfully"
+        description="The laboratory result is now available online for the patient."
+        returnFocusRef={triggerRef}
+        onClose={() => setShowSuccess(false)}
+        onBackToList={() => {
+          setShowSuccess(false);
+          onBackToList();
+        }}
+      />
+    </>
+  );
+}

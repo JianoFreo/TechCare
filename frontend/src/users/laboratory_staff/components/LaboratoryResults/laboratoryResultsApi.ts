@@ -4,6 +4,8 @@ import type {
   LaboratoryReportData,
   ReportTemplate,
   ResultEntryPayload,
+  ResultReleasePayload,
+  ResultReleaseResponse,
 } from "../../../../interface/LaboratoryAnalysis";
 import type { Service } from "../../../../interface/Service";
 import { matchingTest, toReportTemplate } from "./reportTemplates";
@@ -107,6 +109,7 @@ export async function fetchPublishedReportTemplates(
     if (status === 401 || status === 403) {
       throw new Error(
         "Published report templates are unavailable for this account. Ask an administrator to enable laboratory access.",
+        { cause: error },
       );
     }
 
@@ -200,6 +203,53 @@ export async function fetchPrintableResults(
   }
 
   return reports;
+}
+
+// Connect the release endpoint here when it exists. Status changes alone do not
+// confirm that the patient can access a result online.
+export const resultReleaseApi: {
+  releaseResult:
+    | null
+    | ((
+        payload: ResultReleasePayload,
+        signal?: AbortSignal,
+      ) => Promise<ResultReleaseResponse>);
+} = { releaseResult: null };
+
+export async function releaseLaboratoryResult(
+  payload: ResultReleasePayload,
+  signal?: AbortSignal,
+): Promise<ResultReleaseResponse> {
+  if (signal?.aborted) throw new Error("The release request was cancelled.");
+  if (
+    ![payload.result_id, payload.request_id, payload.patient_id].every(
+      (value) => typeof value === "string" && value.trim(),
+    )
+  ) {
+    throw new Error(
+      "A saved result, request, and patient are required before releasing.",
+    );
+  }
+  if (!resultReleaseApi.releaseResult) {
+    throw new Error(
+      "Releasing is not available yet. This result has not been made available online.",
+    );
+  }
+  const result = await resultReleaseApi.releaseResult(payload, signal);
+  if (signal?.aborted) throw new Error("The release request was cancelled.");
+  if (
+    !result ||
+    result.result_id !== payload.result_id ||
+    result.online_available !== true ||
+    typeof result.released_at !== "string" ||
+    !result.released_at.trim() ||
+    !Number.isFinite(new Date(result.released_at).getTime())
+  ) {
+    throw new Error(
+      "The server did not confirm online availability. Reload the result to check its release status before retrying.",
+    );
+  }
+  return result;
 }
 
 export function apiMessage(error: unknown, fallback: string) {

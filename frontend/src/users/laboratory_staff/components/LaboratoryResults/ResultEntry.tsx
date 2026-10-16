@@ -784,6 +784,7 @@ export default function ResultEntry({
           reports={previewReports}
           onBack={returnToEntry}
           backLabel="Back to Entry"
+          onBackToList={onCancel}
         />
       )}
     </>

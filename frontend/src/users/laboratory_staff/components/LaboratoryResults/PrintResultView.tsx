@@ -8,6 +8,7 @@ import type {
 import { AnalysisButton, AnalysisNotice } from "./AnalysisUi";
 import { apiMessage, fetchPrintableResults } from "./laboratoryResultsApi";
 import LaboratoryReport from "./LaboratoryReport";
+import ResultReleaseControl from "./ResultReleaseControl";
 import {
   REPORT_FRAME_HTML,
   REPORT_MIN_HEIGHT,
@@ -290,6 +291,7 @@ type PrintResultViewProps = {
   reports?: readonly LaboratoryReportData[];
   onBack: () => void;
   backLabel?: string;
+  onBackToList?: () => void;
 };
 
 export default function PrintResultView({
@@ -297,6 +299,7 @@ export default function PrintResultView({
   reports,
   onBack,
   backLabel = "Back to Results",
+  onBackToList = onBack,
 }: PrintResultViewProps) {
   const [loadState, setLoadState] = useState<ReportLoadState | null>(null);
 
@@ -418,6 +421,11 @@ export default function PrintResultView({
               </select>
             </label>
           )}
+          <ResultReleaseControl
+            key={`release:${report.resultId ?? "draft"}:${report.template.form_id}`}
+            report={report}
+            onBackToList={onBackToList}
+          />
           <ReportPreview
             key={`${report.resultId ?? "draft"}:${report.template.form_id}`}
             report={report}

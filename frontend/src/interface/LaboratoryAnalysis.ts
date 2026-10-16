@@ -1,7 +1,12 @@
 import type { FormTemplate } from "./FormTemplate";
 
 export type AnalysisStatus = "Ready for Analysis" | "In Progress" | "Completed";
-export type PatientCategory = "Normal" | "Senior Citizen" | "Pregnant" | "PWD" | "Priority";
+export type PatientCategory =
+  | "Normal"
+  | "Senior Citizen"
+  | "Pregnant"
+  | "PWD"
+  | "Priority";
 
 export interface AnalysisTest {
   id: string;
@@ -30,7 +35,11 @@ export interface AnalysisRequest {
   tests: AnalysisTest[];
 }
 
-export type ReportTemplate = FormTemplate & { category: string; version?: number; testNames: string[] };
+export type ReportTemplate = FormTemplate & {
+  category: string;
+  version?: number;
+  testNames: string[];
+};
 export type ResultValues = Record<string, unknown>;
 
 /** The template must be the snapshot used to save this result, not a newer revision. */
@@ -43,6 +52,22 @@ export interface LaboratoryReportData {
   savedAt?: string;
   verifiedBy?: string;
   verifiedAt?: string;
+  releasedAt?: string;
+  releasedBy?: string;
+  onlineAvailable?: boolean;
+}
+
+export interface ResultReleasePayload {
+  result_id: string;
+  request_id: string;
+  patient_id: string;
+}
+
+export interface ResultReleaseResponse {
+  result_id: string;
+  released_at: string;
+  online_available: boolean;
+  released_by?: string;
 }
 export interface ResultEntryPayload {
   request_id: string;
