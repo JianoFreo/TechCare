@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
 import { logActivity } from "../../utils/activityLogger.js";
 
+
 export async function updateUser(req: Request, res: Response) {
   // PATCH /api/admin/users/:user_id
 
