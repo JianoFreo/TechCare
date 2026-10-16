@@ -355,6 +355,7 @@ const TABLES: {
       result_id       VARCHAR(255) UNIQUE NOT NULL,
       lab_item_id     VARCHAR(255) NOT NULL REFERENCES laboratory_request_items(lab_item_id),
       results         JSONB NOT NULL DEFAULT '[]'::jsonb,
+      status          VARCHAR(20) NOT NULL DEFAULT 'Pending',
       remarks         TEXT,
       image_url       VARCHAR(500),
       verified_by     VARCHAR(255),
@@ -368,6 +369,7 @@ const TABLES: {
       lab_item_id:
         "VARCHAR(255) NOT NULL REFERENCES laboratory_request_items(lab_item_id)",
       results: "JSONB NOT NULL DEFAULT '[]'::jsonb",
+      status: "VARCHAR(20) NOT NULL DEFAULT 'Pending'",
       remarks: "TEXT",
       image_url: "VARCHAR(500)",
       verified_by: "VARCHAR(255)",
@@ -546,16 +548,29 @@ const TABLES: {
 // -----------------------------------------------------------------------
 // CONNECT TO DATABASE
 //
-// Creates tables that don't exist.
-// Does NOT modify existing tables.
+// Creates missing tables and applies the additive laboratory-result repair.
+// Does not remove existing tables, columns, or records.
 //
 // Use syncSchema() when you want the database to exactly match TABLES.
 // -----------------------------------------------------------------------
+export async function ensureLaboratoryResultStatus(): Promise<void> {
+  // CREATE TABLE IF NOT EXISTS does not add columns to an existing database.
+  // This additive repair preserves existing results and release statuses.
+  await sql`
+    ALTER TABLE laboratory_results
+    ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+    ADD COLUMN IF NOT EXISTS released_at TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS released_by VARCHAR(255)
+  `;
+}
+
 export async function connectNeon(): Promise<void> {
   try {
     for (const { createSQL } of TABLES) {
       await sql.query(createSQL);
     }
+
+    await ensureLaboratoryResultStatus();
 
     console.log("Database initialized successfully");
   } catch (error) {
