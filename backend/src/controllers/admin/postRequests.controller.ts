@@ -22,7 +22,11 @@ import type {
 // ADD USER
 // =========================
 export async function addUser(
-  req: Request<addUser.request>,
+  req: Request<
+    {},
+    addUser.response | addUser.error,
+    addUser.request
+  >,
   res: Response<addUser.response | addUser.error>,
 ) {
   // POST /api/admin/add-user
@@ -47,7 +51,7 @@ export async function addUser(
       date_hired,
       shift_start,
       shift_end,
-    } = req.body as addUser.request;
+    } = req.body;
 
     // =========================
     // REQUIRED FIELDS
@@ -223,13 +227,17 @@ export async function addUser(
 // ADD SERVICE
 // =========================
 export async function addService(
-  req: Request<addService.request>,
+  req: Request<
+    {},
+    addService.response | addService.error,
+    addService.request
+  >,
   res: Response<addService.response | addService.error>,
 ) {
   // POST /api/admin/services
   try {
     const { service_name, price, service_type, service_category, room } =
-      req.body as addService.request;
+      req.body;
 
     if (
       !service_name ||
@@ -303,13 +311,17 @@ export async function addService(
 // ADD ACTIVITY
 // =========================
 export async function addActivity(
-  req: Request<addActivity.request>,
+  req: Request<
+    {},
+    addActivity.response | addActivity.error,
+    addActivity.request
+  >,
   res: Response<addActivity.response | addActivity.error>,
 ) {
   // POST /api/admin/activities
   try {
     const user_id = req.user.user_id;
-    const { service_name, details } = req.body as addActivity.request;
+    const { service_name, details } = req.body;
 
     const [service] = await sql`
       SELECT service_name
@@ -358,12 +370,16 @@ export async function addActivity(
 // ADD ACTION
 // =========================
 export async function addAction(
-  req: Request<addAction.request>,
+  req: Request<
+    {},
+    addAction.response | addAction.error,
+    addAction.request
+  >,
   res: Response<addAction.response | addAction.error>,
 ) {
   try {
     const { action_name, action_description, module, is_sensitive } =
-      req.body as addAction.request;
+      req.body;
 
     if (!action_name || !module) {
       return res.status(400).json({
@@ -404,7 +420,11 @@ export async function addAction(
 // ADD FORM TEMPLATES
 // =========================
 export async function addFormTemplates(
-  req: Request<addFormTemplates.request>,
+  req: Request<
+    {},
+    addFormTemplates.response | addFormTemplates.error,
+    addFormTemplates.request
+  >,
   res: Response<addFormTemplates.response | addFormTemplates.error>,
 ) {
   const {
@@ -414,7 +434,7 @@ export async function addFormTemplates(
     service_id,
     created_by,
     form_components,
-  } = req.body as addFormTemplates.request;
+  } = req.body;
 
   if (
     !form_name ||
