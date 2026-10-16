@@ -13,6 +13,7 @@ export interface ServiceOption {
   service_id: string;
   service_name: string;
   service_type?: string;
+  service_category: string;
 }
 
 interface FormTemplateProps {
@@ -55,7 +56,7 @@ export default function FormTemplate({
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const [editingTemplate, setEditingTemplate] = useState<FormTemplate | null>(
-    null
+    null,
   );
 
   // Added function to fetch form templates from GET /api/admin/form-templates
@@ -76,7 +77,7 @@ export default function FormTemplate({
       const validTemplates = rawTemplates.filter(isValidFormTemplate);
       if (validTemplates.length !== rawTemplates.length) {
         console.warn(
-          `Dropped ${rawTemplates.length - validTemplates.length} malformed template record(s).`
+          `Dropped ${rawTemplates.length - validTemplates.length} malformed template record(s).`,
         );
       }
       setFormTemplates(validTemplates);
@@ -85,7 +86,7 @@ export default function FormTemplate({
       const validServices = rawServices.filter(isValidService);
       if (validServices.length !== rawServices.length) {
         console.warn(
-          `Dropped ${rawServices.length - validServices.length} malformed service record(s).`
+          `Dropped ${rawServices.length - validServices.length} malformed service record(s).`,
         );
       }
       setServices(validServices);
@@ -113,13 +114,13 @@ export default function FormTemplate({
       const token = localStorage.getItem("token");
       const response = await api.get(
         `api/admin/form-templates/${template.form_id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       const fullTemplate: FormTemplate = {
         ...response.data.formTemplate,
         components: (response.data.components ?? []).map(
-          dbComponentToBuilderComponent
+          dbComponentToBuilderComponent,
         ),
       };
 

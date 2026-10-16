@@ -1,5 +1,5 @@
-
 import { sql } from "../config/db.js";
+import type { PoolClient } from "@neondatabase/serverless";
 
 export async function generateUserId() {
   const now = new Date();
@@ -138,7 +138,7 @@ export async function generateActivityId() {
   return `ACT-${prefix}-${sequence}`;
 }
 
-export async function generateLaboratoryRequestID() {
+export async function generateLaboratoryRequestID(client: PoolClient) {
   const now = new Date();
 
   const year = String(now.getFullYear()).slice(-2);
@@ -146,13 +146,14 @@ export async function generateLaboratoryRequestID() {
   const day = String(now.getDate()).padStart(2, "0");
 
   const prefix = `${year}-${month}${day}`;
-  const labRequestsCreatedToday = await sql`
-    SELECT request_id
-    FROM laboratory_requests
-    WHERE request_id LIKE ${`LR-${prefix}-%`}
-    ORDER BY request_id DESC
-    LIMIT 1
-  `;
+  const { rows: labRequestsCreatedToday } = await client.query(
+    `SELECT request_id
+     FROM laboratory_requests
+     WHERE request_id LIKE $1
+     ORDER BY request_id DESC
+     LIMIT 1`,
+    [`LR-${prefix}-%`],
+  );
 
   const nextNumber =
     labRequestsCreatedToday.length > 0
@@ -162,7 +163,7 @@ export async function generateLaboratoryRequestID() {
   return `LR-${prefix}-${String(nextNumber).padStart(4, "0")}`;
 }
 
-export async function generateLaboratoryItemID() {
+export async function generateLaboratoryItemID(client: PoolClient) {
   const now = new Date();
 
   const year = String(now.getFullYear()).slice(-2);
@@ -170,13 +171,14 @@ export async function generateLaboratoryItemID() {
   const day = String(now.getDate()).padStart(2, "0");
 
   const prefix = `${year}-${month}${day}`;
-  const labItemsCreatedToday = await sql`
-    SELECT lab_item_id
-    FROM laboratory_request_items
-    WHERE lab_item_id LIKE ${`LI-${prefix}-%`}
-    ORDER BY lab_item_id DESC
-    LIMIT 1
-  `;
+  const { rows: labItemsCreatedToday } = await client.query(
+    `SELECT lab_item_id
+     FROM laboratory_request_items
+     WHERE lab_item_id LIKE $1
+     ORDER BY lab_item_id DESC
+     LIMIT 1`,
+    [`LI-${prefix}-%`],
+  );
 
   const nextNumber =
     labItemsCreatedToday.length > 0

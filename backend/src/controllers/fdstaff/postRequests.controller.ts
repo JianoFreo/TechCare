@@ -467,12 +467,12 @@ export async function addToQueue(req: Request, res: Response) {
     const isLab = record_type === "laboratory";
 
     const queue_id = isLab
-      ? await generateLaboratoryQueueId(client)
-      : await generateConsultationQueueId(client);
+      ? await generateLaboratoryQueueId()
+      : await generateConsultationQueueId();
 
     const queue_number = isLab
-      ? await generateQueueNumberLaboratory(client)
-      : await generateQueueNumberConsultation(client);
+      ? await generateQueueNumberLaboratory()
+      : await generateQueueNumberConsultation();
 
     // 3. create the queue entry
     const { rows: queueRows } = await client.query(
@@ -518,7 +518,7 @@ export async function addToQueue(req: Request, res: Response) {
 
 export async function addLaboratoryRequest(req: Request, res: Response) {
   const { patient_id, services } = req.body;
-  const user_id = "U-26-1001-0002";
+  const user_id = "U-26-1001-0004";
 
   if (
     !patient_id ||

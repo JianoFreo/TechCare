@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import api from "#lib/axios";
 import type { FormTemplate } from "../../../../interface/FormTemplate";
 import { dbComponentToBuilderComponent } from "../../../../interface/FormTemplate";
-import type { ServiceOption } from "../../pages/FormTemplate"; 
+import type { ServiceOption } from "../../pages/FormTemplate";
 import {
   Search,
   Clock,
@@ -37,10 +37,12 @@ export default function TemplateLibrary({
   const [selectedCategory, setSelectedCategory] = useState("All Templates");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("recently_updated");
-  const [selectedTemplate, setSelectedTemplate] =
-    useState<FormTemplate | null>(templates[0] || null);
-  const [previewTemplate, setPreviewTemplate] =
-    useState<FormTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<FormTemplate | null>(
+    templates[0] || null,
+  );
+  const [previewTemplate, setPreviewTemplate] = useState<FormTemplate | null>(
+    null,
+  );
   const [previewLoadingId, setPreviewLoadingId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -56,7 +58,7 @@ export default function TemplateLibrary({
     serviceIdToName[serviceId] || UNCATEGORIZED;
 
   const categories = useMemo(() => {
-    const names = new Set(services.map((s) => s.service_name));
+    const names = new Set(services.map((s) => s.service_category));
     return ["All Templates", ...Array.from(names).sort(), UNCATEGORIZED];
   }, [services]);
 
@@ -96,13 +98,13 @@ export default function TemplateLibrary({
       const token = localStorage.getItem("token");
       const response = await api.get(
         `api/admin/form-templates/${tpl.form_id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       const fullTemplate: FormTemplate = {
         ...response.data.formTemplate,
         components: (response.data.components ?? []).map(
-          dbComponentToBuilderComponent
+          dbComponentToBuilderComponent,
         ),
       };
 

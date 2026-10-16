@@ -179,7 +179,7 @@ export async function getAnalysisReadyRequests(req: Request, res: Response) {
         ri.updated_at
       FROM laboratory_request_items ri
       JOIN services s ON s.service_id = ri.service_id
-      WHERE ri.status = 'Specimen Collected'
+      WHERE ri.status = 'Collected'
       ORDER BY ri.created_at ASC
     `;
 
@@ -215,13 +215,12 @@ export async function getAvailableFormTemplates(req: Request, res: Response) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
- // IMPORTANT: Fetches laboratory results only after they have been released.
+// IMPORTANT: Fetches laboratory results only after they have been released.
 export async function getReleasedLaboratoryResults(
   req: Request,
   res: Response,
 ) {
   try {
-   
     const results = await sql`
       SELECT
         result_id,

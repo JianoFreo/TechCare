@@ -53,7 +53,7 @@ function RequestSummary({ services, queues, room }: RequestSummaryProps) {
         counts.Waiting += 1;
       }
       if (queue.status === "Completed") {
-        counts.Completed += 1;
+        counts.Collected += 1;
       }
       return counts;
     },
@@ -61,7 +61,7 @@ function RequestSummary({ services, queues, room }: RequestSummaryProps) {
       Priority: 0,
       Serving: 0,
       Waiting: 0,
-      Completed: 0,
+      Collected: 0,
     },
   );
 
@@ -107,8 +107,8 @@ function RequestSummary({ services, queues, room }: RequestSummaryProps) {
       labelColor: "text-blue-600",
     },
     {
-      label: "Completed",
-      count: queueCounts.Completed,
+      label: "Collected",
+      count: queueCounts.Collected,
       shapeColors: "text-yellow-600 bg-yellow-100 border-yellow-600",
       labelColor: "text-yellow-600",
     },

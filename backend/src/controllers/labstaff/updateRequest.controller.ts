@@ -74,7 +74,7 @@ export async function completeQueueEntry(req: Request, res: Response) {
     const [updated] = await sql`
       UPDATE queue_entries q
       SET
-        status = 'Completed',
+        status = 'Collected',
         updated_at = NOW()
       FROM services s
       WHERE q.queue_id = ${queue_id}
@@ -245,9 +245,7 @@ export async function cancelQueueEntry(req: Request, res: Response) {
 
     // Only waiting, skipped, or serving entries can be cancelled.
     if (
-      !["waiting", "skipped", "serving"].includes(
-        String(status).toLowerCase(),
-      )
+      !["waiting", "skipped", "serving"].includes(String(status).toLowerCase())
     ) {
       return res.status(409).json({
         message: `Queue entry cannot be cancelled because its status is ${status}.`,
@@ -297,11 +295,7 @@ export async function cancelQueueEntry(req: Request, res: Response) {
   }
 }
 
-
-export async function releaseLaboratoryResult(
-  req: Request,
-  res: Response,
-) {
+export async function releaseLaboratoryResult(req: Request, res: Response) {
   try {
     const { result_id } = req.params;
 

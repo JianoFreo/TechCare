@@ -360,22 +360,22 @@ export async function getUnpaidRequests(req: Request, res: Response) {
     const unpaidLabRequests = await sql`
       SELECT
         'laboratory'::text                          AS record_type,
-        lri.lab_item_id,
         lr.request_id,
         lr.patient_id,
         CONCAT_WS(' ', p.first_name, p.last_name)   AS patient_name,
-        s.service_id,
-        s.service_name,
         lr.is_paid,
         CONCAT_WS(' ', u.first_name, u.last_name)   AS created_by,
         lr.requested_at                             AS created_at
-      FROM laboratory_request_items lri
-      JOIN laboratory_requests lr ON lr.request_id = lri.request_id
-      JOIN patients p             ON p.patient_id = lr.patient_id
-      JOIN services s             ON s.service_id = lri.service_id
-      LEFT JOIN users u           ON u.user_id = lr.requested_by
+      FROM laboratory_requests lr
+      JOIN patients p   ON p.patient_id = lr.patient_id
+      LEFT JOIN users u ON u.user_id = lr.requested_by
       WHERE lr.is_paid = FALSE
-        AND lri.queue_id IS NULL
+        AND EXISTS (
+          SELECT 1
+          FROM laboratory_request_items lri
+          WHERE lri.request_id = lr.request_id
+            AND lri.queue_id IS NULL
+        )
         AND lr.requested_at >= CURRENT_DATE
         AND lr.requested_at <  CURRENT_DATE + INTERVAL '1 day'
       ORDER BY lr.requested_at DESC
@@ -500,7 +500,7 @@ export async function getMedicalHistoryDetails(req: Request, res: Response) {
           .json({ message: "Laboratory record not found." });
 
       const results = await sql`
-        SELECT result_id, result_value, unit, reference_range, flag, remarks,
+        SELECT result_id, results, remarks,
               verified_by, verified_at, image_url, created_at
         FROM laboratory_results
         WHERE lab_item_id = ${record_id}
