@@ -42,8 +42,8 @@ export function ReleaseConfirmationContent({
             Release Laboratory Result
           </Dialog.Title>
           <Dialog.Description className="mt-1 text-[11px] leading-relaxed text-[#839abe]">
-            Releasing makes this result available online for the patient to
-            view.
+            Confirm release of this saved laboratory result. Patient online
+            access is shown only when confirmed by the server.
           </Dialog.Description>
         </div>
         <Dialog.Close
@@ -113,11 +113,13 @@ export function ReleaseConfirmationContent({
 type ResultReleaseControlProps = {
   report: LaboratoryReportData;
   onBackToList: () => void;
+  onReleased?: (result: ResultReleaseResponse) => void;
 };
 
 export default function ResultReleaseControl({
   report,
   onBackToList,
+  onReleased,
 }: ResultReleaseControlProps) {
   const [open, setOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -131,6 +133,10 @@ export default function ResultReleaseControl({
   const pendingRequest = useRef<AbortController | null>(null);
   const available =
     confirmed?.online_available === true || report.onlineAvailable === true;
+  const released =
+    available ||
+    confirmed?.status === "Released" ||
+    report.releaseStatus === "Released";
   const releasedAt = confirmed?.released_at || report.releasedAt;
   const unavailableReason = !report.resultId
     ? "Save this result before releasing it."
@@ -139,9 +145,11 @@ export default function ResultReleaseControl({
       : "";
   const status = available
     ? "Available online"
-    : !report.resultId || report.onlineAvailable === false
-      ? "Not available online"
-      : "Online availability not recorded";
+    : released
+      ? "Released"
+      : !report.resultId || report.onlineAvailable === false
+        ? "Not available online"
+        : "Online availability not recorded";
 
   useEffect(() => () => pendingRequest.current?.abort(), []);
 
@@ -149,7 +157,7 @@ export default function ResultReleaseControl({
     if (
       pendingRequest.current ||
       unavailableReason ||
-      available ||
+      released ||
       !report.resultId
     )
       return;
@@ -168,6 +176,7 @@ export default function ResultReleaseControl({
       );
       if (!controller.signal.aborted) {
         setConfirmed(result);
+        onReleased?.(result);
         setOpen(false);
         setShowSuccess(true);
       }
@@ -192,11 +201,13 @@ export default function ResultReleaseControl({
           <Globe size={18} />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-xs font-semibold">Online Availability</h2>
+          <h2 className="text-xs font-semibold">Result Release</h2>
           <p className="mt-1 text-[11px] text-[#839abe]">
             {available
               ? "This result is available online for the patient."
-              : "Release the saved laboratory result for the patient to view online."}
+              : released
+                ? "This result is released. Patient online access has not been confirmed."
+                : "Review and release the saved laboratory result."}
           </p>
           {releasedAt && (
             <p className="mt-1 text-[10px] text-[#839abe]">
@@ -213,16 +224,16 @@ export default function ResultReleaseControl({
         <button
           ref={triggerRef}
           type="button"
-          aria-disabled={available}
+          aria-disabled={released}
           onClick={() => {
-            if (available) return;
+            if (released) return;
             setError("");
             setOpen(true);
           }}
           className="inline-flex cursor-pointer items-center justify-center gap-2 rounded border border-[#188bff] bg-[#188bff] px-4 py-2 text-[11px] font-medium text-white hover:bg-[#0879eb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
         >
           <Send size={13} />
-          {available ? "Available online" : "Release Result"}
+          {released ? "Released" : "Release Result"}
         </button>
       </section>
       <Dialog.Root
@@ -256,7 +267,11 @@ export default function ResultReleaseControl({
       <ResultSuccessOverlay
         open={showSuccess}
         title="Result Released Successfully"
-        description="The laboratory result is now available online for the patient."
+        description={
+          available
+            ? "The laboratory result is now available online for the patient."
+            : "The server confirmed that the laboratory result was released."
+        }
         returnFocusRef={triggerRef}
         onClose={() => setShowSuccess(false)}
         onBackToList={() => {

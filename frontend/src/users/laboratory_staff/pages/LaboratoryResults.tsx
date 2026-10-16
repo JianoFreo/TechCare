@@ -7,7 +7,10 @@ import PrintResultView from "../components/LaboratoryResults/PrintResultView";
 import {
   apiMessage,
   fetchAnalysisRequests,
+  fetchReleasedResults,
 } from "../components/LaboratoryResults/laboratoryResultsApi";
+import { AnalysisNotice } from "../components/LaboratoryResults/AnalysisUi";
+import { applyReleasedResults } from "../components/LaboratoryResults/laboratoryResultAdapters";
 
 type LaboratoryResultsProps = {
   open: boolean;
@@ -15,18 +18,16 @@ type LaboratoryResultsProps = {
   room: string;
 };
 
-function LaboratoryResults({
-  open,
-  setOpen,
-  room,
-}: LaboratoryResultsProps) {
+function LaboratoryResults({ open, setOpen, room }: LaboratoryResultsProps) {
   const [requests, setRequests] = useState<AnalysisRequest[]>([]);
-  const [selectedRequest, setSelectedRequest] = useState<AnalysisRequest | null>(
+  const [selectedRequest, setSelectedRequest] =
+    useState<AnalysisRequest | null>(null);
+  const [printRequest, setPrintRequest] = useState<AnalysisRequest | null>(
     null,
   );
-  const [printRequest, setPrintRequest] = useState<AnalysisRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [resultError, setResultError] = useState<string | null>(null);
   const pendingRequest = useRef<AbortController | null>(null);
 
   const loadRequests = useCallback(async () => {
@@ -35,12 +36,30 @@ function LaboratoryResults({
     pendingRequest.current = controller;
     setLoading(true);
     setError(null);
+    setResultError(null);
 
     try {
-      const items = await fetchAnalysisRequests(room, controller.signal);
+      const [requestResponse, releasedResponse] = await Promise.allSettled([
+        fetchAnalysisRequests(room, controller.signal),
+        fetchReleasedResults(controller.signal),
+      ]);
+      if (requestResponse.status === "rejected") throw requestResponse.reason;
+      const items = requestResponse.value;
 
       if (!controller.signal.aborted) {
-        setRequests(items);
+        setRequests(
+          releasedResponse.status === "fulfilled"
+            ? applyReleasedResults(items, releasedResponse.value)
+            : items,
+        );
+        if (releasedResponse.status === "rejected") {
+          setResultError(
+            apiMessage(
+              releasedResponse.reason,
+              "Unable to load released laboratory results.",
+            ),
+          );
+        }
       }
     } catch (cause) {
       if (!controller.signal.aborted) {
@@ -66,6 +85,7 @@ function LaboratoryResults({
   function returnToList() {
     setSelectedRequest(null);
     setPrintRequest(null);
+    void loadRequests();
     requestAnimationFrame(() => {
       document.getElementById("analysis-heading")?.focus();
     });
@@ -82,6 +102,15 @@ function LaboratoryResults({
       />
       <div className="px-3 pb-9 sm:px-6 xl:px-7">
         <div hidden={Boolean(selectedRequest || printRequest)}>
+          {resultError && (
+            <div className="pt-4">
+              <AnalysisNotice error>
+                Released results could not be loaded: {resultError} Result entry
+                is unavailable until release status can be checked. Use Refresh
+                to try again.
+              </AnalysisNotice>
+            </div>
+          )}
           <AnalysisList
             requests={requests}
             loading={loading}
@@ -90,6 +119,7 @@ function LaboratoryResults({
             onEnter={setSelectedRequest}
             onPrintPreview={setPrintRequest}
             onRetry={reloadRequests}
+            entryDisabled={Boolean(resultError)}
           />
         </div>
         {selectedRequest && (

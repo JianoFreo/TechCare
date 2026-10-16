@@ -14,6 +14,7 @@ import type {
   LaboratoryReportData,
   ReportTemplate,
   ResultValues,
+  ResultReleaseResponse,
 } from "../../../../interface/LaboratoryAnalysis";
 import { inputTypes, validateResults } from "./laboratoryValidation";
 import {
@@ -93,6 +94,7 @@ export default function ResultEntry({
   const [reload, setReload] = useState(0);
   const [saving, setSaving] = useState(false);
   const [savedResultId, setSavedResultId] = useState<string | null>(null);
+  const [release, setRelease] = useState<ResultReleaseResponse | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [touched, setTouched] = useState<Set<string>>(new Set());
@@ -144,10 +146,13 @@ export default function ResultEntry({
               values,
               remarks,
               resultId: savedResultId ?? undefined,
+              releaseStatus: release?.status,
+              releasedAt: release?.released_at,
+              onlineAvailable: release?.online_available,
             },
           ]
         : [],
-    [request, template, values, remarks, savedResultId],
+    [request, template, values, remarks, savedResultId, release],
   );
 
   function returnToEntry() {
@@ -352,6 +357,7 @@ export default function ResultEntry({
         service_id: test?.serviceId || template.service_id,
         form_id: template.form_id,
         template_version: template.version ?? null,
+        template_snapshot: template,
         values,
         remarks: remarks.trim(),
       });
@@ -792,6 +798,7 @@ export default function ResultEntry({
           onBack={returnToEntry}
           backLabel="Back to Entry"
           onBackToList={onCancel}
+          onReleased={setRelease}
         />
       )}
     </>

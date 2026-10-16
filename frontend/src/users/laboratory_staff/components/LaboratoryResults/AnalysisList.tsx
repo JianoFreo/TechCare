@@ -88,6 +88,7 @@ type AnalysisListProps = {
   onEnter: (request: AnalysisRequest) => void;
   onPrintPreview: (request: AnalysisRequest) => void;
   onRetry: () => void;
+  entryDisabled?: boolean;
 };
 
 export default function AnalysisList({
@@ -98,6 +99,7 @@ export default function AnalysisList({
   onEnter,
   onPrintPreview,
   onRetry,
+  entryDisabled = false,
 }: AnalysisListProps) {
   const [tab, setTab] = useState<AnalysisStatus>("Ready for Analysis");
   const [search, setSearch] = useState("");
@@ -438,6 +440,7 @@ export default function AnalysisList({
                           <AnalysisButton
                             compact
                             onClick={() => onEnter(request)}
+                            disabled={entryDisabled}
                             aria-label={`Enter result for ${request.patientName || request.patientId}, ${request.requestId}`}
                           >
                             Enter Result

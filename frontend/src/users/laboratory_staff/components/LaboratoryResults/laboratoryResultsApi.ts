@@ -11,6 +11,12 @@ import type { Service } from "../../../../interface/Service";
 import type { LaboratoryRequestDetail } from "../../../../interface/LabRequestDetail";
 import { matchingTest, toReportTemplate } from "./reportTemplates";
 import { normalizeAnalysisRequests } from "./laboratoryAnalysis";
+import {
+  saveResult,
+  loadReleasedReports,
+  releaseResult,
+} from "./laboratoryResultAdapters";
+export { fetchReleasedResults } from "./laboratoryResultAdapters";
 export {
   collectionDay,
   normalizeAnalysisRequests,
@@ -185,7 +191,7 @@ export const resultEntryApi: {
       }>);
 } = {
   loadTemplates: fetchPublishedReportTemplates,
-  saveResult: null,
+  saveResult,
 };
 
 export async function submitResultEntry(payload: ResultEntryPayload): Promise<{
@@ -218,7 +224,7 @@ export const resultPrintApi: {
         signal?: AbortSignal,
       ) => Promise<LaboratoryReportData[]>);
 } = {
-  loadResults: null,
+  loadResults: loadReleasedReports,
 };
 
 export async function fetchPrintableResults(
@@ -259,8 +265,7 @@ export async function fetchPrintableResults(
   return reports;
 }
 
-// Connect the release endpoint here when it exists. Status changes alone do not
-// confirm that the patient can access a result online.
+// Release status and confirmed patient online access are separate server facts.
 export const resultReleaseApi: {
   releaseResult:
     | null
@@ -268,7 +273,7 @@ export const resultReleaseApi: {
         payload: ResultReleasePayload,
         signal?: AbortSignal,
       ) => Promise<ResultReleaseResponse>);
-} = { releaseResult: null };
+} = { releaseResult };
 
 export async function releaseLaboratoryResult(
   payload: ResultReleasePayload,
@@ -294,13 +299,10 @@ export async function releaseLaboratoryResult(
   if (
     !result ||
     result.result_id !== payload.result_id ||
-    result.online_available !== true ||
-    typeof result.released_at !== "string" ||
-    !result.released_at.trim() ||
-    !Number.isFinite(new Date(result.released_at).getTime())
+    (result.status !== "Released" && result.online_available !== true)
   ) {
     throw new Error(
-      "The server did not confirm online availability. Reload the result to check its release status before retrying.",
+      "The server did not confirm release. Reload the result to check its status before retrying.",
     );
   }
   return result;

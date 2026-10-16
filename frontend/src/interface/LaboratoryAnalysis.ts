@@ -56,6 +56,7 @@ export interface LaboratoryReportData {
   releasedAt?: string;
   releasedBy?: string;
   onlineAvailable?: boolean;
+  releaseStatus?: "Pending" | "Released";
 }
 
 export interface ResultReleasePayload {
@@ -66,8 +67,9 @@ export interface ResultReleasePayload {
 
 export interface ResultReleaseResponse {
   result_id: string;
-  released_at: string;
-  online_available: boolean;
+  status?: "Released";
+  released_at?: string;
+  online_available?: boolean;
   released_by?: string;
 }
 export interface ResultEntryPayload {
@@ -77,6 +79,7 @@ export interface ResultEntryPayload {
   service_id: string;
   form_id: string;
   template_version: number | null;
+  template_snapshot: ReportTemplate;
   values: ResultValues;
   remarks: string;
 }

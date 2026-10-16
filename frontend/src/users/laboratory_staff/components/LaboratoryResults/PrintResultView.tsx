@@ -4,6 +4,7 @@ import { ArrowLeft, Eye, LoaderCircle, Maximize, Printer } from "lucide-react";
 import type {
   AnalysisRequest,
   LaboratoryReportData,
+  ResultReleaseResponse,
 } from "../../../../interface/LaboratoryAnalysis";
 import { AnalysisButton, AnalysisNotice } from "./AnalysisUi";
 import { apiMessage, fetchPrintableResults } from "./laboratoryResultsApi";
@@ -292,6 +293,7 @@ type PrintResultViewProps = {
   onBack: () => void;
   backLabel?: string;
   onBackToList?: () => void;
+  onReleased?: (result: ResultReleaseResponse) => void;
 };
 
 export default function PrintResultView({
@@ -300,6 +302,7 @@ export default function PrintResultView({
   onBack,
   backLabel = "Back to Results",
   onBackToList = onBack,
+  onReleased,
 }: PrintResultViewProps) {
   const [loadState, setLoadState] = useState<ReportLoadState | null>(null);
 
@@ -425,6 +428,7 @@ export default function PrintResultView({
             key={`release:${report.resultId ?? "draft"}:${report.template.form_id}`}
             report={report}
             onBackToList={onBackToList}
+            onReleased={onReleased}
           />
           <ReportPreview
             key={`${report.resultId ?? "draft"}:${report.template.form_id}`}
