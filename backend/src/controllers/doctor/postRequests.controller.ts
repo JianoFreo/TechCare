@@ -225,7 +225,7 @@ export async function addPrescriptions(req: Request, res: Response) {
     await client.query(
       "SELECT pg_advisory_xact_lock(hashtext('prescription_ids'))",
     );
-    const prescription_id = await generatePrescriptionId(client);
+    const prescription_id = await generatePrescriptionId();
 
     const { rows } = await client.query(
       `INSERT INTO prescription_records
