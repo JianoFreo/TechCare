@@ -164,6 +164,57 @@ export async function getLaboratoryQueueItems(req: Request, res: Response) {
   }
 }
 
+export async function getAnalysisItems(req: Request, res: Response) {
+  const room = typeof req.query.room === "string" ? req.query.room.trim() : "";
+  if (!room) return res.status(400).json({ message: "room is required" });
+  try {
+    const items = await sql`
+      SELECT ri.lab_item_id, ri.request_id, ri.service_id, ri.queue_id, ri.status,
+        s.room, s.service_name, s.service_type,
+        lr.patient_id, lr.requested_at,
+        p.first_name, p.last_name, p.middle_name, p.suffix, p.birthdate, p.sex,
+        COALESCE(q.is_priority, lr.is_priority) AS is_priority,
+        COALESCE(q.status, ri.status) AS request_status,
+        CASE WHEN ri.status IN ('Completed', 'Released') OR EXISTS (
+          SELECT 1 FROM laboratory_results r WHERE r.lab_item_id = ri.lab_item_id
+            AND r.status IN ('Pending', 'Released')
+        ) THEN 'Completed'
+        WHEN ri.status = 'In Progress' THEN 'In Progress'
+        ELSE 'Ready for Analysis' END AS analysis_status
+      FROM laboratory_request_items ri
+      JOIN services s ON s.service_id = ri.service_id
+      JOIN laboratory_requests lr ON lr.request_id = ri.request_id
+      JOIN patients p ON p.patient_id = lr.patient_id
+      LEFT JOIN queue_entries q ON q.queue_id = ri.queue_id
+      WHERE s.room = ${room}
+        AND ri.status IN ('Specimen Collected', 'In Progress', 'Completed', 'Released')
+      ORDER BY ri.created_at ASC
+    `;
+    return res.json(items);
+  } catch (error) {
+    console.error("Unable to load analysis items:", error);
+    return res.status(500).json({ message: "Unable to load analysis items." });
+  }
+}
+
+export async function getSavedLaboratoryResults(req: Request, res: Response) {
+  const room = typeof req.query.room === "string" ? req.query.room.trim() : "";
+  if (!room) return res.status(400).json({ message: "room is required" });
+  try {
+    const results = await sql`
+      SELECT r.* FROM laboratory_results r
+      JOIN laboratory_request_items ri ON ri.lab_item_id = r.lab_item_id
+      JOIN services s ON s.service_id = ri.service_id
+      WHERE s.room = ${room} AND r.status IN ('Pending', 'Released')
+      ORDER BY r.updated_at DESC
+    `;
+    return res.json({ results });
+  } catch (error) {
+    console.error("Unable to load saved results:", error);
+    return res.status(500).json({ message: "Unable to load saved results." });
+  }
+}
+
 export async function getAnalysisReadyRequests(req: Request, res: Response) {
   try {
     const analysisReadyRequests = await sql`
@@ -221,13 +272,12 @@ export async function getAvailableFormTemplates(req: Request, res: Response) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
- // IMPORTANT: Fetches laboratory results only after they have been released.
+// IMPORTANT: Fetches laboratory results only after they have been released.
 export async function getReleasedLaboratoryResults(
   req: Request,
   res: Response,
 ) {
   try {
-   
     const results = await sql`
       SELECT
         result_id,

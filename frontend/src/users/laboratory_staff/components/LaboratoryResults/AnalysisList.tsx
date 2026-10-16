@@ -89,6 +89,8 @@ type AnalysisListProps = {
   onPrintPreview: (request: AnalysisRequest) => void;
   onRetry: () => void;
   entryDisabled?: boolean;
+  selectedTab?: AnalysisStatus;
+  onTabChange?: (tab: AnalysisStatus) => void;
 };
 
 export default function AnalysisList({
@@ -100,8 +102,16 @@ export default function AnalysisList({
   onPrintPreview,
   onRetry,
   entryDisabled = false,
+  selectedTab,
+  onTabChange,
 }: AnalysisListProps) {
-  const [tab, setTab] = useState<AnalysisStatus>("Ready for Analysis");
+  const [localTab, setLocalTab] =
+    useState<AnalysisStatus>("Ready for Analysis");
+  const tab = selectedTab ?? localTab;
+  function setTab(next: AnalysisStatus) {
+    setLocalTab(next);
+    onTabChange?.(next);
+  }
   const [search, setSearch] = useState("");
   const [test, setTest] = useState("");
   const [priority, setPriority] = useState("");
@@ -443,7 +453,9 @@ export default function AnalysisList({
                             disabled={entryDisabled}
                             aria-label={`Enter result for ${request.patientName || request.patientId}, ${request.requestId}`}
                           >
-                            Enter Result
+                            {request.status === "In Progress"
+                              ? "Continue Result"
+                              : "Enter Result"}
                           </AnalysisButton>
                         )}
                       </td>

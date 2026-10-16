@@ -7,7 +7,9 @@ import {
   getAvailableFormTemplates,
   getLaboratoryQueues,
   getLaboratoryRequestDetails,
-  getReleasedLaboratoryResults
+  getReleasedLaboratoryResults,
+  getAnalysisItems,
+  getSavedLaboratoryResults,
 } from "../controllers/labstaff/getRequests.controller.js";
 
 import {
@@ -16,6 +18,7 @@ import {
   cancelQueueEntry,
   completeQueueEntry,
   releaseLaboratoryResult,
+  startLaboratoryAnalysis,
 } from "../controllers/labstaff/updateRequest.controller.js";
 
 import {
@@ -41,6 +44,8 @@ router.get("/laboratory-queues/:queue_id/items", getLaboratoryQueueItems);
 router.get("/laboratory-queues/:queue_id/request", getLaboratoryRequestDetails);
 router.get("/laboratory-requests/items/", getAnalysisReadyRequests);
 router.get("/laboratory-results/form-templates/", getAvailableFormTemplates);
+router.get("/laboratory-results/analysis-items", getAnalysisItems);
+router.get("/laboratory-results/saved", getSavedLaboratoryResults);
 
 // IMPORTANT: Fetches laboratory results only after they have been released.
 router.get("/laboratory-results", getReleasedLaboratoryResults);
@@ -50,6 +55,7 @@ router.post("/laboratory-requests", addLaboratoryRequest);
 router.post("/laboratory-results/:lab_item_id", saveLaboratoryResult);
 
 // PATCH ROUTES
+router.patch("/laboratory-requests/analysis/start", startLaboratoryAnalysis);
 router.patch("/laboratory-queues/:queue_id/accept", acceptQueueEntry);
 router.patch("/laboratory-queues/:queue_id/skip", skipQueueEntry);
 router.patch("/laboratory-queues/:queue_id/cancel", cancelQueueEntry);

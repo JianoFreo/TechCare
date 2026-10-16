@@ -78,7 +78,10 @@ export async function addLaboratoryRequest(req: Request, res: Response) {
 export async function saveLaboratoryResult(req: Request, res: Response) {
   try {
     const { lab_item_id } = req.params;
-    const { results, remarks, image_url } = req.body;
+    const { results, remarks, image_url, room } = req.body;
+    if (typeof room !== "string" || !room.trim()) {
+      return res.status(400).json({ message: "room is required" });
+    }
 
     if (!lab_item_id) {
       return res.status(400).json({
@@ -93,10 +96,7 @@ export async function saveLaboratoryResult(req: Request, res: Response) {
     }
 
     const invalidResult = results.some(
-      (item: {
-        name?: string;
-        result?: string | number;
-      }) =>
+      (item: { name?: string; result?: string | number }) =>
         !item ||
         typeof item.name !== "string" ||
         !item.name.trim() ||
@@ -104,8 +104,7 @@ export async function saveLaboratoryResult(req: Request, res: Response) {
         item.result === null ||
         !["string", "number"].includes(typeof item.result) ||
         (typeof item.result === "string" && !item.result.trim()) ||
-        (typeof item.result === "number" &&
-          !Number.isFinite(item.result)),
+        (typeof item.result === "number" && !Number.isFinite(item.result)),
     );
 
     if (invalidResult) {
@@ -127,50 +126,47 @@ export async function saveLaboratoryResult(req: Request, res: Response) {
       });
     }
 
-    const [existingResult] = await sql`
-      SELECT result_id
-      FROM laboratory_results
-      WHERE lab_item_id = ${lab_item_id}
-      LIMIT 1
-    `;
-
-    if (existingResult) {
-      const [updatedResult] = await sql`
-        UPDATE laboratory_results
-        SET
+    const result_id = `RES-${crypto.randomUUID()}`;
+    const [savedResult] = await sql`
+      WITH eligible AS MATERIALIZED (
+        SELECT ri.lab_item_id FROM laboratory_request_items ri
+        JOIN services s ON s.service_id = ri.service_id
+        WHERE ri.lab_item_id = ${lab_item_id} AND s.room = ${room}
+          AND ri.status = 'In Progress'
+          AND NOT EXISTS (SELECT 1 FROM laboratory_results r WHERE r.lab_item_id = ri.lab_item_id AND r.status = 'Released')
+        FOR UPDATE OF ri
+      ), updated AS (
+        UPDATE laboratory_results r SET
           results = ${JSON.stringify(results)}::jsonb,
           remarks = ${typeof remarks === "string" ? remarks.trim() || null : null},
           image_url = ${typeof image_url === "string" ? image_url.trim() || null : null},
           updated_at = NOW()
-        WHERE lab_item_id = ${lab_item_id}
+        FROM eligible e WHERE r.lab_item_id = e.lab_item_id AND r.status = 'Pending'
+        RETURNING r.*
+      ), inserted AS (
+        INSERT INTO laboratory_results (result_id, lab_item_id, results, remarks, image_url)
+        SELECT ${result_id}, e.lab_item_id, ${JSON.stringify(results)}::jsonb,
+          ${typeof remarks === "string" ? remarks.trim() || null : null},
+          ${typeof image_url === "string" ? image_url.trim() || null : null}
+        FROM eligible e WHERE NOT EXISTS (SELECT 1 FROM laboratory_results r WHERE r.lab_item_id = e.lab_item_id)
         RETURNING *
-      `;
-
-      return res.status(200).json({
-        message: "Laboratory results updated successfully.",
-        result: updatedResult,
-      });
-    }
-
-    const result_id = `RES-${crypto.randomUUID()}`;
-
-    const [savedResult] = await sql`
-      INSERT INTO laboratory_results (
-        result_id,
-        lab_item_id,
-        results,
-        remarks,
-        image_url
+      ), saved AS (
+        SELECT * FROM updated UNION ALL SELECT * FROM inserted
+      ), completed AS (
+        UPDATE laboratory_request_items ri SET status = 'Completed', updated_at = NOW()
+        FROM saved WHERE ri.lab_item_id = saved.lab_item_id
+        RETURNING ri.lab_item_id
       )
-      VALUES (
-        ${result_id},
-        ${lab_item_id},
-        ${JSON.stringify(results)}::jsonb,
-        ${typeof remarks === "string" ? remarks.trim() || null : null},
-        ${typeof image_url === "string" ? image_url.trim() || null : null}
-      )
-      RETURNING *
+      SELECT saved.* FROM saved JOIN completed USING (lab_item_id)
     `;
+
+    if (!savedResult)
+      return res
+        .status(409)
+        .json({
+          message:
+            "Only an in-progress test in this room can be saved. Refresh the list to check its status.",
+        });
 
     return res.status(201).json({
       message: "Laboratory results saved successfully.",

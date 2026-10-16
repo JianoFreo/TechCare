@@ -351,6 +351,7 @@ export default function ResultEntry({
 
     try {
       const result = await submitResultEntry({
+        room: request.room,
         request_id: request.requestId,
         patient_id: request.patientId,
         lab_item_id: test?.id || null,

@@ -8,6 +8,7 @@ import type {
 } from "../../../../interface/LaboratoryAnalysis";
 import { inputTypes } from "./laboratoryValidation";
 import { matchingTest, toReportTemplate } from "./reportTemplates";
+import { retryLaboratoryRead } from "./laboratoryNetwork";
 
 export const LABORATORY_RESULTS_ENDPOINT = "/api/labstaff/laboratory-results";
 
@@ -27,6 +28,7 @@ export type ReleasedResult = {
   created_at?: string;
   verified_by?: string;
   verified_at?: string;
+  status?: "Pending" | "Released";
 };
 
 function resultText(value: unknown): string | number {
@@ -73,7 +75,7 @@ export async function saveResult(payload: ResultEntryPayload) {
   results[0].template_snapshot = template;
   const response = await api.post(
     `${LABORATORY_RESULTS_ENDPOINT}/${encodeURIComponent(payload.lab_item_id)}`,
-    { results, remarks: payload.remarks },
+    { results, remarks: payload.remarks, room: payload.room },
   );
   const saved = response.data?.result;
   if (
@@ -157,7 +159,7 @@ export function releasedReports(
         savedAt: row.created_at,
         verifiedBy: row.verified_by,
         verifiedAt: row.verified_at,
-        releaseStatus: "Released",
+        releaseStatus: row.status ?? "Released",
       };
     });
 }
@@ -166,7 +168,65 @@ export async function loadReleasedReports(
   request: AnalysisRequest,
   signal?: AbortSignal,
 ) {
-  return releasedReports(request, await fetchReleasedResults(signal));
+  return releasedReports(
+    request,
+    await fetchSavedResults(request.room, signal),
+  );
+}
+
+export async function fetchSavedResults(
+  room: string,
+  signal?: AbortSignal,
+): Promise<ReleasedResult[]> {
+  const response = await retryLaboratoryRead(
+    () =>
+      api.get(`${LABORATORY_RESULTS_ENDPOINT}/saved`, {
+        params: { room },
+        signal,
+      }),
+    signal,
+  );
+  const results = response.data?.results;
+  if (
+    !Array.isArray(results) ||
+    results.some(
+      (row) =>
+        !row ||
+        typeof row.result_id !== "string" ||
+        typeof row.lab_item_id !== "string" ||
+        !Array.isArray(row.results) ||
+        !["Pending", "Released"].includes(row.status),
+    )
+  )
+    throw new Error("The saved-results response could not be read.");
+  return results;
+}
+
+export async function startAnalysis(
+  request: AnalysisRequest,
+  signal?: AbortSignal,
+) {
+  const ids = request.tests.map((test) => test.id);
+  if (!ids.length || ids.some((id) => !id) || new Set(ids).size !== ids.length)
+    throw new Error("Laboratory item IDs are incomplete.");
+  const response = await api.patch(
+    "/api/labstaff/laboratory-requests/analysis/start",
+    { room: request.room, lab_item_ids: ids },
+    { signal },
+  );
+  const items = response.data?.items;
+  if (
+    !Array.isArray(items) ||
+    items.length !== ids.length ||
+    new Set(items.map((item) => item.lab_item_id)).size !== ids.length ||
+    items.some(
+      (item) =>
+        !ids.includes(item.lab_item_id) || item.status !== "In Progress",
+    )
+  )
+    throw new Error(
+      "The server did not confirm that analysis started. Refresh the list before retrying.",
+    );
 }
 
 export function applyReleasedResults(

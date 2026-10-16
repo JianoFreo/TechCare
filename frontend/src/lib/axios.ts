@@ -9,7 +9,12 @@ import axios from "axios";
 import { ENV } from "./env.config";
 
 const api = axios.create({
-  baseURL: ENV.VITE_IS_DEVELOPMENT ? "http://localhost:5000" : ENV.VITE_API_BASE_URL, // on monolithic its undefined without beacsue  it has /api on VITE_API_BASE_URL so it redirects to the webs domain and adds /api on its. thats not the same on our static
+  // Development requests use Vite's /api proxy on the website's own origin.
+  baseURL: import.meta.env.DEV
+    ? ""
+    : ENV.VITE_IS_DEVELOPMENT
+      ? "http://localhost:5000"
+      : ENV.VITE_API_BASE_URL,
     //   1. Local monolithic (npm run build && npm start, one server on :5000)
 
     // No VITE_API_BASE_URL set → baseURL = ""

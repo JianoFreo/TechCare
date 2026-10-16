@@ -73,6 +73,7 @@ export interface ResultReleaseResponse {
   released_by?: string;
 }
 export interface ResultEntryPayload {
+  room: string;
   request_id: string;
   patient_id: string;
   lab_item_id: string | null;

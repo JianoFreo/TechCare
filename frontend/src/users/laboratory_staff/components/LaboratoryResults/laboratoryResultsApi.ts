@@ -8,9 +8,9 @@ import type {
   ResultReleaseResponse,
 } from "../../../../interface/LaboratoryAnalysis";
 import type { Service } from "../../../../interface/Service";
-import type { LaboratoryRequestDetail } from "../../../../interface/LabRequestDetail";
 import { matchingTest, toReportTemplate } from "./reportTemplates";
 import { normalizeAnalysisRequests } from "./laboratoryAnalysis";
+import { retryLaboratoryRead } from "./laboratoryNetwork";
 import {
   saveResult,
   loadReleasedReports,
@@ -23,24 +23,40 @@ export {
   patientAge,
 } from "./laboratoryAnalysis";
 export const LABORATORY_REQUESTS_ENDPOINT =
-  "/api/labstaff/laboratory-requests/items/";
+  "/api/labstaff/laboratory-results/analysis-items";
 export const LABORATORY_TEMPLATES_ENDPOINT =
   "/api/labstaff/laboratory-results/form-templates/";
 
 type AnalysisReadyItem = {
   lab_item_id: string;
   request_id: string;
+  patient_id: string;
+  service_name: string;
+  request_status: string;
   service_id: string;
   room: string;
   queue_id: string | null;
   status: string;
+  analysis_status: "Ready for Analysis" | "In Progress" | "Completed";
 };
 
 function isCollected(status: string) {
-  return status.trim().toLowerCase() === "specimen collected";
+  return [
+    "specimen collected",
+    "in progress",
+    "completed",
+    "released",
+  ].includes(status.trim().toLowerCase());
 }
 
 export async function fetchAnalysisRequests(
+  room: string,
+  signal?: AbortSignal,
+): Promise<AnalysisRequest[]> {
+  return retryLaboratoryRead(() => loadAnalysisRequests(room, signal), signal);
+}
+
+async function loadAnalysisRequests(
   room: string,
   signal?: AbortSignal,
 ): Promise<AnalysisRequest[]> {
@@ -63,73 +79,23 @@ export async function fetchAnalysisRequests(
       (item) =>
         !item.lab_item_id ||
         !item.request_id ||
+        !item.patient_id ||
         !item.service_id ||
-        typeof item.queue_id !== "string" ||
-        !item.queue_id.trim(),
+        !item.service_name,
     )
   ) {
     throw new Error(
-      "Some collected samples are missing request or queue details. Please reload laboratory requests.",
+      "Some laboratory tests are missing patient or request information. Please reload laboratory requests.",
     );
   }
-
-  const queueIds = [...new Set(items.map((item) => item.queue_id!))];
-  const details = await Promise.all(
-    queueIds.map(async (queueId) => {
-      const response = await api.get<LaboratoryRequestDetail>(
-        "/api/labstaff/laboratory-queues/" +
-          encodeURIComponent(queueId) +
-          "/request",
-        { params: { room }, signal },
-      );
-      if (
-        !response.data?.request?.request_id ||
-        !response.data.request.patient_id ||
-        !Array.isArray(response.data.items)
-      ) {
-        throw new Error(
-          "Patient and request details could not be read for a collected sample.",
-        );
-      }
-      return [queueId, response.data] as const;
-    }),
-  );
-  const byQueue = new Map(details);
-  const rows = items.flatMap((item) => {
-    const detail = byQueue.get(item.queue_id!)!;
-    const collectedItem = detail.items.find(
-      (candidate) => candidate.lab_item_id === item.lab_item_id,
-    );
-    if (
-      detail.request.request_id !== item.request_id ||
-      !collectedItem ||
-      collectedItem.queue_id !== item.queue_id ||
-      collectedItem.service?.service_id !== item.service_id
-    ) {
-      throw new Error(
-        "A collected sample no longer matches its request details. Please reload laboratory requests.",
-      );
-    }
-    // Request details include tests from other rooms and collection stages. Only
-    // the exact ready item belongs in this analysis list. Queue completion is
-    // collection completion; it does not mean an analysis result is completed.
-    if (
-      collectedItem.service.room !== room ||
-      !isCollected(collectedItem.status)
-    )
-      return [];
-    return [
-      {
-        ...detail.request,
-        request_status: detail.request.status,
-        analysis_status: "Ready for Analysis",
-        sample_status: collectedItem.status,
-        queue_id: item.queue_id,
-        room,
-        items: [collectedItem],
-      },
-    ];
-  });
+  // Historical completed tests may have no queue. The analysis endpoint joins
+  // patient and service details through request_id, so queue_id is optional.
+  const rows = items.map((item) => ({
+    ...item,
+    request_status: item.request_status || item.status,
+    sample_status: "Specimen Collected",
+    items: [item],
+  }));
   if (signal?.aborted)
     throw new Error("Loading laboratory requests was cancelled.");
   return normalizeAnalysisRequests(rows, room);

@@ -335,10 +335,54 @@ export async function cancelQueueEntry(req: Request, res: Response) {
 }
 
 
-export async function releaseLaboratoryResult(
-  req: Request,
-  res: Response,
-) {
+export async function startLaboratoryAnalysis(req: Request, res: Response) {
+  const { room, lab_item_ids } = req.body ?? {};
+  if (
+    typeof room !== "string" ||
+    !room.trim() ||
+    !Array.isArray(lab_item_ids) ||
+    !lab_item_ids.length ||
+    lab_item_ids.length > 100 ||
+    lab_item_ids.some((id) => typeof id !== "string" || !id.trim()) ||
+    new Set(lab_item_ids).size !== lab_item_ids.length
+  ) {
+    return res
+      .status(400)
+      .json({
+        message: "A room and distinct laboratory item IDs are required.",
+      });
+  }
+  try {
+    const items = await sql`
+      WITH eligible AS MATERIALIZED (
+        SELECT ri.lab_item_id FROM laboratory_request_items ri
+        JOIN services s ON s.service_id = ri.service_id
+        WHERE ri.lab_item_id = ANY(${lab_item_ids}::text[]) AND s.room = ${room}
+          AND ri.status IN ('Specimen Collected', 'In Progress')
+          AND NOT EXISTS (SELECT 1 FROM laboratory_results r WHERE r.lab_item_id = ri.lab_item_id)
+        FOR UPDATE OF ri
+      )
+      UPDATE laboratory_request_items ri SET status = 'In Progress',
+        updated_at = CASE WHEN ri.status = 'In Progress' THEN ri.updated_at ELSE NOW() END
+      WHERE ri.lab_item_id IN (SELECT lab_item_id FROM eligible)
+        AND (SELECT count(*) FROM eligible) = ${lab_item_ids.length}
+      RETURNING ri.lab_item_id, ri.status
+    `;
+    if (items.length !== lab_item_ids.length)
+      return res
+        .status(409)
+        .json({
+          message:
+            "Some tests are already completed or are not collected samples in this room. Refresh the list.",
+        });
+    return res.json({ items });
+  } catch (error) {
+    console.error("Unable to start analysis:", error);
+    return res.status(500).json({ message: "Unable to start analysis." });
+  }
+}
+
+export async function releaseLaboratoryResult(req: Request, res: Response) {
   try {
     const { result_id } = req.params;
 
