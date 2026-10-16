@@ -7,6 +7,7 @@ import {
   getAvailableFormTemplates,
   getLaboratoryQueues,
   getLaboratoryRequestDetails,
+  getReleasedLaboratoryResults
 } from "../controllers/labstaff/getRequests.controller.js";
 
 import {
@@ -40,6 +41,9 @@ router.get("/laboratory-queues/:queue_id/items", getLaboratoryQueueItems);
 router.get("/laboratory-queues/:queue_id/request", getLaboratoryRequestDetails);
 router.get("/laboratory-requests/items/", getAnalysisReadyRequests);
 router.get("/laboratory-results/form-templates/", getAvailableFormTemplates);
+
+// IMPORTANT: Fetches laboratory results only after they have been released.
+router.get("/laboratory-results", getReleasedLaboratoryResults);
 
 // POST ROUTES
 router.post("/laboratory-requests", addLaboratoryRequest);
