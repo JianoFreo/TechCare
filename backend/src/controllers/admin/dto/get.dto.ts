@@ -1,3 +1,4 @@
+
 export namespace getAllUsers {
   export interface user {
     id: number;
@@ -33,10 +34,14 @@ export namespace getAllUsers {
   }
 
   export interface error {
-    message: string;
+    message?: string;
+    error?: string;
   }
 }
 
+// =========================
+// GET ALL ACTIVITIES
+// =========================
 export namespace getAllActivities {
   export interface activity {
     id: number;
@@ -46,8 +51,8 @@ export namespace getAllActivities {
     module: string;
     is_sensitive: boolean;
     status: string;
-    target_type: string;
-    target_id: string;
+    target_type: string | null;
+    target_id: string | null;
     metadata: Record<string, unknown> | null;
     created_at: string;
   }
@@ -58,20 +63,24 @@ export namespace getAllActivities {
   }
 
   export interface error {
-    error: string;
+    message?: string;
+    error?: string;
   }
 }
 
+// =========================
+// GET ALL SERVICES
+// =========================
 export namespace getAllservices {
   export interface service {
     id: number;
     service_id: string;
     service_type: string;
     service_name: string;
-    price: string;
-    active: boolean;
-    room: string;
     service_category: string;
+    price: number | string;
+    room: string;
+    active: boolean;
     created_at: string;
     updated_at: string;
   }
@@ -81,10 +90,14 @@ export namespace getAllservices {
   }
 
   export interface error {
-    error: string;
+    message?: string;
+    error?: string;
   }
 }
 
+// =========================
+// GET MY ACTIVITIES
+// =========================
 export namespace getMyActivities {
   export interface activity {
     id: number;
@@ -96,15 +109,19 @@ export namespace getMyActivities {
   }
 
   export interface response {
-    activities?: activity[];
+    activities: activity[];
     message?: string;
   }
 
   export interface error {
-    error: string;
+    message?: string;
+    error?: string;
   }
 }
 
+// =========================
+// GET ALL FORM TEMPLATES
+// =========================
 export namespace getAllFormTemplates {
   export interface query {
     service_id?: string;
@@ -130,12 +147,16 @@ export namespace getAllFormTemplates {
   }
 
   export interface error {
-    message: string;
+    message?: string;
+    error?: string;
   }
 }
 
+// =========================
+// GET FORM TEMPLATE BY ID
+// =========================
 export namespace getFormTemplateById {
-  export interface request {
+  export interface params {
     form_id: string;
   }
 
@@ -171,6 +192,7 @@ export namespace getFormTemplateById {
   }
 
   export interface error {
-    message: string;
+    message?: string;
+    error?: string;
   }
 }

@@ -1,3 +1,4 @@
+
 import { sql } from "../../config/db.js";
 import { Request, Response } from "express";
 import type {
@@ -13,7 +14,7 @@ import type {
 // GET ALL USERS
 // =========================
 export async function getAllUsers(
-  req: Request,
+  req: Request<{}, getAllUsers.response | getAllUsers.error, {}>,
   res: Response<getAllUsers.response | getAllUsers.error>,
 ) {
   // GET /api/admin/users
@@ -95,7 +96,7 @@ export async function getAllUsers(
 // GET ALL ACTIVITIES
 // =========================
 export async function getAllActivities(
-  req: Request,
+  req: Request<{}, getAllActivities.response | getAllActivities.error, {}>,
   res: Response<getAllActivities.response | getAllActivities.error>,
 ) {
   // GET /api/admin/activities
@@ -143,7 +144,7 @@ export async function getAllActivities(
 // GET ALL SERVICES
 // =========================
 export async function getAllservices(
-  req: Request,
+  req: Request<{}, getAllservices.response | getAllservices.error, {}>,
   res: Response<getAllservices.response | getAllservices.error>,
 ) {
   // GET /api/admin/services
@@ -187,7 +188,7 @@ export async function getAllservices(
 // GET MY ACTIVITIES
 // =========================
 export async function getMyActivities(
-  req: Request,
+  req: Request<{}, getMyActivities.response | getMyActivities.error, {}>,
   res: Response<getMyActivities.response | getMyActivities.error>,
 ) {
   // GET /api/admin/activity
@@ -236,11 +237,16 @@ export async function getMyActivities(
 // GET ALL FORM TEMPLATES
 // =========================
 export async function getAllFormTemplates(
-  req: Request,
+  req: Request<
+    {},
+    getAllFormTemplates.response | getAllFormTemplates.error,
+    {},
+    getAllFormTemplates.query
+  >,
   res: Response<getAllFormTemplates.response | getAllFormTemplates.error>,
 ) {
   try {
-    const { service_id, status } = req.query as getAllFormTemplates.query;
+    const { service_id, status } = req.query;
 
     const templates = await sql`
       SELECT *
@@ -270,8 +276,14 @@ export async function getAllFormTemplates(
 // GET FORM TEMPLATE BY ID
 // =========================
 export async function getFormTemplateById(
-  req: Request<getFormTemplateById.request>,
-  res: Response,
+  req: Request<
+    getFormTemplateById.params,
+    getFormTemplateById.response | getFormTemplateById.error,
+    {}
+  >,
+  res: Response<
+    getFormTemplateById.response | getFormTemplateById.error
+  >,
 ) {
   try {
     const { form_id } = req.params;

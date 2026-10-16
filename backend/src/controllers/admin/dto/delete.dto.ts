@@ -1,6 +1,6 @@
 
 export namespace deleteTemplate {
-  export interface request {
+  export interface params {
     form_id: string;
   }
 
@@ -19,7 +19,7 @@ export namespace deleteTemplate {
 
   export interface response {
     message: string;
-    template: template;
+    template?: template;
   }
 
   export interface error {

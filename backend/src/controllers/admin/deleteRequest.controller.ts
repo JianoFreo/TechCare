@@ -1,15 +1,20 @@
-import { Request, Response } from "express";
+
+import type { Request, Response } from "express";
 import { sql } from "../../config/db.js";
-import type { deleteTemplate  } from "./dto/delete.dto.js";
+import type { deleteTemplate } from "./dto/delete.dto.js";
 
 export async function deleteTemplate(
-  req: Request<deleteTemplate.request>,
+  req: Request<
+    deleteTemplate.params,
+    deleteTemplate.response | deleteTemplate.error,
+    {}
+  >,
   res: Response<
     deleteTemplate.response | deleteTemplate.error
   >,
 ) {
   try {
-    const { form_id } = req.params as deleteTemplate.request;
+    const { form_id } = req.params;
 
     if (!form_id) {
       return res.status(400).json({
