@@ -215,3 +215,38 @@ export async function getAvailableFormTemplates(req: Request, res: Response) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
+ // IMPORTANT: Fetches laboratory results only after they have been released.
+export async function getReleasedLaboratoryResults(
+  req: Request,
+  res: Response,
+) {
+  try {
+   
+    const results = await sql`
+      SELECT
+        result_id,
+        lab_item_id,
+        results,
+        remarks,
+        image_url,
+        verified_by,
+        verified_at,
+        created_at,
+        updated_at
+      FROM laboratory_results
+      WHERE status = 'Released'
+      ORDER BY updated_at DESC;
+    `;
+
+    return res.status(200).json({
+      message: "Released laboratory results fetched successfully.",
+      results,
+    });
+  } catch (error) {
+    console.error("Unable to fetch released laboratory results:", error);
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+}
