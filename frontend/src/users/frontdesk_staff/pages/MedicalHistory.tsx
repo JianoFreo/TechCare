@@ -1,5 +1,5 @@
 import Header from "../../../components/Header";
-import { ChevronRight, SquareChevronLeft } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import PatientHeader from "../components/MedicalHistory/PatientHeader";
 import type { Patient } from "../../../interface/Patient";
 import HistoryTabs from "../components/MedicalHistory/HistoryTabs";

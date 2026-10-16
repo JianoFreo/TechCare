@@ -21,9 +21,17 @@ type LabDetails = {
   results: LabResultRow[];
 };
 
+type Prescription_item = {
+  medication_name: string;
+  dosage: string;
+  frequency: string;
+  duration_days: number;
+  instruction: string;
+};
+
 type Prescription = {
   prescription_id: string | number;
-  prescription_items: Json;
+  prescription_items: Prescription_item[];
   notes: string | null;
   valid_until: string | null;
   prescribed_at: string;
@@ -132,7 +140,6 @@ function JsonView({ value }: { value: Json | undefined }) {
   );
 }
 
-// Lab results: guesses common key names until the real ones are confirmed
 const pick = (o: Record<string, Json>, keys: string[]) => {
   for (const k of keys) if (o[k] != null && o[k] !== "") return o[k];
   return null;
@@ -441,8 +448,40 @@ function VisitDetails({
                     key={p.prescription_id}
                     className="rounded-lg border border-gray-200 p-3 text-sm"
                   >
-                    <div className="text-gray-700">
-                      <JsonView value={p.prescription_items} />
+                    <div className="overflow-x-auto border-b border-gray-200">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-gray-200 text-gray-500">
+                            <th className="py-2 pr-4 font-medium">Name</th>
+                            <th className="py-2 pr-4 font-medium">Dosage</th>
+                            <th className="py-2 pr-4 whitespace-nowrap font-medium">
+                              Frequency
+                            </th>
+                            <th className="py-2 text-right font-medium">
+                              Duration
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {p.prescription_items.map((item, i) => (
+                            <tr key={i} className="align-top">
+                              <td className="py-2 pr-4 font-medium text-gray-900">
+                                {item.medication_name}
+                              </td>
+                              <td className="py-2 pr-4 text-gray-700">
+                                {item.dosage}
+                              </td>
+                              <td className="py-2 pr-4 whitespace-nowrap text-gray-700">
+                                {item.frequency}
+                              </td>
+                              <td className="py-2 text-right whitespace-nowrap text-gray-700">
+                                {item.duration_days}{" "}
+                                {item.duration_days === 1 ? "day" : "days"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                     {p.notes && (
                       <p className="mt-2 text-xs text-gray-500">{p.notes}</p>

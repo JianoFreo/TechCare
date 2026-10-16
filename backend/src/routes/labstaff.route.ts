@@ -7,7 +7,7 @@ import {
   getAvailableFormTemplates,
   getLaboratoryQueues,
   getLaboratoryRequestDetails,
-  getReleasedLaboratoryResults
+  getReleasedLaboratoryResults,
 } from "../controllers/labstaff/getRequests.controller.js";
 
 import {
@@ -18,10 +18,7 @@ import {
   releaseLaboratoryResult,
 } from "../controllers/labstaff/updateRequest.controller.js";
 
-import {
-  saveLaboratoryResult,
-  addLaboratoryRequest,
-} from "../controllers/labstaff/postRequests.controller.js";
+import { saveLaboratoryResult } from "../controllers/labstaff/postRequests.controller.js";
 
 import authMiddleware from "../middlewares/auth.middleware.js";
 import labstaffMiddleware from "../middlewares/labstaff.middleware.js";
@@ -46,7 +43,6 @@ router.get("/laboratory-results/form-templates/", getAvailableFormTemplates);
 router.get("/laboratory-results", getReleasedLaboratoryResults);
 
 // POST ROUTES
-router.post("/laboratory-requests", addLaboratoryRequest);
 router.post("/laboratory-results/:lab_item_id", saveLaboratoryResult);
 
 // PATCH ROUTES

@@ -7,7 +7,7 @@ import type { PriorityFilter, QueueEntry } from "../../../../interface/Queue";
 import type { Service } from "../../../../interface/Service";
 import QueueFilters from "./LaboratoryQueuePanel/QueueFilter";
 
-type MainFilter = "all" | "waiting" | "serving" | "completed" | "skipped";
+type MainFilter = "all" | "waiting" | "serving" | "collected" | "skipped";
 
 type RequestTableProps = {
   queues: QueueEntry[];
@@ -26,7 +26,7 @@ const mainFilterValues: { label: string; value: MainFilter }[] = [
   { label: "All", value: "all" },
   { label: "Waiting", value: "waiting" },
   { label: "Serving", value: "serving" },
-  { label: "Completed", value: "completed" },
+  { label: "Collected", value: "collected" },
   { label: "Skipped", value: "skipped" },
 ];
 
@@ -119,7 +119,7 @@ function LaboratoryQueuePanel({
 
       const matchesStatus =
         activeMainTab === "all"
-          ? status !== "completed"
+          ? status !== "collected"
           : status === activeMainTab;
 
       const matchesSearch =
@@ -146,7 +146,7 @@ function LaboratoryQueuePanel({
     (counts, queue) => {
       const status = queue.status?.toLowerCase();
 
-      if (status !== "completed") counts.all += 1;
+      if (status !== "collected") counts.all += 1;
       if (queue.is_priority) counts.priority += 1;
 
       switch (status) {
@@ -156,8 +156,8 @@ function LaboratoryQueuePanel({
         case "serving":
           counts.serving += 1;
           break;
-        case "completed":
-          counts.completed += 1;
+        case "collected":
+          counts.collected += 1;
           break;
         case "skipped":
           counts.skipped += 1;
@@ -171,7 +171,7 @@ function LaboratoryQueuePanel({
       waiting: 0,
       priority: 0,
       serving: 0,
-      completed: 0,
+      collected: 0,
       skipped: 0,
     },
   );

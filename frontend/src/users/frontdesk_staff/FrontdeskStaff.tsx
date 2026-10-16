@@ -14,7 +14,6 @@ import Billing from "./pages/Billing";
 import FrontdeskDashboard from "./pages/FrontdeskDashboard";
 import PatientRecords from "./pages/PatientRecords";
 import PatientRegistration from "./pages/PatientRegistration";
-import QueueManagement from "./pages/QueueManagement";
 import ServiceRequest from "./pages/ServiceRequest";
 import Queues from "./pages/Queues";
 import type { QueueRequests } from "../../interface/Queue";
@@ -94,11 +93,6 @@ function FrontdeskStaff() {
       icon: <Syringe size={20} />,
     },
     {
-      page: "queue-management",
-      label: "Queue Management",
-      icon: <ListOrdered size={20} />,
-    },
-    {
       page: "queues",
       label: "Queues",
       icon: <ListOrdered size={20} />,
@@ -146,18 +140,6 @@ function FrontdeskStaff() {
           patients={patients}
           selectedPatient={selectedPatient}
           setSelectedPatient={setSelectedPatient}
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-          loading={loading}
-        />
-      )}
-
-      {page === "queue-management" && (
-        <QueueManagement
-          patients={patients}
-          services={services}
-          queues={queues}
           open={open}
           setOpen={setOpen}
           loadData={loadData}

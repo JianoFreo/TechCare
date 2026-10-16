@@ -1,12 +1,27 @@
+
 import { sql } from "../../config/db.js";
 import cloudinary from "../../config/cloudinary.js";
 import bcrypt from "bcryptjs";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { logActivity } from "../../utils/activityLogger.js";
+import type {
+  updateUser,
+  updateUserStatus,
+  updateFormTemplate,
+} from "./dto/update.dto.js";
 
-export async function updateUser(req: Request, res: Response) {
+// =========================
+// UPDATE USER
+// =========================
+export async function updateUser(
+  req: Request<
+    updateUser.params,
+    updateUser.response | updateUser.error,
+    updateUser.body
+  >,
+  res: Response<updateUser.response | updateUser.error>,
+) {
   // PATCH /api/admin/users/:user_id
-
   try {
     const { user_id } = req.params;
 
@@ -35,7 +50,6 @@ export async function updateUser(req: Request, res: Response) {
     // =========================
     // PASSWORD
     // =========================
-
     let hashedPassword: string | null = null;
 
     if (password?.trim()) {
@@ -45,7 +59,6 @@ export async function updateUser(req: Request, res: Response) {
     // =========================
     // PROFILE PHOTO
     // =========================
-
     let profilePhoto: string | null = null;
 
     if (req.file) {
@@ -59,118 +72,37 @@ export async function updateUser(req: Request, res: Response) {
     // =========================
     // UPDATE USER
     // =========================
-
     const updatedUser = await sql`
       UPDATE users
       SET
-        username = COALESCE(${username}, username),
-
-        password_hash = COALESCE(
-          ${hashedPassword},
-          password_hash
-        ),
-
-        first_name = COALESCE(
-          ${first_name},
-          first_name
-        ),
-
-        middle_name = COALESCE(
-          ${middle_name},
-          middle_name
-        ),
-
-        last_name = COALESCE(
-          ${last_name},
-          last_name
-        ),
-
-        suffix = COALESCE(
-          ${suffix},
-          suffix
-        ),
-
-        sex = COALESCE(
-          ${sex},
-          sex
-        ),
-
-        email = COALESCE(
-          ${email},
-          email
-        ),
-
-        contact_number = COALESCE(
-          ${contact_number},
-          contact_number
-        ),
-
-        emergency_contact_name = COALESCE(
-          ${emergency_contact_name},
-          emergency_contact_name
-        ),
-
-        emergency_contact = COALESCE(
-          ${emergency_contact},
-          emergency_contact
-        ),
-
-        address = COALESCE(
-          ${address},
-          address
-        ),
-
-        birthdate = COALESCE(
-          ${birthdate},
-          birthdate
-        ),
-
-        role = COALESCE(
-          ${role},
-          role
-        ),
-
-        department = COALESCE(
-          ${department},
-          department
-        ),
-
-        employment_status = COALESCE(
-          ${employment_status},
-          employment_status
-        ),
-
-        date_hired = COALESCE(
-          ${date_hired},
-          date_hired
-        ),
-
-        shift_start = COALESCE(
-          ${shift_start},
-          shift_start
-        ),
-
-        shift_end = COALESCE(
-          ${shift_end},
-          shift_end
-        ),
-
-        profile_photo = COALESCE(
-          ${profilePhoto},
-          profile_photo
-        ),
-
+        username = COALESCE(${username ?? null}, username),
+        password_hash = COALESCE(${hashedPassword}, password_hash),
+        first_name = COALESCE(${first_name ?? null}, first_name),
+        middle_name = COALESCE(${middle_name ?? null}, middle_name),
+        last_name = COALESCE(${last_name ?? null}, last_name),
+        suffix = COALESCE(${suffix ?? null}, suffix),
+        sex = COALESCE(${sex ?? null}, sex),
+        email = COALESCE(${email ?? null}, email),
+        contact_number = COALESCE(${contact_number ?? null}, contact_number),
+        emergency_contact_name = COALESCE(${emergency_contact_name ?? null}, emergency_contact_name),
+        emergency_contact = COALESCE(${emergency_contact ?? null}, emergency_contact),
+        address = COALESCE(${address ?? null}, address),
+        birthdate = COALESCE(${birthdate ?? null}, birthdate),
+        role = COALESCE(${role ?? null}, role),
+        department = COALESCE(${department ?? null}, department),
+        employment_status = COALESCE(${employment_status ?? null}, employment_status),
+        date_hired = COALESCE(${date_hired ?? null}, date_hired),
+        shift_start = COALESCE(${shift_start ?? null}, shift_start),
+        shift_end = COALESCE(${shift_end ?? null}, shift_end),
+        profile_photo = COALESCE(${profilePhoto}, profile_photo),
         updated_at = CURRENT_TIMESTAMP
-
       WHERE user_id = ${user_id}
-
       RETURNING *;
     `;
 
     // =========================
     // USER NOT FOUND
     // =========================
-
     if (updatedUser.length === 0) {
       return res.status(404).json({
         message: "User not found",
@@ -178,13 +110,17 @@ export async function updateUser(req: Request, res: Response) {
     }
 
     // =========================
+    // REMOVE SENSITIVE DATA
+    // =========================
+    const { password_hash, ...safeUser } = updatedUser[0];
+
+    // =========================
     // RESPONSE
     // =========================
-
     return res.status(200).json({
       message: "User updated successfully!",
-      user: updatedUser[0],
-    });
+      user: safeUser,
+    } as updateUser.response);
   } catch (error) {
     console.error("UPDATE USER ERROR:", error);
 
@@ -194,9 +130,16 @@ export async function updateUser(req: Request, res: Response) {
   }
 }
 
+// =========================
+// UPDATE USER STATUS
+// =========================
 export async function updateUserStatus(
-  req: Request<{ user_id: string }>,
-  res: Response,
+  req: Request<
+    updateUserStatus.params,
+    updateUserStatus.response | updateUserStatus.error,
+    updateUserStatus.body
+  >,
+  res: Response<updateUserStatus.response | updateUserStatus.error>,
 ) {
   try {
     const { user_id } = req.params;
@@ -230,16 +173,25 @@ export async function updateUserStatus(
     }
 
     const updatedAccountStatus = await sql`
-        UPDATE users
-        SET account_status = ${account_status}, updated_at = CURRENT_TIMESTAMP
-        WHERE user_id = ${user_id}
-        RETURNING user_id,
-                  first_name,
-                  last_name,
-                  middle_name,
-                  role,
-                  account_status;  
-        `;
+      UPDATE users
+      SET
+        account_status = ${account_status},
+        updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ${user_id}
+      RETURNING
+        user_id,
+        first_name,
+        last_name,
+        middle_name,
+        role,
+        account_status;
+    `;
+
+    if (updatedAccountStatus.length === 0) {
+      return res.status(404).json({
+        message: "User not found.",
+      });
+    }
 
     await logActivity({
       userId: req.user.user_id,
@@ -247,87 +199,130 @@ export async function updateUserStatus(
       status: "success",
       targetType: "user",
       targetId: user_id,
-      metadata: { newStatus: account_status ? "activated" : "deactivated" },
+      metadata: {
+        newStatus: account_status ? "activated" : "deactivated",
+      },
     });
 
     return res.status(200).json({
       message: `User successfully ${account_status ? "activated" : "deactivated"}.`,
-      updatedAccountStatus: updatedAccountStatus,
-    });
+      updatedAccountStatus,
+    } as updateUserStatus.response);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
+    console.error("UPDATE USER STATUS ERROR:", error);
+
+    return res.status(500).json({
       message: "Internal Server Error.",
     });
   }
 }
 
-export async function updateFormTemplate(req: Request, res: Response) {
+// =========================
+// UPDATE FORM TEMPLATE
+// =========================
+export async function updateFormTemplate(
+  req: Request<
+    updateFormTemplate.params,
+    updateFormTemplate.response | updateFormTemplate.error,
+    updateFormTemplate.body
+  >,
+  res: Response<updateFormTemplate.response | updateFormTemplate.error>,
+) {
   const { form_id } = req.params;
   const { form_name, form_description, status, form_components } = req.body;
 
   if (!form_id) {
-    return res.status(400).json({ message: "form_id is required." });
+    return res.status(400).json({
+      message: "form_id is required.",
+    });
   }
 
   if (
-    !form_name ||
+    !form_name?.trim() ||
     !Array.isArray(form_components) ||
     form_components.length === 0
   ) {
-    return res.status(400).json({ message: "Required fields missing." });
+    return res.status(400).json({
+      message: "Required fields missing.",
+    });
   }
 
   try {
     const [checkExisting] = await sql`
-      SELECT * FROM form_templates WHERE form_id = ${form_id}
+      SELECT *
+      FROM form_templates
+      WHERE form_id = ${form_id}
     `;
 
     if (!checkExisting) {
-      return res.status(404).json({ message: "Form template not found." });
+      return res.status(404).json({
+        message: "Form template not found.",
+      });
     }
 
-    await sql.query("BEGIN");
+    // NOTE: For Neon HTTP queries, separate BEGIN/COMMIT calls may not share
+    // the same connection. Use a transaction-capable client for atomic writes.
+
     const [formUpdated] = await sql`
       UPDATE form_templates
-      SET form_name = ${form_name},
-          form_description = ${form_description},
-          status = ${status},
-          version = version + 1,
-          updated_at = CURRENT_TIMESTAMP
+      SET
+        form_name = ${form_name},
+        form_description = ${form_description ?? null},
+        status = ${status ?? checkExisting.status},
+        version = version + 1,
+        updated_at = CURRENT_TIMESTAMP
       WHERE form_id = ${form_id}
       RETURNING *
     `;
 
     await sql`
-      DELETE FROM form_components WHERE form_id = ${form_id}
+      DELETE FROM form_components
+      WHERE form_id = ${form_id}
     `;
 
-    const componentsUpdated = [];
+    const componentsUpdated: updateFormTemplate.component[] = [];
+
     for (let index = 0; index < form_components.length; index++) {
-      const c = form_components[index];
+      const componentData = form_components[index];
       const form_component_id = `FC-${form_id}-${index}`;
 
       const [component] = await sql`
-        INSERT INTO form_components
-          (form_component_id, form_id, type_id, label, field_key, display_order, settings, validation)
-        VALUES
-          (${form_component_id}, ${form_id}, ${c.type_id}, ${c.label}, ${c.field_key}, ${c.display_order}, ${c.settings}, ${c.validation})
+        INSERT INTO form_components (
+          form_component_id,
+          form_id,
+          type_id,
+          label,
+          field_key,
+          display_order,
+          settings,
+          validation
+        )
+        VALUES (
+          ${form_component_id},
+          ${form_id},
+          ${componentData.type_id},
+          ${componentData.label},
+          ${componentData.field_key},
+          ${componentData.display_order},
+          ${JSON.stringify(componentData.settings ?? null)}::jsonb,
+          ${JSON.stringify(componentData.validation ?? null)}::jsonb
+        )
         RETURNING *
       `;
-      componentsUpdated.push(component);
+
+      componentsUpdated.push(component as updateFormTemplate.component);
     }
 
-    await sql.query("COMMIT");
-
-    res.status(200).json({
+    return res.status(200).json({
       message: "Form template updated successfully",
-      formUpdated,
+      formUpdated: formUpdated as updateFormTemplate.template,
       componentsUpdated,
-    });
+    } as updateFormTemplate.response);
   } catch (error) {
-    console.error(error);
-    await sql.query("ROLLBACK");
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("UPDATE FORM TEMPLATE ERROR:", error);
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
   }
 }
