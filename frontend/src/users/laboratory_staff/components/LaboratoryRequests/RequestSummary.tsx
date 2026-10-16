@@ -34,6 +34,13 @@ function RequestSummary({ services, queues, room }: RequestSummaryProps) {
       Inactive: 0,
     },
   );
+  console.log(
+    "RequestSummary queues:",
+    typeof queues,
+    Array.isArray(queues),
+    queues,
+  );
+
   const queueCounts = queues.reduce(
     (counts, queue) => {
       if (queue.is_priority) {

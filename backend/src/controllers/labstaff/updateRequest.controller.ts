@@ -1,7 +1,7 @@
 import { sql } from "../../config/db.js";
 import { json, Request, Response } from "express";
 
-export async function updateQueueStatus(req: Request, res: Response) {
+export async function acceptQueueEntry(req: Request, res: Response) {
   try {
     const { queue_id } = req.params;
     const { room } = req.body as { room?: string };
@@ -16,17 +16,14 @@ export async function updateQueueStatus(req: Request, res: Response) {
     const [updated] = await sql`
       UPDATE queue_entries q
       SET
-        status = CASE
-          WHEN LOWER(q.status) IN ('waiting', 'skipped') THEN 'Serving'
-          WHEN LOWER(q.status) = 'serving' THEN 'Completed'
-        END,
+        status = 'Serving',
         updated_at = NOW()
       FROM services s
       WHERE q.queue_id = ${queue_id}
         AND q.queue_id LIKE 'LAB-%'
         AND s.service_id = q.service_id
         AND s.room = ${room}
-        AND LOWER(q.status) IN ('waiting', 'skipped', 'serving')
+        AND LOWER(q.status) IN ('waiting', 'skipped')
       RETURNING q.*
     `;
 
@@ -48,20 +45,77 @@ export async function updateQueueStatus(req: Request, res: Response) {
           .json({ message: "This queue belongs to a different room." });
       }
       return res.status(409).json({
-        message: `Queue is already ${existing.status} and can't be updated.`,
+        message: `Queue is ${existing.status} and can't be accepted.`,
       });
     }
 
     return res.status(200).json({
-      message: `Queue entry status changed to ${updated.status}.`,
+      message: "Queue entry accepted and now being served.",
       queue: updated,
     });
   } catch (error) {
-    console.error("Unable to update queue status", error);
+    console.error("Unable to accept queue", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
 
+export async function completeQueueEntry(req: Request, res: Response) {
+  try {
+    const { queue_id } = req.params;
+    const { room } = req.body as { room?: string };
+
+    if (!queue_id) {
+      return res.status(400).json({ message: "Queue ID is required!" });
+    }
+    if (!room) {
+      return res.status(400).json({ message: "room is required" });
+    }
+
+    const [updated] = await sql`
+      UPDATE queue_entries q
+      SET
+        status = 'Completed',
+        updated_at = NOW()
+      FROM services s
+      WHERE q.queue_id = ${queue_id}
+        AND q.queue_id LIKE 'LAB-%'
+        AND s.service_id = q.service_id
+        AND s.room = ${room}
+        AND LOWER(q.status) IN ('serving')
+      RETURNING q.*
+    `;
+
+    if (!updated) {
+      const [existing] = await sql`
+        SELECT q.status, s.room
+        FROM queue_entries q
+        JOIN services s ON s.service_id = q.service_id
+        WHERE q.queue_id = ${queue_id}
+          AND q.queue_id LIKE 'LAB-%'
+      `;
+
+      if (!existing) {
+        return res.status(404).json({ message: "Queue entry not found." });
+      }
+      if (existing.room !== room) {
+        return res
+          .status(403)
+          .json({ message: "This queue belongs to a different room." });
+      }
+      return res.status(409).json({
+        message: `Queue is ${existing.status} and can't be completed.`,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Queue entry completed.",
+      queue: updated,
+    });
+  } catch (error) {
+    console.error("Unable to complete queue", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
 
 export async function skipQueueEntry(req: Request, res: Response) {
   try {
@@ -92,11 +146,7 @@ export async function skipQueueEntry(req: Request, res: Response) {
       });
     }
 
-    const {
-      queue_number: currentQueueNumber,
-      service_id,
-      status,
-    } = queue[0];
+    const { queue_number: currentQueueNumber, service_id, status } = queue[0];
 
     // Only waiting or serving entries can be skipped.
     if (!["waiting", "serving"].includes(String(status).toLowerCase())) {
@@ -132,7 +182,7 @@ export async function skipQueueEntry(req: Request, res: Response) {
     const updatedQueue = await sql`
       UPDATE queue_entries
       SET
-        queue_number = ${currentQueueNumber + 1},
+        queue_number = ${currentQueueNumber + 2},
         status = 'skipped',
         updated_at = NOW()
       WHERE queue_id = ${queue_id}
@@ -154,17 +204,30 @@ export async function skipQueueEntry(req: Request, res: Response) {
 
 export async function cancelQueueEntry(req: Request, res: Response) {
   try {
-    // Get the queue_id of the patient whose queue needs to be cancelled.
     const { queue_id } = req.params;
+    const { reason } = req.body as { reason?: string };
 
-    // Validate the queue ID.
     if (!queue_id) {
       return res.status(400).json({
         message: "Queue ID is required!",
       });
     }
 
-    // Find the patient's current queue entry.
+    if (typeof reason !== "string" || !reason.trim()) {
+      return res.status(400).json({
+        message: "Cancellation reason is required!",
+      });
+    }
+
+    const cancellationReason = reason.trim();
+
+    if (cancellationReason.length > 255) {
+      return res.status(400).json({
+        message: "Cancellation reason must not exceed 255 characters.",
+      });
+    }
+
+    // Find the queue entry.
     const queue = await sql`
       SELECT queue_id, queue_number, service_id, status
       FROM queue_entries
@@ -172,7 +235,6 @@ export async function cancelQueueEntry(req: Request, res: Response) {
       LIMIT 1;
     `;
 
-    // Stop if the queue entry doesn't exist.
     if (queue.length === 0) {
       return res.status(404).json({
         message: "Queue entry not found.",
@@ -203,16 +265,28 @@ export async function cancelQueueEntry(req: Request, res: Response) {
       RETURNING *;
     `;
 
-    // Handle cases where the status changed before the update.
     if (updatedQueue.length === 0) {
       return res.status(409).json({
         message: "Queue entry status changed. Please try again.",
       });
     }
 
+    // Store the cancellation reason against the associated
+    // laboratory request item.
+    const updatedItems = await sql`
+      UPDATE laboratory_request_items
+      SET
+        reason = ${cancellationReason},
+        updated_at = NOW()
+      WHERE queue_id = ${queue_id}
+      RETURNING lab_item_id, request_id, queue_id, reason;
+    `;
+
     return res.status(200).json({
       message: "Queue cancelled successfully.",
       queue: updatedQueue[0],
+      reason: cancellationReason,
+      laboratory_items: updatedItems,
     });
   } catch (error) {
     console.error("Error in cancelQueueEntry controller:", error);
@@ -222,4 +296,3 @@ export async function cancelQueueEntry(req: Request, res: Response) {
     });
   }
 }
-
