@@ -260,7 +260,10 @@ export default function TemplateBuilder({
     <div className="flex flex-col gap-5 w-full">
       {/* Notice Banner */}
       {noticeMessage && (
-        <div className="bg-sky-50 border border-sky-200 text-sky-800 text-xs px-4 py-3 rounded-2xl flex items-center justify-between shadow-sm animate-fade-in">
+        <div
+          role="alert"
+          className="sticky top-3 z-20 bg-sky-50 border border-sky-200 text-sky-800 text-xs px-4 py-3 rounded-2xl flex items-center justify-between shadow-sm animate-fade-in"
+        >
           <div className="flex items-center gap-2 font-medium">
             <AlertCircle size={16} className="text-sky-600 flex-shrink-0" />
             <span>{noticeMessage}</span>
@@ -410,7 +413,7 @@ export default function TemplateBuilder({
       <div className="bg-white border border-gray-200 rounded-3xl px-6 py-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
           <CheckCircle2 size={16} className="text-emerald-500" />
-          <span>In-Memory Prototype Session</span>
+          <span>Save a draft or publish to save your changes.</span>
         </div>
 
         <div className="flex items-center gap-3">

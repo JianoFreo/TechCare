@@ -612,16 +612,13 @@ export default function ResultEntry({
                       )}
                     </div>
                   )}
-                  {!loading &&
-                    template?.fieldsAvailable === false &&
-                    !failure && (
-                      <AnalysisNotice>
-                        This published template is available, but its result
-                        fields and validation rules are not available yet.
-                        Result entry will be enabled once those fields are
-                        provided.
-                      </AnalysisNotice>
-                    )}
+                  {!loading && template && !editableCount && !failure && (
+                    <AnalysisNotice>
+                      This published template is available, but its result
+                      fields and validation rules are not available yet. Result
+                      entry will be enabled once those fields are provided.
+                    </AnalysisNotice>
+                  )}
                   {failure && (
                     <>
                       <AnalysisNotice error>{failure}</AnalysisNotice>

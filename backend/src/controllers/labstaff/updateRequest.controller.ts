@@ -62,27 +62,56 @@ export async function acceptQueueEntry(req: Request, res: Response) {
 export async function completeQueueEntry(req: Request, res: Response) {
   try {
     const { queue_id } = req.params;
-    const { room } = req.body as { room?: string };
+    const { room } = (req.body ?? {}) as { room?: string };
 
     if (!queue_id) {
       return res.status(400).json({ message: "Queue ID is required!" });
     }
-    if (!room) {
+    if (typeof room !== "string" || !room.trim()) {
       return res.status(400).json({ message: "room is required" });
     }
 
     const [updated] = await sql`
-      UPDATE queue_entries q
-      SET
-        status = 'Completed',
-        updated_at = NOW()
-      FROM services s
-      WHERE q.queue_id = ${queue_id}
-        AND q.queue_id LIKE 'LAB-%'
-        AND s.service_id = q.service_id
-        AND s.room = ${room}
-        AND LOWER(q.status) IN ('serving')
-      RETURNING q.*
+      WITH completed_queue AS (
+        UPDATE queue_entries q
+        SET
+          status = 'Completed',
+          updated_at = CASE
+            WHEN LOWER(q.status) = 'completed' THEN q.updated_at
+            ELSE NOW()
+          END
+        FROM services s
+        WHERE q.queue_id = ${queue_id}
+          AND q.queue_id LIKE 'LAB-%'
+          AND s.service_id = q.service_id
+          AND s.room = ${room}
+          AND LOWER(q.status) IN ('serving', 'completed')
+          AND (
+            LOWER(q.status) = 'completed'
+            OR EXISTS (
+              SELECT 1
+              FROM laboratory_request_items ri
+              JOIN services item_service ON item_service.service_id = ri.service_id
+              WHERE ri.queue_id = q.queue_id
+                AND item_service.room = ${room}
+                AND LOWER(ri.status) IN (
+                  'requested', 'waiting', 'serving', 'specimen collected'
+                )
+            )
+          )
+        RETURNING q.*
+      ), collected_items AS (
+        UPDATE laboratory_request_items ri
+        SET status = 'Specimen Collected', updated_at = NOW()
+        FROM completed_queue cq, services s
+        WHERE ri.queue_id = cq.queue_id
+          AND s.service_id = ri.service_id
+          AND s.room = ${room}
+          AND LOWER(ri.status) IN ('requested', 'waiting', 'serving')
+        RETURNING ri.lab_item_id
+      )
+      SELECT cq.*, (SELECT COUNT(*)::int FROM collected_items) AS collected_item_count
+      FROM completed_queue cq
     `;
 
     if (!updated) {
@@ -102,14 +131,22 @@ export async function completeQueueEntry(req: Request, res: Response) {
           .status(403)
           .json({ message: "This queue belongs to a different room." });
       }
+      if (String(existing.status).toLowerCase() === "serving") {
+        return res.status(409).json({
+          message:
+            "No laboratory request items are available for specimen collection in this room.",
+        });
+      }
       return res.status(409).json({
-        message: `Queue is ${existing.status} and can't be completed.`,
+        message: "Queue is " + existing.status + " and can't be completed.",
       });
     }
 
+    const { collected_item_count, ...queue } = updated;
     return res.status(200).json({
       message: "Queue entry completed.",
-      queue: updated,
+      queue,
+      collected_item_count,
     });
   } catch (error) {
     console.error("Unable to complete queue", error);

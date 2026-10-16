@@ -198,11 +198,17 @@ export async function getAvailableFormTemplates(req: Request, res: Response) {
         ft.form_name,
         ft.form_description,
         ft.service_id,
+        ft.status,
         s.service_name,
         ft.version,
         ft.created_by,
         ft.created_at,
-        ft.updated_at
+        ft.updated_at,
+        COALESCE((
+          SELECT jsonb_agg(to_jsonb(fc) ORDER BY fc.display_order, fc.form_component_id)
+          FROM form_components fc
+          WHERE fc.form_id = ft.form_id
+        ), '[]'::jsonb) AS components
       FROM form_templates ft
       JOIN services s ON s.service_id = ft.service_id
       WHERE ft.status = 'Published'

@@ -147,7 +147,7 @@ export async function fetchPublishedReportTemplates(
     }
     return (
       rows
-        // This endpoint returns published records but omits their status column.
+        // Older published-template responses omitted the status column.
         .filter(
           (row) =>
             row && (row.status === undefined || row.status === "Published"),

@@ -1,6 +1,7 @@
 import { sql } from "../../config/db.js";
 import cloudinary from "../../config/cloudinary.js";
 import bcrypt from "bcryptjs";
+import { registerFormComponentTypes } from "../../utils/formComponentTypes.js";
 import { NextFunction, Request, Response } from "express";
 import {
   generateUserId,
@@ -350,36 +351,34 @@ export async function addFormTemplates(req: Request, res: Response) {
     AND status = 'Published'
     `;
 
-    if (checkExisting) {
+    if (status === "Published" && checkExisting) {
       return res.status(400).json({
         message: "An active form template already exist for the service.",
       });
     }
 
-    await sql.query("BEGIN");
     const form_id = `F-${Date.now()}`;
-    const [formCreated] = await sql`
+    const results = await sql.transaction([
+      registerFormComponentTypes(),
+      sql`
       INSERT INTO form_templates (form_id, form_name, form_description, service_id, status, created_by)
       VALUES (${form_id}, ${form_name}, ${form_description}, ${service_id}, ${status}, ${created_by})
       RETURNING *
-    `;
+    `,
+      ...form_components.map((c, index) => {
+        const form_component_id = `FC-${form_id}-${index}`;
 
-    const componentsCreated = [];
-    for (let index = 0; index < form_components.length; index++) {
-      const c = form_components[index];
-      const form_component_id = `FC-${form_id}-${index}`;
-
-      const [component] = await sql`
+        return sql`
           INSERT INTO form_components
             (form_component_id, form_id, type_id, label, field_key, display_order, settings, validation)
           VALUES
             (${form_component_id}, ${form_id}, ${c.type_id}, ${c.label}, ${c.field_key}, ${c.display_order}, ${c.settings}, ${c.validation})
           RETURNING *
         `;
-      componentsCreated.push(component);
-    }
-
-    await sql.query("COMMIT");
+      }),
+    ]);
+    const [formCreated] = results[1];
+    const componentsCreated = results.slice(2).flat();
     res.status(201).json({
       message: "Form successfully created",
       formCreated,
@@ -387,7 +386,6 @@ export async function addFormTemplates(req: Request, res: Response) {
     });
   } catch (error) {
     console.error(error);
-    await sql.query("ROLLBACK");
     res.status(500).json({
       message: "Internal Server Error",
     });
