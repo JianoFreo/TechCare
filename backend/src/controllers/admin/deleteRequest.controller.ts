@@ -8,7 +8,8 @@ import type { deleteTemplate } from "./dto/delete.dto.js";
 // =========================
 export async function deleteTemplateController(
   req: Request<deleteTemplate.request>,
-  res: Response,
+  res: Response<deleteTemplate.response | deleteTemplate.error>,
+  
 ) {
   // DELETE /api/admin/templates/:form_id
 
