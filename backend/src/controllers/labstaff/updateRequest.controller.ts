@@ -108,11 +108,11 @@ export async function completeQueueEntry(req: Request, res: Response) {
     }
 
     return res.status(200).json({
-      message: "Queue entry accepted and now being served.",
+      message: "Queue entry completed.",
       queue: updated,
     });
   } catch (error) {
-    console.error("Unable to accept queue", error);
+    console.error("Unable to complete queue", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -182,7 +182,7 @@ export async function skipQueueEntry(req: Request, res: Response) {
     const updatedQueue = await sql`
       UPDATE queue_entries
       SET
-        queue_number = ${currentQueueNumber + 1},
+        queue_number = ${currentQueueNumber + 2},
         status = 'skipped',
         updated_at = NOW()
       WHERE queue_id = ${queue_id}

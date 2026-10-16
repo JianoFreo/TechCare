@@ -11,6 +11,7 @@ import {
   acceptQueueEntry,
   skipQueueEntry,
   cancelQueueEntry,
+  completeQueueEntry,
 } from "../controllers/labstaff/updateRequest.controller.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import labstaffMiddleware from "../middlewares/labstaff.middleware.js";
@@ -32,5 +33,6 @@ router.get("/laboratory-results/form-templates/", getAvailableFormTemplates);
 // UPDATE ROUTES
 router.patch("/laboratory-queues/:queue_id/accept", acceptQueueEntry);
 router.patch("/laboratory-queues/:queue_id/skip", skipQueueEntry);
+router.patch("/laboratory-queues/:queue_id/complete", completeQueueEntry);
 // DELETE ROUTES
 export default router;
