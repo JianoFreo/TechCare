@@ -3,41 +3,49 @@ import api from "../../../../lib/axios";
 import QueueTabs from "./QueueTabs";
 import QueueTable from "./QueueTable";
 import type { LaboratoryItem } from "../../../../interface/LaboratoryItem";
-import type { Queue } from "../../../../interface/Queue";
+import type { PriorityFilter, QueueEntry } from "../../../../interface/Queue";
 import type { Service } from "../../../../interface/Service";
+import QueueFilters from "./LaboratoryQueuePanel/QueueFilter";
 
-type MainFilter = "All" | "Waiting" | "Serving" | "Completed" | "Skipped";
+type MainFilter = "all" | "waiting" | "serving" | "completed" | "skipped";
 
 type RequestTableProps = {
-  // setRequestIdCard: React.Dispatch<React.SetStateAction<string | null>>;
-  // setPatientIdCard: React.Dispatch<React.SetStateAction<string | null>>;
-  // setOpenInformationCard: React.Dispatch<React.SetStateAction<boolean>>;
-  queues: Queue[];
-  services: Service[];
+  queues: QueueEntry[];
+  services?: Service[];
   loading: boolean;
   error: string | null;
   setOpenQueueAccordion: Dispatch<SetStateAction<string | null>>;
   openQueueAccordion: string | null;
   setOpenInformationCard: Dispatch<SetStateAction<boolean>>;
   setQueueIdCard: Dispatch<SetStateAction<string | null>>;
+  loadData: () => Promise<void>;
+  room: string;
 };
+
+const mainFilterValues: { label: string; value: MainFilter }[] = [
+  { label: "All", value: "all" },
+  { label: "Waiting", value: "waiting" },
+  { label: "Serving", value: "serving" },
+  { label: "Completed", value: "completed" },
+  { label: "Skipped", value: "skipped" },
+];
 
 function LaboratoryQueuePanel({
   queues,
-  services,
   loading,
   error,
   setOpenQueueAccordion,
   openQueueAccordion,
   setOpenInformationCard,
   setQueueIdCard,
+  room,
+  loadData,
 }: RequestTableProps) {
-  // MAIN STATUS TABS AND ADDITIONAL FILTER AND SORT
-  const [activeMainTab, setActiveMainTab] = useState<MainFilter>("All");
-  const [priorityFilter, setPriorityFilter] = useState("");
-  const [searchFilter, setSerchFilter] = useState("");
+  // MAIN STATUS TABS AND ADDITIONAL FILTERS
+  const [activeMainTab, setActiveMainTab] = useState<MainFilter>("all");
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all");
+  const [searchFilter, setSearchFilter] = useState("");
   const [serviceFilter, setServiceFilter] = useState("");
-  const [sortFilter, setSortFilter] = useState("");
 
   // LABORATORY REQUEST ITEM STORAGE
   const [laboratoryItems, setLaboratoryItems] = useState<LaboratoryItem[]>([]);
@@ -46,11 +54,13 @@ function LaboratoryQueuePanel({
   const [accordionError, setAccordionError] = useState<string | null>(null);
   const [accordionLoading, setAccordionLoading] = useState(false);
 
-  // FOR FETCHING ITEMS WHEN QUEUE ACCORDION IS OPENED
+  // FETCH ITEMS WHEN A QUEUE ACCORDION IS OPENED
   useEffect(() => {
     if (!openQueueAccordion) {
       return;
     }
+
+    let cancelled = false;
 
     async function fetchLaboratoryItems() {
       try {
@@ -60,107 +70,116 @@ function LaboratoryQueuePanel({
         const itemResponse = await api.get(
           `/api/labstaff/laboratory-queues/${openQueueAccordion}/items`,
         );
+        if (cancelled) return;
         setLaboratoryItems(itemResponse.data ?? []);
       } catch (err) {
+        if (cancelled) return;
         const message =
           (err as { response?: { data?: { message?: string } } })?.response
             ?.data?.message || "Unable to fetch data.";
         setAccordionError(message);
         setLaboratoryItems([]);
       } finally {
-        setAccordionLoading(false);
+        if (!cancelled) setAccordionLoading(false);
       }
     }
 
     fetchLaboratoryItems();
+
+    return () => {
+      cancelled = true;
+    };
   }, [openQueueAccordion]);
 
-  const mainFilterValues: {
-    label: string;
-    value: MainFilter;
-  }[] = [
-    { label: "All", value: "All" },
-    { label: "Waiting", value: "Waiting" },
-    { label: "Serving", value: "Serving" },
-    { label: "Completed", value: "Completed" },
-    { label: "Skipped", value: "Skipped" },
-  ];
+  // SERVICE OPTIONS (based on the active status tab)
+  const serviceOptions = Array.from(
+    new Set(
+      queues
+        .filter(
+          (q) =>
+            activeMainTab === "all" ||
+            q.status?.toLowerCase() === activeMainTab,
+        )
+        .map((q) => q.service_category),
+    ),
+  )
+    .filter((c): c is string => Boolean(c))
+    .sort();
+
+  // If the selected service isn't available on this tab, treat it as "no filter"
+  const activeServiceFilter = serviceOptions.includes(serviceFilter)
+    ? serviceFilter
+    : "";
+
+  const searchLower = searchFilter.trim().toLowerCase();
 
   const filterQueues = queues
     .filter((queue) => {
-      const matchesActiveMainFilter =
-        activeMainTab === "All" ||
-        (activeMainTab === "Waiting" && queue.status === "Waiting") ||
-        (activeMainTab === "Serving" && queue.status === "Serving") ||
-        (activeMainTab === "Completed" && queue.status === "Completed") ||
-        (activeMainTab === "Skipped" && queue.status === "Skipped");
+      const status = queue.status?.toLowerCase();
 
-      const searchLower = searchFilter.trim().toLowerCase();
+      const matchesStatus =
+        activeMainTab === "all"
+          ? status !== "completed"
+          : status === activeMainTab;
+
       const matchesSearch =
         !searchLower ||
-        queue.queue_id.toLowerCase().includes(searchLower) ||
-        queue.patient_id.toLowerCase().includes(searchLower);
+        queue.queue_id?.toLowerCase().includes(searchLower) ||
+        queue.patient_id?.toLowerCase().includes(searchLower);
 
-      const priorityMatches =
-        priorityFilter === "" ||
-        (priorityFilter === "Priority" && queue.is_priority) ||
-        (priorityFilter === "Non-priority" && !queue.is_priority);
+      const matchesPriority =
+        priorityFilter === "all" ||
+        (priorityFilter === "yes" && queue.is_priority) ||
+        (priorityFilter === "none" && !queue.is_priority);
 
-      return matchesActiveMainFilter && matchesSearch && priorityMatches;
+      const matchesService =
+        activeServiceFilter === "" ||
+        queue.service_category === activeServiceFilter;
+
+      return (
+        matchesStatus && matchesSearch && matchesPriority && matchesService
+      );
     })
-    .sort((a, b) => {
-      if (sortFilter === "oldest") {
-        return (
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
-      }
-      if (sortFilter === "newest") {
-        return (
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-      }
-
-      return a.queue_number - b.queue_number;
-    });
+    .sort((a, b) => a.queue_number - b.queue_number);
 
   const mainFilterCounts = queues.reduce(
     (counts, queue) => {
-      counts.All += 1;
+      const status = queue.status?.toLowerCase();
 
-      if (queue.is_priority) {
-        counts.Priority += 1;
-      }
+      if (status !== "completed") counts.all += 1;
+      if (queue.is_priority) counts.priority += 1;
 
-      if (queue.status === "Waiting") {
-        counts.Waiting += 1;
-      }
-
-      if (queue.status === "Serving") {
-        counts["Serving"] += 1;
-      }
-
-      if (queue.status === "Completed") {
-        counts.Completed += 1;
-      }
-
-      if (queue.status === "Skipped") {
-        counts.Skipped += 1;
+      switch (status) {
+        case "waiting":
+          counts.waiting += 1;
+          break;
+        case "serving":
+          counts.serving += 1;
+          break;
+        case "completed":
+          counts.completed += 1;
+          break;
+        case "skipped":
+          counts.skipped += 1;
+          break;
       }
 
       return counts;
     },
     {
-      All: 0,
-      Waiting: 0,
-      Priority: 0,
-      Serving: 0,
-      Completed: 0,
-      Skipped: 0,
+      all: 0,
+      waiting: 0,
+      priority: 0,
+      serving: 0,
+      completed: 0,
+      skipped: 0,
     },
   );
 
+  const loadingLabel = activeMainTab === "all" ? "" : `${activeMainTab} `;
+
   return (
-    <div className="w-full min-h-20 border rounded-3xl border-gray-300 flex flex-col gap-5 items-center justify-around">
+    <div className="w-full min-h-20 border rounded-3xl border-gray-300 flex flex-col gap-5 justify-around">
       {/* MAIN FILTERS */}
       <QueueTabs
         mainFilterValues={mainFilterValues}
@@ -169,69 +188,35 @@ function LaboratoryQueuePanel({
         setOpenQueueAccordion={setOpenQueueAccordion}
         onClick={setActiveMainTab}
       />
+
       {/* SEARCH BAR AND ADDITIONAL FILTERS */}
-      <div className="flex w-full items-center justify-start gap-3 px-5">
-        {/* Search */}
-        <input
-          type="text"
-          placeholder="Patient ID, Queue ID..."
-          value={searchFilter}
-          className="w-full max-w-56 border rounded-lg px-3 py-1"
-          onChange={(e) => setSerchFilter(e.target.value)}
-        />
+      <QueueFilters
+        search={searchFilter}
+        setSearch={setSearchFilter}
+        serviceFilter={activeServiceFilter}
+        setServiceFilter={setServiceFilter}
+        serviceOptions={serviceOptions}
+        priority={priorityFilter}
+        setPriority={setPriorityFilter}
+      />
 
-        {/* Priority */}
-        <select
-          className="border rounded-lg px-3 py-2"
-          value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value)}
+      {loading ? (
+        <div className="w-full mb-8 rounded-xl border border-gray-200 bg-gray-100 p-4 text-center text-sm">
+          Loading {loadingLabel}laboratory queues...
+        </div>
+      ) : error ? (
+        <div
+          role="alert"
+          className="w-full mb-8 rounded-xl border border-rose-200 bg-rose-50 p-4 text-center text-sm text-rose-700"
         >
-          <option value="">Priority: All</option>
-          <option value="Priority">Priority</option>
-          <option value="Non-priority">Non-priority</option>
-        </select>
-
-        {/* Service */}
-        <select
-          className="border rounded-lg px-3 py-2"
-          value={serviceFilter}
-          onChange={(e) => setServiceFilter(e.target.value)}
-        >
-          <option value="">Services: All</option>
-          {services.map((service) => (
-            <option key={service.id} value={service.service_name}>
-              {service.service_name}
-            </option>
-          ))}
-        </select>
-
-        {/* Sort */}
-        <select
-          className="border rounded-lg px-3 py-2"
-          value={sortFilter}
-          onChange={(e) => setSortFilter(e.target.value)}
-        >
-          <option value="">Sort: Queue #</option>
-          <option value="newest">Sort: Newest</option>
-          <option value="oldest">Sort: Oldest</option>
-        </select>
-      </div>
-      {/* TABLE HEADERS */}
-      {error ? (
-        <div className=" border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
           {error}
         </div>
-      ) : null}
-      {loading ? (
-        <div className=" border border-gray-200 bg-gray-100 p-4 text-sm">
-          Loading {activeMainTab} laboratory queues...
-        </div>
       ) : filterQueues.length === 0 ? (
-        <div className="w-full text-center mb-8 border-gray-200 bg-gray-100 p-4 text-sm">
+        <div className="w-full mb-8 rounded-xl border border-gray-200 bg-gray-100 p-4 text-center text-sm">
           No laboratory requests found.
         </div>
       ) : (
-        <div className="mb-8">
+        <div className="w-full mb-8">
           <QueueTable
             filterQueues={filterQueues}
             laboratoryItems={laboratoryItems}
@@ -241,6 +226,8 @@ function LaboratoryQueuePanel({
             openQueueAccordion={openQueueAccordion}
             setOpenInformationCard={setOpenInformationCard}
             setQueueIdCard={setQueueIdCard}
+            room={room}
+            loadData={loadData}
           />
         </div>
       )}

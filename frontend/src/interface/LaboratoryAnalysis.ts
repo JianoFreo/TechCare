@@ -39,6 +39,7 @@ export type ReportTemplate = FormTemplate & {
   category: string;
   version?: number;
   testNames: string[];
+  fieldsAvailable?: boolean;
 };
 export type ResultValues = Record<string, unknown>;
 

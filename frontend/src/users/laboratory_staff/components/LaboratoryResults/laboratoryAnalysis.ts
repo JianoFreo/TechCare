@@ -106,16 +106,22 @@ export function normalizeAnalysisRequests(
       flag(row.sample_collected) ||
       flag(row.is_sample_collected) ||
       flag(collection.collected) ||
-      ["collected", "sample collected", "samples collected"].includes(
-        normal(row.sample_status || row.sample_collection_status),
-      ) ||
-      ["sample collected", "samples collected"].includes(requestStatus);
+      [
+        "collected",
+        "sample collected",
+        "samples collected",
+        "specimen collected",
+      ].includes(normal(row.sample_status || row.sample_collection_status)) ||
+      ["sample collected", "samples collected", "specimen collected"].includes(
+        requestStatus,
+      );
 
     const accepted =
       flag(row.is_accepted) ||
       Boolean(timestamp(row.accepted_at)) ||
       [
         "accepted",
+        "serving",
         "ready",
         "ready for analysis",
         "awaiting analysis",
@@ -124,6 +130,7 @@ export function normalizeAnalysisRequests(
         "released",
         "sample collected",
         "samples collected",
+        "specimen collected",
       ].includes(requestStatus);
 
     const collectionDenied =

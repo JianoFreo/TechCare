@@ -1,14 +1,17 @@
 import { Router } from "express";
 import {
-  getAllLaboratoryPaid,
-  getLaboratoryRequest,
   getRoomSpecificServices,
-  getAllLaboratorySpecificQueues,
   getLaboratoryQueueItems,
+  getAnalysisReadyRequests,
+  getAvailableFormTemplates,
+  getLaboratoryQueues,
+  getLaboratoryRequestDetails,
 } from "../controllers/labstaff/getRequests.controller.js";
 import {
-  updateLabRequestStatus,
-  updateQueueStatus,
+  acceptQueueEntry,
+  skipQueueEntry,
+  cancelQueueEntry,
+  completeQueueEntry,
 } from "../controllers/labstaff/updateRequest.controller.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import labstaffMiddleware from "../middlewares/labstaff.middleware.js";
@@ -19,17 +22,17 @@ if (ENV.IS_PRODUCTION) {
   console.log("Lab Staff routes enabled");
 }
 // GET ROUTES
-router.get("/laboratory-requests", getAllLaboratoryPaid);
-router.get("/laboratory-requests/:queue_id", getLaboratoryRequest);
-router.get("/laboratory-queues/:room", getAllLaboratorySpecificQueues);
+router.get("/laboratory-queues/room/:room", getLaboratoryQueues);
 router.get("/services/:room", getRoomSpecificServices);
 router.get("/laboratory-queues/:queue_id/items", getLaboratoryQueueItems);
-
+router.get("/laboratory-queues/:queue_id/request", getLaboratoryRequestDetails);
+router.get("/laboratory-requests/items/", getAnalysisReadyRequests);
+router.get("/laboratory-results/form-templates/", getAvailableFormTemplates);
 // POST ROUTES
 
 // UPDATE ROUTES
-router.patch("/laboratory-requests/:request_id", updateLabRequestStatus);
-router.patch("/queues/:queue_id", updateQueueStatus);
-
+router.patch("/laboratory-queues/:queue_id/accept", acceptQueueEntry);
+router.patch("/laboratory-queues/:queue_id/skip", skipQueueEntry);
+router.patch("/laboratory-queues/:queue_id/complete", completeQueueEntry);
 // DELETE ROUTES
 export default router;

@@ -8,6 +8,7 @@ import type {
   ResultReleaseResponse,
 } from "../../../../interface/LaboratoryAnalysis";
 import type { Service } from "../../../../interface/Service";
+import type { LaboratoryRequestDetail } from "../../../../interface/LabRequestDetail";
 import { matchingTest, toReportTemplate } from "./reportTemplates";
 import { normalizeAnalysisRequests } from "./laboratoryAnalysis";
 export {
@@ -15,21 +16,117 @@ export {
   normalizeAnalysisRequests,
   patientAge,
 } from "./laboratoryAnalysis";
-export const LABORATORY_REQUESTS_ENDPOINT = "/api/labstaff/laboratory-requests";
+export const LABORATORY_REQUESTS_ENDPOINT =
+  "/api/labstaff/laboratory-requests/items/";
+export const LABORATORY_TEMPLATES_ENDPOINT =
+  "/api/labstaff/laboratory-results/form-templates/";
+
+type AnalysisReadyItem = {
+  lab_item_id: string;
+  request_id: string;
+  service_id: string;
+  room: string;
+  queue_id: string | null;
+  status: string;
+};
+
+function isCollected(status: string) {
+  return status.trim().toLowerCase() === "specimen collected";
+}
 
 export async function fetchAnalysisRequests(
   room: string,
   signal?: AbortSignal,
-) {
+): Promise<AnalysisRequest[]> {
   const response = await api.get(LABORATORY_REQUESTS_ENDPOINT, {
-    params: {
-      room,
-    },
-
+    params: { room },
     signal,
   });
+  if (!Array.isArray(response.data)) {
+    throw new Error("The analysis-ready response was not a list.");
+  }
+  const items: AnalysisReadyItem[] = response.data.filter(
+    (item) =>
+      item?.room === room &&
+      typeof item.status === "string" &&
+      isCollected(item.status),
+  );
+  if (!items.length) return [];
+  if (
+    items.some(
+      (item) =>
+        !item.lab_item_id ||
+        !item.request_id ||
+        !item.service_id ||
+        typeof item.queue_id !== "string" ||
+        !item.queue_id.trim(),
+    )
+  ) {
+    throw new Error(
+      "Some collected samples are missing request or queue details. Please reload laboratory requests.",
+    );
+  }
 
-  return normalizeAnalysisRequests(response.data, room);
+  const queueIds = [...new Set(items.map((item) => item.queue_id!))];
+  const details = await Promise.all(
+    queueIds.map(async (queueId) => {
+      const response = await api.get<LaboratoryRequestDetail>(
+        "/api/labstaff/laboratory-queues/" +
+          encodeURIComponent(queueId) +
+          "/request",
+        { params: { room }, signal },
+      );
+      if (
+        !response.data?.request?.request_id ||
+        !response.data.request.patient_id ||
+        !Array.isArray(response.data.items)
+      ) {
+        throw new Error(
+          "Patient and request details could not be read for a collected sample.",
+        );
+      }
+      return [queueId, response.data] as const;
+    }),
+  );
+  const byQueue = new Map(details);
+  const rows = items.flatMap((item) => {
+    const detail = byQueue.get(item.queue_id!)!;
+    const collectedItem = detail.items.find(
+      (candidate) => candidate.lab_item_id === item.lab_item_id,
+    );
+    if (
+      detail.request.request_id !== item.request_id ||
+      !collectedItem ||
+      collectedItem.queue_id !== item.queue_id ||
+      collectedItem.service?.service_id !== item.service_id
+    ) {
+      throw new Error(
+        "A collected sample no longer matches its request details. Please reload laboratory requests.",
+      );
+    }
+    // Request details include tests from other rooms and collection stages. Only
+    // the exact ready item belongs in this analysis list. Queue completion is
+    // collection completion; it does not mean an analysis result is completed.
+    if (
+      collectedItem.service.room !== room ||
+      !isCollected(collectedItem.status)
+    )
+      return [];
+    return [
+      {
+        ...detail.request,
+        request_status: detail.request.status,
+        analysis_status: "Ready for Analysis",
+        sample_status: collectedItem.status,
+        queue_id: item.queue_id,
+        room,
+        items: [collectedItem],
+      },
+    ];
+  });
+  if (signal?.aborted)
+    throw new Error("Loading laboratory requests was cancelled.");
+  return normalizeAnalysisRequests(rows, room);
 }
 
 export async function fetchPublishedReportTemplates(
@@ -38,81 +135,38 @@ export async function fetchPublishedReportTemplates(
 ): Promise<ReportTemplate[]> {
   try {
     const [templateResponse, serviceResponse] = await Promise.all([
-      api.get("/api/admin/form-templates", {
-        params: {
-          status: "Published",
-        },
-
-        signal,
-      }),
-      api.get(`/api/labstaff/services/${encodeURIComponent(request.room)}`, {
+      api.get(LABORATORY_TEMPLATES_ENDPOINT, { signal }),
+      api.get("/api/labstaff/services/" + encodeURIComponent(request.room), {
         signal,
       }),
     ]);
-
-    const rows: unknown = templateResponse.data?.formTemplates;
-    const services: Service[] = Array.isArray(serviceResponse.data)
-      ? serviceResponse.data
-      : serviceResponse.data?.services;
-
+    const rows: unknown = templateResponse.data;
+    const services: Service[] = serviceResponse.data;
     if (!Array.isArray(rows) || !Array.isArray(services)) {
       throw new Error("Unable to read published templates and their services.");
     }
-
-    const applicable = rows
-      .filter((row) => row?.status === "Published")
-      .map((row) => toReportTemplate(row, services))
-      .filter((template) => matchingTest(request, template));
-
-    return await Promise.all(
-      applicable.map(async (summary) => {
-        const detail = await api.get(
-          `/api/admin/form-templates/${encodeURIComponent(summary.form_id)}`,
-          {
-            signal,
-          },
-        );
-
-        if (!Array.isArray(detail.data?.components)) {
-          throw new Error(
-            "Template fields are unavailable. Please reload the report templates.",
-          );
-        }
-
-        const template = toReportTemplate(
-          detail.data.formTemplate,
-          services,
-          detail.data.components,
-        );
-
-        if (
-          template.form_id !== summary.form_id ||
-          !matchingTest(request, template)
-        ) {
-          throw new Error(
-            "The selected template has changed. Please reload report templates.",
-          );
-        }
-
-        return template;
-      }),
+    return (
+      rows
+        // This endpoint returns published records but omits their status column.
+        .filter(
+          (row) =>
+            row && (row.status === undefined || row.status === "Published"),
+        )
+        .map((row) => ({
+          ...toReportTemplate({ ...row, status: "Published" }, services),
+          fieldsAvailable: Array.isArray(row.components),
+        }))
+        .filter((template) => matchingTest(request, template))
     );
   } catch (error) {
-    const status = (
-      error as {
-        response?: {
-          status?: number;
-        };
-      }
-    ).response?.status;
-
+    const status = (error as { response?: { status?: number } }).response
+      ?.status;
     if (status === 401 || status === 403) {
       throw new Error(
-        "Published report templates are unavailable for this account. Ask an administrator to enable laboratory access.",
+        "Published report templates are unavailable for this laboratory account. Please sign in again or contact an administrator.",
         { cause: error },
       );
     }
-
     throw error;
   }
 }

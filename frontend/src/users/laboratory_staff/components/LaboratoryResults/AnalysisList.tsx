@@ -105,7 +105,9 @@ export default function AnalysisList({
   const [priority, setPriority] = useState("");
   const [date, setDate] = useState("");
   const [page, setPage] = useState(1);
-  const roomName = `Laboratory Room ${Number(room.split("-")[1]) || room}`;
+  const roomName = /^Laboratory Room\s/i.test(room)
+    ? room
+    : `Laboratory Room ${Number(room.split("-")[1]) || room}`;
 
   const testNames = useMemo(
     () =>

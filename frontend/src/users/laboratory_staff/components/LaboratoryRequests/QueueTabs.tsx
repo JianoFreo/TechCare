@@ -1,15 +1,20 @@
 import { type Dispatch, type SetStateAction } from "react";
 
-type MainFilter = "All" | "Waiting" | "Serving" | "Completed" | "Skipped";
+export type MainFilter =
+  | "all"
+  | "waiting"
+  | "serving"
+  | "completed"
+  | "skipped";
 
-type mainFilterValue = {
+type MainFilterValue = {
   label: string;
   value: MainFilter;
 };
 
 type QueueStatusTabsProps = {
-  mainFilterValues: mainFilterValue[];
-  activeMainFilter: string;
+  mainFilterValues: MainFilterValue[];
+  activeMainFilter: MainFilter;
   mainFilterCounts: Record<string, number>;
   onClick: (value: MainFilter) => void;
   setOpenQueueAccordion: Dispatch<SetStateAction<string | null>>;
@@ -23,24 +28,33 @@ function QueueTabs({
   setOpenQueueAccordion,
 }: QueueStatusTabsProps) {
   return (
-    <div className="flex w-full justify-around h-10 items-end border-b border-gray-300">
-      {mainFilterValues.map((mainFilter) => (
-        <button
-          key={mainFilter.value}
-          type="button"
-          onClick={() => {
-            onClick(mainFilter.value);
-            setOpenQueueAccordion(null);
-          }}
-          className={`px-5 py-1 text-sm ${
-            activeMainFilter === mainFilter.value
-              ? "text-blue-600 border-blue-600 border-b"
-              : "text-gray-900"
-          }`}
-        >
-          {mainFilter.label} ({mainFilterCounts[mainFilter.value]})
-        </button>
-      ))}
+    <div
+      role="tablist"
+      className="flex w-full justify-around h-10 items-end border-b border-gray-300"
+    >
+      {mainFilterValues.map((mainFilter) => {
+        const isActive = activeMainFilter === mainFilter.value;
+
+        return (
+          <button
+            key={mainFilter.value}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => {
+              onClick(mainFilter.value);
+              setOpenQueueAccordion(null);
+            }}
+            className={`px-5 py-1 text-sm ${
+              isActive
+                ? "text-blue-600 border-b border-blue-600"
+                : "text-gray-900"
+            }`}
+          >
+            {mainFilter.label} ({mainFilterCounts[mainFilter.value] ?? 0})
+          </button>
+        );
+      })}
     </div>
   );
 }
