@@ -3,7 +3,7 @@ export namespace updateUser {
     user_id: string;
   }
 
-  export interface request {
+  export interface body {
     username?: string;
     password?: string;
     first_name?: string;
@@ -69,7 +69,7 @@ export namespace updateUserStatus {
     user_id: string;
   }
 
-  export interface request {
+  export interface body {
     account_status: boolean;
   }
 
@@ -97,7 +97,7 @@ export namespace updateFormTemplate {
     form_id: string;
   }
 
-  export interface componentRequest {
+  export interface componentBody {
     type_id: string;
     label: string;
     field_key: string;
@@ -106,11 +106,11 @@ export namespace updateFormTemplate {
     validation?: Record<string, unknown> | null;
   }
 
-  export interface request {
+  export interface body {
     form_name: string;
     form_description?: string | null;
     status: string;
-    form_components: componentRequest[];
+    form_components: componentBody[];
   }
 
   export interface template {
