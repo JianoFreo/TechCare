@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { UserPlus } from "lucide-react";
 import Header from "../../../components/Header";
 import api from "../../../lib/axios";
 
@@ -9,45 +10,115 @@ type PatientRegistrationProps = {
   loading: boolean;
 };
 
-function PatientRegistration({
-  open,
-  setOpen,
-  loadData,
-  loading,
-}: PatientRegistrationProps) {
-  const [firstName, setFirstName] = useState("");
-  const [middleName, setMiddleName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [suffix, setSuffix] = useState("");
-  const [sex, setSex] = useState("");
-  const [birthdate, setBirthdate] = useState("");
-  const [civilStatus, setCivilStatus] = useState("");
-  const [bloodType, setBloodType] = useState("");
+const initialForm = {
+  first_name: "", middle_name: "", last_name: "", suffix: "", sex: "",
+  birthdate: "", civil_status: "", blood_type: "", height_cm: "", weight_kg: "",
 
-  const [contactNumber, setContactNumber] = useState("");
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
+  contact_number: "", email: "", address: "",
+  barangay: "", city: "", province: "", zip_code: "",
 
-  const [emergencyContactName, setEmergencyContactName] = useState("");
-  const [emergencyContact, setEmergencyContact] = useState("");
+  guardian_name: "", guardian_relationship: "", guardian_contact: "", guardian_address: "",
 
+  allergies: "", existing_conditions: "", current_medications: "",
+  previous_surgeries: "", previous_hospitalizations: "",
+  family_medical_history: "", smoking: "", alcohol_consumption: "",
+};
+type FormState = typeof initialForm;
+
+const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const SEX_OPTIONS = ["Male", "Female"];
+const CIVIL_STATUS_OPTIONS = ["Single", "Married", "Widowed", "Separated"];
+const SMOKING_OPTIONS = ["Yes", "No", "Former"];
+const ALCOHOL_OPTIONS = ["None", "Occasional", "Regular"];
+
+// Merges the street address with barangay, city, province and ZIP into one string
+function buildFullAddress(f: FormState) {
+  return [f.address, f.barangay, f.city, f.province, f.zip_code]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
+// Defined outside the component so inputs don't remount (and lose focus) on every keystroke
+function Field({
+  label, value, onChange, width = "w-40", type = "text", readOnly = false, placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange?: (v: string) => void;
+  width?: string;
+  type?: string;
+  readOnly?: boolean;
+  placeholder?: string;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm text-gray-500">
+      <span className="whitespace-nowrap">{label}</span>
+      <input
+        type={type}
+        value={value}
+        readOnly={readOnly}
+        placeholder={placeholder}
+        onChange={(e) => onChange?.(e.target.value)}
+        className={`${width} h-8 rounded-lg border border-gray-200 px-2 text-sm text-gray-800 placeholder:text-gray-300 focus:border-sky-400 focus:outline-none read-only:bg-gray-50`}
+      />
+    </label>
+  );
+}
+
+function SelectField({
+  label, value, onChange, options, width = "w-28",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  width?: string;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm text-gray-500">
+      <span className="whitespace-nowrap">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`${width} h-8 rounded-lg border border-gray-200 px-1 text-sm text-gray-800 focus:border-sky-400 focus:outline-none`}
+      >
+        <option value=""></option>
+        {options.map((o) => (
+          <option key={o} value={o}>{o}</option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-4">
+      <h3 className="text-sm font-medium text-gray-900">{title}</h3>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-4">{children}</div>
+    </section>
+  );
+}
+
+function PatientRegistration({ open, setOpen, loadData, loading }: PatientRegistrationProps) {
+  const [form, setForm] = useState<FormState>(initialForm);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const set = (key: keyof FormState) => (v: string) =>
+    setForm((f) => ({ ...f, [key]: v }));
+
+  const age = form.birthdate
+    ? String(Math.max(0, Math.floor((Date.now() - new Date(form.birthdate).getTime()) / 31557600000)))
+    : "";
+
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      alert("Please select an image file.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Profile photo must be smaller than 5MB.");
-      return;
-    }
-
+    if (!file.type.startsWith("image/")) return alert("Please select an image file.");
+    if (file.size > 5 * 1024 * 1024) return alert("Profile photo must be smaller than 5MB.");
     if (preview) URL.revokeObjectURL(preview);
     setImage(file);
     setPreview(URL.createObjectURL(file));
@@ -59,76 +130,43 @@ function PatientRegistration({
     setPreview(null);
   }
 
-  useEffect(() => {
-    return () => {
-      if (preview) URL.revokeObjectURL(preview);
-    };
-  }, [preview]);
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
   function resetForm() {
-    setFirstName("");
-    setMiddleName("");
-    setLastName("");
-    setSuffix("");
-    setSex("");
-    setBirthdate("");
-    setCivilStatus("");
-    setBloodType("");
-    setContactNumber("");
-    setEmail("");
-    setAddress("");
-    setEmergencyContactName("");
-    setEmergencyContact("");
+    setForm(initialForm);
     removePhoto();
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (
-      !firstName ||
-      !lastName ||
-      !sex ||
-      !birthdate ||
-      !email ||
-      !contactNumber ||
-      !address
-    ) {
+    const { first_name, last_name, sex, birthdate, email, contact_number, address } = form;
+    if (!first_name || !last_name || !sex || !birthdate || !email || !contact_number || !address) {
       alert("Please fill out all required fields.");
       return;
     }
 
     setSubmitting(true);
-
     try {
-      const formData = new FormData();
-      formData.append("first_name", firstName);
-      formData.append("last_name", lastName);
-      formData.append("sex", sex);
-      formData.append("birthdate", birthdate);
-      formData.append("email", email);
-      formData.append("contact_number", contactNumber);
-      formData.append("address", address);
+      // Pull out the pieces that get merged into `address`
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { barangay, city, province, zip_code, ...rest } = form;
 
-      if (middleName) formData.append("middle_name", middleName);
-      if (suffix) formData.append("suffix", suffix);
-      if (civilStatus) formData.append("civil_status", civilStatus);
-      if (bloodType) formData.append("blood_type", bloodType);
-      if (emergencyContactName)
-        formData.append("emergency_contact_name", emergencyContactName);
-      if (emergencyContact)
-        formData.append("emergency_contact", emergencyContact);
+      const formData = new FormData();
+      Object.entries(rest).forEach(([key, value]) => {
+        if (value) formData.append(key, value);
+      });
+      formData.set("address", buildFullAddress(form)); // overrides the street-only value
       if (image) formData.append("image", image);
 
       const response = await api.post("/api/fdstaff/patients", formData);
       alert(response.data.message);
-
       resetForm();
       await loadData();
     } catch (error: unknown) {
       alert(
-        (error as { response?: { data?: { message?: string } } }).response?.data
-          ?.message || "Something went wrong",
+        (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+          "Something went wrong",
       );
       console.error(error);
     } finally {
@@ -136,220 +174,99 @@ function PatientRegistration({
     }
   }
 
-  const inputClass =
-    "w-full border border-gray-300 p-2 text-sm focus:border-gray-900 focus:outline-none";
-  const labelClass = "mb-1 block text-xs text-gray-500";
-
   return (
     <main className="flex-1 min-w-0">
-      <Header
-        loading={loading}
-        open={open}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Patient Registration"
-      />
+      <Header loading={loading} open={open} setOpen={setOpen} loadData={loadData} page="Patient Registration" />
 
-      <div className="w-full px-6">
-        <h2 className="mb-8 text-xl font-medium">Patient Registration</h2>
+      <div className="w-full px-6 pb-8">
+        <h2 className="mb-4 text-xl font-semibold text-gray-700">Register Patient</h2>
 
-        <form onSubmit={handleSubmit} className="w-full space-y-10">
-          <div className="grid w-full grid-cols-1 gap-10 lg:grid-cols-3">
-            {/* LEFT — PHOTO + PERSONAL */}
-            <div className="space-y-10 lg:col-span-2">
-              <div className="flex items-center gap-5">
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-300 bg-gray-50">
-                  {preview ? (
-                    <img
-                      src={preview}
-                      alt="Patient preview"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-xs text-gray-400">Photo</span>
-                  )}
-                </div>
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-8 rounded-2xl border border-gray-200 p-6"
+        >
+          <Section title="Personal Information">
+            <Field label="Patient ID" value="" readOnly placeholder="Auto" width="w-32" />
+            <div className="basis-full" />
+            <Field label="First Name" value={form.first_name} onChange={set("first_name")} width="w-36" />
+            <Field label="Middle Name" value={form.middle_name} onChange={set("middle_name")} width="w-36" />
+            <Field label="Last Name" value={form.last_name} onChange={set("last_name")} width="w-36" />
+            <Field label="Suffix" value={form.suffix} onChange={set("suffix")} width="w-12" />
+            <SelectField label="Sex" value={form.sex} onChange={set("sex")} options={SEX_OPTIONS} width="w-20" />
+            <Field label="Age" value={age} readOnly width="w-12" />
 
-                <div className="space-y-1">
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/jpg,image/webp"
-                    onChange={handleImageChange}
-                    className="block text-sm"
-                  />
-                  {image && (
-                    <button
-                      type="button"
-                      onClick={removePhoto}
-                      className="text-xs text-gray-500 hover:text-gray-900"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="mb-4 text-sm font-medium text-gray-900">
-                  Personal Information
-                </h3>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-5 lg:grid-cols-3">
-                  <div>
-                    <label className={labelClass}>First name</label>
-                    <input
-                      className={inputClass}
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Middle name</label>
-                    <input
-                      className={inputClass}
-                      value={middleName}
-                      onChange={(e) => setMiddleName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Last name</label>
-                    <input
-                      className={inputClass}
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Suffix</label>
-                    <input
-                      className={inputClass}
-                      value={suffix}
-                      onChange={(e) => setSuffix(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Sex</label>
-                    <select
-                      className={inputClass}
-                      value={sex}
-                      onChange={(e) => setSex(e.target.value)}
-                    >
-                      <option value=""></option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelClass}>Birthdate</label>
-                    <input
-                      type="date"
-                      className={inputClass}
-                      value={birthdate}
-                      onChange={(e) => setBirthdate(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Civil status</label>
-                    <select
-                      className={inputClass}
-                      value={civilStatus}
-                      onChange={(e) => setCivilStatus(e.target.value)}
-                    >
-                      <option value=""></option>
-                      <option value="Single">Single</option>
-                      <option value="Married">Married</option>
-                      <option value="Widowed">Widowed</option>
-                      <option value="Separated">Separated</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelClass}>Blood type</label>
-                    <input
-                      className={inputClass}
-                      value={bloodType}
-                      onChange={(e) => setBloodType(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
+            <Field label="Date of Birth" type="date" value={form.birthdate} onChange={set("birthdate")} width="w-36" />
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <span>Profile Photo</span>
+              <label className="flex h-8 w-36 cursor-pointer items-center justify-center truncate rounded-lg border border-gray-200 px-2 text-xs text-gray-400 underline hover:text-gray-700">
+                {image ? image.name : "Upload Photo"}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </label>
+              {image && (
+                <button type="button" onClick={removePhoto} className="text-xs hover:text-gray-900">
+                  Remove
+                </button>
+              )}
             </div>
+            <SelectField label="Civil Status" value={form.civil_status} onChange={set("civil_status")} options={CIVIL_STATUS_OPTIONS} width="w-36" />
+            <SelectField label="Blood Type" value={form.blood_type} onChange={set("blood_type")} options={BLOOD_TYPES} width="w-20" />
+            <Field label="Height (CM)" value={form.height_cm} onChange={set("height_cm")} width="w-14" type="number" />
+            <Field label="Weight(KG)" value={form.weight_kg} onChange={set("weight_kg")} width="w-14" type="number" />
+          </Section>
 
-            {/* RIGHT — CONTACT + EMERGENCY */}
-            <div className="space-y-10">
-              <div>
-                <h3 className="mb-4 text-sm font-medium text-gray-900">
-                  Contact Information
-                </h3>
-                <div className="space-y-5">
-                  <div>
-                    <label className={labelClass}>Contact number</label>
-                    <input
-                      className={inputClass}
-                      value={contactNumber}
-                      onChange={(e) => setContactNumber(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Email</label>
-                    <input
-                      type="email"
-                      className={inputClass}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Address</label>
-                    <textarea
-                      rows={3}
-                      className={`${inputClass} resize-none`}
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
+          <Section title="Contact Information">
+            <Field label="Mobile Number" value={form.contact_number} onChange={set("contact_number")} width="w-36" />
+            <Field label="Email Address" type="email" value={form.email} onChange={set("email")} width="w-44" />
+            <Field label="Street Address" value={form.address} onChange={set("address")} width="w-56" />
+            <div className="basis-full" />
+            <Field label="Barangay" value={form.barangay} onChange={set("barangay")} width="w-24" />
+            <Field label="City/Municipality" value={form.city} onChange={set("city")} width="w-28" />
+            <Field label="Province" value={form.province} onChange={set("province")} width="w-28" />
+            <Field label="ZIP Code" value={form.zip_code} onChange={set("zip_code")} width="w-28" />
+          </Section>
 
-              <div>
-                <h3 className="mb-4 text-sm font-medium text-gray-900">
-                  Emergency Contact
-                </h3>
-                <div className="space-y-5">
-                  <div>
-                    <label className={labelClass}>Name</label>
-                    <input
-                      className={inputClass}
-                      value={emergencyContactName}
-                      onChange={(e) => setEmergencyContactName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Number</label>
-                    <input
-                      className={inputClass}
-                      value={emergencyContact}
-                      onChange={(e) => setEmergencyContact(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <Section title="Guardian Information (If Minor)">
+            <Field label="Full Name" value={form.guardian_name} onChange={set("guardian_name")} width="w-60" />
+            <Field label="Relationship" value={form.guardian_relationship} onChange={set("guardian_relationship")} width="w-44" />
+            <Field label="Contact Number" value={form.guardian_contact} onChange={set("guardian_contact")} width="w-40" />
+            <div className="basis-full" />
+            <Field label="Address" value={form.guardian_address} onChange={set("guardian_address")} width="w-[30rem]" />
+          </Section>
 
-          <div className="flex justify-end gap-3 border-t border-gray-200 pt-6">
+          <Section title="Medical Information">
+            <Field label="Allergies" value={form.allergies} onChange={set("allergies")} width="w-36" />
+            <Field label="Existing Medical Conditions" value={form.existing_conditions} onChange={set("existing_conditions")} width="w-36" />
+            <Field label="Current Medications" value={form.current_medications} onChange={set("current_medications")} width="w-36" />
+            <div className="basis-full" />
+            <Field label="Previous Surgeries" value={form.previous_surgeries} onChange={set("previous_surgeries")} width="w-36" />
+            <Field label="Previous Hospitalizations" value={form.previous_hospitalizations} onChange={set("previous_hospitalizations")} width="w-36" />
+            <div className="basis-full" />
+            <Field label="Family Medical History" value={form.family_medical_history} onChange={set("family_medical_history")} width="w-36" />
+            <SelectField label="Smoking" value={form.smoking} onChange={set("smoking")} options={SMOKING_OPTIONS} width="w-28" />
+            <SelectField label="Alcohol Consumption" value={form.alcohol_consumption} onChange={set("alcohol_consumption")} options={ALCOHOL_OPTIONS} width="w-32" />
+          </Section>
+
+          <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={resetForm}
-              className="px-4 py-2 text-sm text-gray-500 hover:text-gray-900"
               disabled={submitting}
+              className="px-4 py-2 text-sm text-gray-500 hover:text-gray-900"
             >
               Clear
             </button>
             <button
               type="submit"
-              className="border border-gray-900 px-5 py-2 text-sm text-gray-900 hover:bg-gray-900 hover:text-white disabled:opacity-40"
               disabled={submitting}
+              className="flex items-center gap-2 rounded-lg bg-sky-400 px-4 py-2 text-sm text-white hover:bg-sky-500 disabled:opacity-50"
             >
-              {submitting ? "Registering…" : "Register patient"}
+              <UserPlus size={16} />
+              {submitting ? "Registering…" : "Register"}
             </button>
           </div>
         </form>
