@@ -296,3 +296,59 @@ export async function cancelQueueEntry(req: Request, res: Response) {
     });
   }
 }
+
+
+export async function releaseLaboratoryResult(
+  req: Request,
+  res: Response,
+) {
+  try {
+    const { result_id } = req.params;
+
+    if (!result_id) {
+      return res.status(400).json({
+        message: "Result ID is required.",
+      });
+    }
+
+    const [result] = await sql`
+      UPDATE laboratory_results
+      SET
+        status = 'Released',
+        updated_at = NOW()
+      WHERE result_id = ${result_id}
+        AND status = 'Pending'
+      RETURNING result_id, lab_item_id, status, updated_at;
+    `;
+
+    if (!result) {
+      const [existing] = await sql`
+        SELECT result_id, status
+        FROM laboratory_results
+        WHERE result_id = ${result_id}
+        LIMIT 1;
+      `;
+
+      if (!existing) {
+        return res.status(404).json({
+          message: "Laboratory result not found.",
+        });
+      }
+
+      return res.status(409).json({
+        message: `Result cannot be released because its status is ${existing.status}.`,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Laboratory result released successfully.",
+      result,
+    });
+  } catch (error) {
+    console.error("Unable to release laboratory result:", error);
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+}
