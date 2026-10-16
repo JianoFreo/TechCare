@@ -204,17 +204,30 @@ export async function skipQueueEntry(req: Request, res: Response) {
 
 export async function cancelQueueEntry(req: Request, res: Response) {
   try {
-    // Get the queue_id of the patient whose queue needs to be cancelled.
     const { queue_id } = req.params;
+    const { reason } = req.body as { reason?: string };
 
-    // Validate the queue ID.
     if (!queue_id) {
       return res.status(400).json({
         message: "Queue ID is required!",
       });
     }
 
-    // Find the patient's current queue entry.
+    if (typeof reason !== "string" || !reason.trim()) {
+      return res.status(400).json({
+        message: "Cancellation reason is required!",
+      });
+    }
+
+    const cancellationReason = reason.trim();
+
+    if (cancellationReason.length > 255) {
+      return res.status(400).json({
+        message: "Cancellation reason must not exceed 255 characters.",
+      });
+    }
+
+    // Find the queue entry.
     const queue = await sql`
       SELECT queue_id, queue_number, service_id, status
       FROM queue_entries
@@ -222,7 +235,6 @@ export async function cancelQueueEntry(req: Request, res: Response) {
       LIMIT 1;
     `;
 
-    // Stop if the queue entry doesn't exist.
     if (queue.length === 0) {
       return res.status(404).json({
         message: "Queue entry not found.",
@@ -233,7 +245,9 @@ export async function cancelQueueEntry(req: Request, res: Response) {
 
     // Only waiting, skipped, or serving entries can be cancelled.
     if (
-      !["waiting", "skipped", "serving"].includes(String(status).toLowerCase())
+      !["waiting", "skipped", "serving"].includes(
+        String(status).toLowerCase(),
+      )
     ) {
       return res.status(409).json({
         message: `Queue entry cannot be cancelled because its status is ${status}.`,
@@ -251,16 +265,28 @@ export async function cancelQueueEntry(req: Request, res: Response) {
       RETURNING *;
     `;
 
-    // Handle cases where the status changed before the update.
     if (updatedQueue.length === 0) {
       return res.status(409).json({
         message: "Queue entry status changed. Please try again.",
       });
     }
 
+    // Store the cancellation reason against the associated
+    // laboratory request item.
+    const updatedItems = await sql`
+      UPDATE laboratory_request_items
+      SET
+        reason = ${cancellationReason},
+        updated_at = NOW()
+      WHERE queue_id = ${queue_id}
+      RETURNING lab_item_id, request_id, queue_id, reason;
+    `;
+
     return res.status(200).json({
       message: "Queue cancelled successfully.",
       queue: updatedQueue[0],
+      reason: cancellationReason,
+      laboratory_items: updatedItems,
     });
   } catch (error) {
     console.error("Error in cancelQueueEntry controller:", error);
