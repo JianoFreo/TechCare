@@ -1,3 +1,4 @@
+
 import { sql } from "../../config/db.js";
 import cloudinary from "../../config/cloudinary.js";
 import bcrypt from "bcryptjs";
@@ -25,7 +26,7 @@ export async function addUser(
   req: Request<
     {},
     addUser.response | addUser.error,
-    addUser.request
+    addUser.body
   >,
   res: Response<addUser.response | addUser.error>,
 ) {
@@ -230,7 +231,7 @@ export async function addService(
   req: Request<
     {},
     addService.response | addService.error,
-    addService.request
+    addService.body
   >,
   res: Response<addService.response | addService.error>,
 ) {
@@ -314,7 +315,7 @@ export async function addActivity(
   req: Request<
     {},
     addActivity.response | addActivity.error,
-    addActivity.request
+    addActivity.body
   >,
   res: Response<addActivity.response | addActivity.error>,
 ) {
@@ -373,7 +374,7 @@ export async function addAction(
   req: Request<
     {},
     addAction.response | addAction.error,
-    addAction.request
+    addAction.body
   >,
   res: Response<addAction.response | addAction.error>,
 ) {
@@ -423,7 +424,7 @@ export async function addFormTemplates(
   req: Request<
     {},
     addFormTemplates.response | addFormTemplates.error,
-    addFormTemplates.request
+    addFormTemplates.body
   >,
   res: Response<addFormTemplates.response | addFormTemplates.error>,
 ) {

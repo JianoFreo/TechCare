@@ -1,5 +1,6 @@
+
 export namespace addUser {
-  export interface request {
+  export interface body {
     username: string;
     password: string;
     first_name: string;
@@ -56,12 +57,13 @@ export namespace addUser {
   }
 
   export interface error {
-    message: string;
+    message?: string;
+    error?: string;
   }
 }
 
 export namespace addService {
-  export interface request {
+  export interface body {
     service_name: string;
     price: number | string;
     service_type: string;
@@ -75,16 +77,16 @@ export namespace addService {
     service_type: string;
     service_name: string;
     service_category: string;
-    price: string;
-    active: boolean;
+    price: number;
     room: string;
+    active: boolean;
     created_at: string;
     updated_at: string;
   }
 
   export interface response {
     message: string;
-    service?: service;
+    service: service;
   }
 
   export interface error {
@@ -94,7 +96,7 @@ export namespace addService {
 }
 
 export namespace addActivity {
-  export interface request {
+  export interface body {
     service_name: string;
     details: Record<string, unknown>;
   }
@@ -109,17 +111,18 @@ export namespace addActivity {
   }
 
   export interface response {
+    user: activity;
     message: string;
-    user?: activity;
   }
 
   export interface error {
-    error: string;
+    message?: string;
+    error?: string;
   }
 }
 
 export namespace addAction {
-  export interface request {
+  export interface body {
     action_name: string;
     action_description?: string | null;
     module: string;
@@ -140,27 +143,28 @@ export namespace addAction {
   }
 
   export interface error {
-    message: string;
+    message?: string;
+    error?: string;
   }
 }
 
 export namespace addFormTemplates {
-  export interface componentRequest {
+  export interface body {
+    form_name: string;
+    form_description?: string | null;
+    status?: string;
+    service_id: string;
+    created_by: string;
+    form_components: componentBody[];
+  }
+
+  export interface componentBody {
     type_id: string;
     label: string;
     field_key: string;
     display_order: number;
     settings?: Record<string, unknown> | null;
     validation?: Record<string, unknown> | null;
-  }
-
-  export interface request {
-    form_name: string;
-    form_description?: string | null;
-    status?: string;
-    service_id: string;
-    created_by: string;
-    form_components: componentRequest[];
   }
 
   export interface template {
@@ -195,6 +199,7 @@ export namespace addFormTemplates {
   }
 
   export interface error {
-    message: string;
+    message?: string;
+    error?: string;
   }
 }
