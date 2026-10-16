@@ -7,7 +7,11 @@ import {
   getLaboratoryQueues,
   getLaboratoryRequestDetails,
 } from "../controllers/labstaff/getRequests.controller.js";
-import { updateQueueStatus, skipQueueEntry, cancelQueueEntry } from "../controllers/labstaff/updateRequest.controller.js";
+import {
+  acceptQueueEntry,
+  skipQueueEntry,
+  cancelQueueEntry,
+} from "../controllers/labstaff/updateRequest.controller.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import labstaffMiddleware from "../middlewares/labstaff.middleware.js";
 import { ENV } from "../config/env.js";
@@ -26,7 +30,7 @@ router.get("/laboratory-results/form-templates/", getAvailableFormTemplates);
 // POST ROUTES
 
 // UPDATE ROUTES
-router.patch("/laboratory-queues/:queue_id/status", updateQueueStatus);
+router.patch("/laboratory-queues/:queue_id/accept", acceptQueueEntry);
 router.patch("/laboratory-queues/:queue_id/skip", skipQueueEntry);
 // DELETE ROUTES
 export default router;

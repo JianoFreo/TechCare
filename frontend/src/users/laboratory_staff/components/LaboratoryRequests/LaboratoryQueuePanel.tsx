@@ -115,9 +115,12 @@ function LaboratoryQueuePanel({
 
   const filterQueues = queues
     .filter((queue) => {
+      const status = queue.status?.toLowerCase();
+
       const matchesStatus =
-        activeMainTab === "all" ||
-        queue.status?.toLowerCase() === activeMainTab;
+        activeMainTab === "all"
+          ? status !== "completed"
+          : status === activeMainTab;
 
       const matchesSearch =
         !searchLower ||
@@ -139,13 +142,14 @@ function LaboratoryQueuePanel({
     })
     .sort((a, b) => a.queue_number - b.queue_number);
 
-  // COUNTS (keys match the MainFilter values used by the tabs)
   const mainFilterCounts = queues.reduce(
     (counts, queue) => {
-      counts.all += 1;
+      const status = queue.status?.toLowerCase();
+
+      if (status !== "completed") counts.all += 1;
       if (queue.is_priority) counts.priority += 1;
 
-      switch (queue.status?.toLowerCase()) {
+      switch (status) {
         case "waiting":
           counts.waiting += 1;
           break;

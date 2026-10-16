@@ -37,9 +37,11 @@ function QueueTable({
     );
   };
 
-  const handleQueueAction = async (
+  // Shared: busy state, error handling, reload
+  const runQueueRequest = async (
     queue_id: string,
-    action: "accept" | "complete" | "skip",
+    request: () => Promise<unknown>,
+    fallbackMessage: string,
   ) => {
     if (acceptingId) return;
 
@@ -47,21 +49,31 @@ function QueueTable({
       setAcceptingId(queue_id);
       setAcceptError(null);
 
-      await api.patch(
-        `/api/labstaff/laboratory-queues/${encodeURIComponent(queue_id)}/status`,
-        { room, action },
-      );
-
+      await request();
       await loadData();
     } catch (err) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Unable to update queue.";
+          ?.message || fallbackMessage;
       setAcceptError(message);
     } finally {
       setAcceptingId(null);
     }
   };
+
+  const id = (queue_id: string) => encodeURIComponent(queue_id);
+
+  // Same endpoint, different action in the body
+  const handleAccept = (queue_id: string) =>
+    runQueueRequest(
+      queue_id,
+      () =>
+        api.patch(`/api/labstaff/laboratory-queues/${id(queue_id)}/status`, {
+          room,
+          action: "accept",
+        }),
+      "Unable to accept queue.",
+    );
 
   return (
     <table className="w-full table-fixed">
@@ -148,9 +160,7 @@ function QueueTable({
                       {(status === "waiting" || status === "skipped") && (
                         <button
                           disabled={busy}
-                          onClick={() =>
-                            handleQueueAction(queue.queue_id, "accept")
-                          }
+                          onClick={() => handleAccept(queue.queue_id)}
                           className="cursor-pointer px-4 py-2 text-xs rounded-sm border-2 border-green-500 text-green-500 transition-all duration-300 hover:scale-105 hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Accept
@@ -159,20 +169,16 @@ function QueueTable({
                       {status === "serving" && (
                         <button
                           disabled={busy}
-                          onClick={() =>
-                            handleQueueAction(queue.queue_id, "complete")
-                          }
                           className="cursor-pointer px-4 py-2 text-xs rounded-sm border-2 border-green-500 text-green-500 transition-all duration-300 hover:scale-105 hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Complete
                         </button>
                       )}
-                      {status === "waiting" && (
+                      {(status === "serving" ||
+                        status === "waiting" ||
+                        status === "skipped") && (
                         <button
                           disabled={busy}
-                          onClick={() =>
-                            handleQueueAction(queue.queue_id, "skip")
-                          }
                           className="cursor-pointer px-4 py-2 text-xs rounded-sm border-2 border-yellow-500 text-yellow-500 transition-all duration-300 hover:scale-105 hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Skip
