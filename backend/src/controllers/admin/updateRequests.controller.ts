@@ -1,7 +1,8 @@
+
 import { sql } from "../../config/db.js";
 import cloudinary from "../../config/cloudinary.js";
 import bcrypt from "bcryptjs";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { logActivity } from "../../utils/activityLogger.js";
 import type {
   updateUser,
@@ -13,11 +14,14 @@ import type {
 // UPDATE USER
 // =========================
 export async function updateUser(
-  req: Request<updateUser.params, updateUser.body>,
+  req: Request<
+    updateUser.params,
+    updateUser.response | updateUser.error,
+    updateUser.body
+  >,
   res: Response<updateUser.response | updateUser.error>,
 ) {
   // PATCH /api/admin/users/:user_id
-
   try {
     const { user_id } = req.params;
 
@@ -41,12 +45,11 @@ export async function updateUser(
       date_hired,
       shift_start,
       shift_end,
-    } = req.body as updateUser.body;
+    } = req.body;
 
     // =========================
     // PASSWORD
     // =========================
-
     let hashedPassword: string | null = null;
 
     if (password?.trim()) {
@@ -56,7 +59,6 @@ export async function updateUser(
     // =========================
     // PROFILE PHOTO
     // =========================
-
     let profilePhoto: string | null = null;
 
     if (req.file) {
@@ -70,7 +72,6 @@ export async function updateUser(
     // =========================
     // UPDATE USER
     // =========================
-
     const updatedUser = await sql`
       UPDATE users
       SET
@@ -102,23 +103,20 @@ export async function updateUser(
     // =========================
     // USER NOT FOUND
     // =========================
-
     if (updatedUser.length === 0) {
       return res.status(404).json({
         message: "User not found",
-      } as updateUser.error);
+      });
     }
 
     // =========================
     // REMOVE SENSITIVE DATA
     // =========================
-
     const { password_hash, ...safeUser } = updatedUser[0];
 
     // =========================
     // RESPONSE
     // =========================
-
     return res.status(200).json({
       message: "User updated successfully!",
       user: safeUser,
@@ -128,7 +126,7 @@ export async function updateUser(
 
     return res.status(500).json({
       message: "Failed to update user",
-    } as updateUser.error);
+    });
   }
 }
 
@@ -136,23 +134,27 @@ export async function updateUser(
 // UPDATE USER STATUS
 // =========================
 export async function updateUserStatus(
-  req: Request<updateUserStatus.params, updateUserStatus.body>,
+  req: Request<
+    updateUserStatus.params,
+    updateUserStatus.response | updateUserStatus.error,
+    updateUserStatus.body
+  >,
   res: Response<updateUserStatus.response | updateUserStatus.error>,
 ) {
   try {
     const { user_id } = req.params;
-    const { account_status } = req.body as updateUserStatus.body;
+    const { account_status } = req.body;
 
     if (account_status === undefined) {
       return res.status(400).json({
         message: "Account status is required.",
-      } as updateUserStatus.error);
+      });
     }
 
     if (typeof account_status !== "boolean") {
       return res.status(400).json({
         message: "Account status must be a boolean.",
-      } as updateUserStatus.error);
+      });
     }
 
     if (user_id === req.user.user_id) {
@@ -167,7 +169,7 @@ export async function updateUserStatus(
 
       return res.status(400).json({
         message: `You can't ${account_status ? "activate" : "deactivate"} your own account.`,
-      } as updateUserStatus.error);
+      });
     }
 
     const updatedAccountStatus = await sql`
@@ -188,7 +190,7 @@ export async function updateUserStatus(
     if (updatedAccountStatus.length === 0) {
       return res.status(404).json({
         message: "User not found.",
-      } as updateUserStatus.error);
+      });
     }
 
     await logActivity({
@@ -211,7 +213,7 @@ export async function updateUserStatus(
 
     return res.status(500).json({
       message: "Internal Server Error.",
-    } as updateUserStatus.error);
+    });
   }
 }
 
@@ -219,27 +221,30 @@ export async function updateUserStatus(
 // UPDATE FORM TEMPLATE
 // =========================
 export async function updateFormTemplate(
-  req: Request<updateFormTemplate.params>,
+  req: Request<
+    updateFormTemplate.params,
+    updateFormTemplate.response | updateFormTemplate.error,
+    updateFormTemplate.body
+  >,
   res: Response<updateFormTemplate.response | updateFormTemplate.error>,
 ) {
   const { form_id } = req.params;
-  const { form_name, form_description, status, form_components } =
-    req.body as updateFormTemplate.body;
+  const { form_name, form_description, status, form_components } = req.body;
 
   if (!form_id) {
     return res.status(400).json({
       message: "form_id is required.",
-    } as updateFormTemplate.error);
+    });
   }
 
   if (
-    !form_name ||
+    !form_name?.trim() ||
     !Array.isArray(form_components) ||
     form_components.length === 0
   ) {
     return res.status(400).json({
       message: "Required fields missing.",
-    } as updateFormTemplate.error);
+    });
   }
 
   try {
@@ -252,7 +257,7 @@ export async function updateFormTemplate(
     if (!checkExisting) {
       return res.status(404).json({
         message: "Form template not found.",
-      } as updateFormTemplate.error);
+      });
     }
 
     // NOTE: For Neon HTTP queries, separate BEGIN/COMMIT calls may not share
@@ -263,7 +268,7 @@ export async function updateFormTemplate(
       SET
         form_name = ${form_name},
         form_description = ${form_description ?? null},
-        status = ${status},
+        status = ${status ?? checkExisting.status},
         version = version + 1,
         updated_at = CURRENT_TIMESTAMP
       WHERE form_id = ${form_id}
@@ -318,6 +323,6 @@ export async function updateFormTemplate(
 
     return res.status(500).json({
       message: "Internal Server Error",
-    } as updateFormTemplate.error);
+    });
   }
 }
