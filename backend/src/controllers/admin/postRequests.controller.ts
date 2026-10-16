@@ -8,11 +8,11 @@ import {
   generateActivityId,
 } from "../../utils/generateId.js";
 import type {
-  addUser as AddUserDTO,
-  addService as AddServiceDTO,
-  addActivity as AddActivityDTO,
-  addAction as AddActionDTO,
-  addFormTemplates as AddFormTemplatesDTO,
+  addUser,
+  addService,
+  addActivity,
+  addAction,
+  addFormTemplates,
 } from "./dto/post.dto.js";
 
 ///// the token generation on add user is just for testing purposes,
@@ -22,8 +22,8 @@ import type {
 // ADD USER
 // =========================
 export async function addUser(
-  req: Request<AddUserDTO.request>,
-  res: Response<AddUserDTO.response | AddUserDTO.error>,
+  req: Request<addUser.request>,
+  res: Response<addUser.response | addUser.error>,
 ) {
   // POST /api/admin/add-user
   try {
@@ -47,7 +47,7 @@ export async function addUser(
       date_hired,
       shift_start,
       shift_end,
-    } = req.body as AddUserDTO.request;
+    } = req.body as addUser.request;
 
     // =========================
     // REQUIRED FIELDS
@@ -67,7 +67,7 @@ export async function addUser(
     ) {
       return res.status(400).json({
         message: "Please fill out all required fields",
-      } as AddUserDTO.error);
+      } as addUser.error);
     }
 
     // =========================
@@ -84,7 +84,7 @@ export async function addUser(
     if (existingUser.length > 0) {
       return res.status(409).json({
         message: "Username, email, or contact number already exists",
-      } as AddUserDTO.error);
+      } as addUser.error);
     }
 
     // =========================
@@ -183,7 +183,7 @@ export async function addUser(
     return res.status(201).json({
       user: safeUser,
       message: "User created successfully!",
-    } as AddUserDTO.response);
+    } as addUser.response);
 
     // {
     //   "user": {
@@ -215,7 +215,7 @@ export async function addUser(
 
     return res.status(500).json({
       message: "Error while creating new user",
-    } as AddUserDTO.error);
+    } as addUser.error);
   }
 }
 
@@ -223,13 +223,13 @@ export async function addUser(
 // ADD SERVICE
 // =========================
 export async function addService(
-  req: Request<AddServiceDTO.request>,
-  res: Response<AddServiceDTO.response | AddServiceDTO.error>,
+  req: Request<addService.request>,
+  res: Response<addService.response | addService.error>,
 ) {
   // POST /api/admin/services
   try {
     const { service_name, price, service_type, service_category, room } =
-      req.body as AddServiceDTO.request;
+      req.body as addService.request;
 
     if (
       !service_name ||
@@ -241,13 +241,13 @@ export async function addService(
     ) {
       return res.status(400).json({
         message: "All fields are required",
-      } as AddServiceDTO.error);
+      } as addService.error);
     }
 
     if (isNaN(Number(price)) || Number(price) < 0) {
       return res.status(400).json({
         message: "Price must be a valid non-negative number",
-      } as AddServiceDTO.error);
+      } as addService.error);
     }
 
     const existingService = await sql`
@@ -259,7 +259,7 @@ export async function addService(
     if (existingService.length > 0) {
       return res.status(409).json({
         message: "Service already exists",
-      } as AddServiceDTO.error);
+      } as addService.error);
     }
 
     const serviceId = await generateServiceId();
@@ -287,13 +287,13 @@ export async function addService(
     return res.status(201).json({
       message: "Service added successfully!",
       service: newService[0],
-    } as AddServiceDTO.response);
+    } as addService.response);
   } catch (error) {
     console.error("ADD SERVICE ERROR:", error);
 
     return res.status(500).json({
       error: "error on service controller",
-    } as AddServiceDTO.error);
+    } as addService.error);
   }
 }
 
@@ -303,13 +303,13 @@ export async function addService(
 // ADD ACTIVITY
 // =========================
 export async function addActivity(
-  req: Request<AddActivityDTO.request>,
-  res: Response<AddActivityDTO.response | AddActivityDTO.error>,
+  req: Request<addActivity.request>,
+  res: Response<addActivity.response | addActivity.error>,
 ) {
   // POST /api/admin/activities
   try {
     const user_id = req.user.user_id;
-    const { service_name, details } = req.body as AddActivityDTO.request;
+    const { service_name, details } = req.body as addActivity.request;
 
     const [service] = await sql`
       SELECT service_name
@@ -320,7 +320,7 @@ export async function addActivity(
     if (!service) {
       return res.status(404).json({
         error: "There is no service with that name in our database",
-      } as AddActivityDTO.error);
+      } as addActivity.error);
     }
 
     const activityId = await generateActivityId();
@@ -344,13 +344,13 @@ export async function addActivity(
     return res.status(201).json({
       user: activity,
       message: "Activity added successfully!",
-    } as AddActivityDTO.response);
+    } as addActivity.response);
   } catch (error) {
     console.error("ADD ACTIVITY ERROR:", error);
 
     return res.status(500).json({
       error: "error on adding activity controller",
-    } as AddActivityDTO.error);
+    } as addActivity.error);
   }
 }
 
@@ -358,17 +358,17 @@ export async function addActivity(
 // ADD ACTION
 // =========================
 export async function addAction(
-  req: Request<AddActionDTO.request>,
-  res: Response<AddActionDTO.response | AddActionDTO.error>,
+  req: Request<addAction.request>,
+  res: Response<addAction.response | addAction.error>,
 ) {
   try {
     const { action_name, action_description, module, is_sensitive } =
-      req.body as AddActionDTO.request;
+      req.body as addAction.request;
 
     if (!action_name || !module) {
       return res.status(400).json({
         message: "Please fill out required fields.",
-      } as AddActionDTO.error);
+      } as addAction.error);
     }
 
     const [newAction] = await sql`
@@ -390,13 +390,13 @@ export async function addAction(
     return res.status(201).json({
       message: "Action successfully added.",
       newAction: [newAction],
-    } as AddActionDTO.response);
+    } as addAction.response);
   } catch (error) {
     console.error("ADD ACTION ERROR:", error);
 
     return res.status(500).json({
       message: "Internal Server Error",
-    } as AddActionDTO.error);
+    } as addAction.error);
   }
 }
 
@@ -404,8 +404,8 @@ export async function addAction(
 // ADD FORM TEMPLATES
 // =========================
 export async function addFormTemplates(
-  req: Request<AddFormTemplatesDTO.request>,
-  res: Response<AddFormTemplatesDTO.response | AddFormTemplatesDTO.error>,
+  req: Request<addFormTemplates.request>,
+  res: Response<addFormTemplates.response | addFormTemplates.error>,
 ) {
   const {
     form_name,
@@ -414,7 +414,7 @@ export async function addFormTemplates(
     service_id,
     created_by,
     form_components,
-  } = req.body as AddFormTemplatesDTO.request;
+  } = req.body as addFormTemplates.request;
 
   if (
     !form_name ||
@@ -425,7 +425,7 @@ export async function addFormTemplates(
   ) {
     return res.status(400).json({
       message: "Required fields missing.",
-    } as AddFormTemplatesDTO.error);
+    } as addFormTemplates.error);
   }
 
   try {
@@ -439,7 +439,7 @@ export async function addFormTemplates(
     if (checkExisting) {
       return res.status(400).json({
         message: "An active form template already exist for the service.",
-      } as AddFormTemplatesDTO.error);
+      } as addFormTemplates.error);
     }
 
     // NOTE: For Neon HTTP queries, separate BEGIN/COMMIT calls may not share
@@ -466,7 +466,7 @@ export async function addFormTemplates(
       RETURNING *
     `;
 
-    const componentsCreated: AddFormTemplatesDTO.component[] = [];
+    const componentsCreated: addFormTemplates.component[] = [];
 
     for (let index = 0; index < form_components.length; index++) {
       const component = form_components[index];
@@ -496,19 +496,19 @@ export async function addFormTemplates(
         RETURNING *
       `;
 
-      componentsCreated.push(createdComponent as AddFormTemplatesDTO.component);
+      componentsCreated.push(createdComponent as addFormTemplates.component);
     }
 
     return res.status(201).json({
       message: "Form successfully created",
       formCreated,
       componentsCreated,
-    } as AddFormTemplatesDTO.response);
+    } as addFormTemplates.response);
   } catch (error) {
     console.error("ADD FORM TEMPLATES ERROR:", error);
 
     return res.status(500).json({
       message: "Internal Server Error",
-    } as AddFormTemplatesDTO.error);
+    } as addFormTemplates.error);
   }
 }

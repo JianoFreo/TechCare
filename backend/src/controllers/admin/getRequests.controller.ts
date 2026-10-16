@@ -1,12 +1,12 @@
 import { sql } from "../../config/db.js";
 import { Request, Response } from "express";
 import type {
-  getAllUsers as GetAllUsersDTO,
-  getAllActivities as GetAllActivitiesDTO,
-  getAllservices as GetAllServicesDTO,
-  getMyActivities as GetMyActivitiesDTO,
-  getAllFormTemplates as GetAllFormTemplatesDTO,
-  getFormTemplateById as GetFormTemplateByIdDTO,
+  getAllUsers,
+  getAllActivities,
+  getAllservices,
+  getMyActivities,
+  getFormTemplateById,
+  getAllFormTemplates,
 } from "./dto/get.dto.js";
 
 // =========================
@@ -14,7 +14,7 @@ import type {
 // =========================
 export async function getAllUsers(
   req: Request,
-  res: Response<GetAllUsersDTO.response | GetAllUsersDTO.error>,
+  res: Response<getAllUsers.response | getAllUsers.error>,
 ) {
   // GET /api/admin/users
   try {
@@ -51,13 +51,13 @@ export async function getAllUsers(
 
     return res.status(200).json({
       users,
-    } as GetAllUsersDTO.response);
+    } as getAllUsers.response);
   } catch (error) {
     console.error("GET ALL USERS ERROR:", error);
 
     return res.status(500).json({
       message: "Error while fetching users",
-    } as GetAllUsersDTO.error);
+    } as getAllUsers.error);
   }
 }
 
@@ -96,7 +96,7 @@ export async function getAllUsers(
 // =========================
 export async function getAllActivities(
   req: Request,
-  res: Response<GetAllActivitiesDTO.response | GetAllActivitiesDTO.error>,
+  res: Response<getAllActivities.response | getAllActivities.error>,
 ) {
   // GET /api/admin/activities
   try {
@@ -122,18 +122,18 @@ export async function getAllActivities(
       return res.status(200).json({
         activities: [],
         message: "there are no activities",
-      } as GetAllActivitiesDTO.response);
+      } as getAllActivities.response);
     }
 
     return res.status(200).json({
       activities,
-    } as GetAllActivitiesDTO.response);
+    } as getAllActivities.response);
   } catch (error) {
     console.error("GET ALL ACTIVITIES ERROR:", error);
 
     return res.status(500).json({
       error: "error on get acts controller",
-    } as GetAllActivitiesDTO.error);
+    } as getAllActivities.error);
   }
 }
 
@@ -144,7 +144,7 @@ export async function getAllActivities(
 // =========================
 export async function getAllservices(
   req: Request,
-  res: Response<GetAllServicesDTO.response | GetAllServicesDTO.error>,
+  res: Response<getAllservices.response | getAllservices.error>,
 ) {
   // GET /api/admin/services
   try {
@@ -155,7 +155,7 @@ export async function getAllservices(
 
     return res.status(200).json({
       services,
-    } as GetAllServicesDTO.response);
+    } as getAllservices.response);
 
     // {
     //   "services": [
@@ -177,7 +177,7 @@ export async function getAllservices(
 
     return res.status(500).json({
       error: "Internal Server Error",
-    } as GetAllServicesDTO.error);
+    } as getAllservices.error);
   }
 }
 
@@ -188,7 +188,7 @@ export async function getAllservices(
 // =========================
 export async function getMyActivities(
   req: Request,
-  res: Response<GetMyActivitiesDTO.response | GetMyActivitiesDTO.error>,
+  res: Response<getMyActivities.response | getMyActivities.error>,
 ) {
   // GET /api/admin/activity
   try {
@@ -203,12 +203,12 @@ export async function getMyActivities(
       return res.status(200).json({
         message: "You have no activities",
         activities: [],
-      } as GetMyActivitiesDTO.response);
+      } as getMyActivities.response);
     }
 
     return res.status(200).json({
       activities,
-    } as GetMyActivitiesDTO.response);
+    } as getMyActivities.response);
 
     // {
     //   "activities": [
@@ -228,7 +228,7 @@ export async function getMyActivities(
 
     return res.status(500).json({
       error: "error on get your activities",
-    } as GetMyActivitiesDTO.error);
+    } as getMyActivities.error);
   }
 }
 
@@ -237,10 +237,10 @@ export async function getMyActivities(
 // =========================
 export async function getAllFormTemplates(
   req: Request,
-  res: Response<GetAllFormTemplatesDTO.response | GetAllFormTemplatesDTO.error>,
+  res: Response<getAllFormTemplates.response | getAllFormTemplates.error>,
 ) {
   try {
-    const { service_id, status } = req.query as GetAllFormTemplatesDTO.query;
+    const { service_id, status } = req.query as getAllFormTemplates.query;
 
     const templates = await sql`
       SELECT *
@@ -256,13 +256,13 @@ export async function getAllFormTemplates(
     return res.status(200).json({
       message: "Form templates fetched successfully",
       formTemplates: templates,
-    } as GetAllFormTemplatesDTO.response);
+    } as getAllFormTemplates.response);
   } catch (error) {
     console.error("GET ALL FORM TEMPLATES ERROR:", error);
 
     return res.status(500).json({
       message: "Internal Server Error.",
-    } as GetAllFormTemplatesDTO.error);
+    } as getAllFormTemplates.error);
   }
 }
 
@@ -270,7 +270,7 @@ export async function getAllFormTemplates(
 // GET FORM TEMPLATE BY ID
 // =========================
 export async function getFormTemplateById(
-  req: Request<GetFormTemplateByIdDTO.request>,
+  req: Request<getFormTemplateById.request>,
   res: Response,
 ) {
   try {
@@ -279,7 +279,7 @@ export async function getFormTemplateById(
     if (!form_id) {
       return res.status(400).json({
         message: "Form ID is required.",
-      } as GetFormTemplateByIdDTO.error);
+      } as getFormTemplateById.error);
     }
 
     const [formTemplate] = await sql`
@@ -291,7 +291,7 @@ export async function getFormTemplateById(
     if (!formTemplate) {
       return res.status(404).json({
         message: "Form template not found.",
-      } as GetFormTemplateByIdDTO.error);
+      } as getFormTemplateById.error);
     }
 
     const components = await sql`
@@ -305,12 +305,12 @@ export async function getFormTemplateById(
       message: "Form template fetched successfully",
       formTemplate,
       components,
-    } as GetFormTemplateByIdDTO.response);
+    } as getFormTemplateById.response);
   } catch (error) {
     console.error("GET FORM TEMPLATE BY ID ERROR:", error);
 
     return res.status(500).json({
       message: "Internal Server Error",
-    } as GetFormTemplateByIdDTO.error);
+    } as getFormTemplateById.error);
   }
 }
