@@ -8,17 +8,21 @@ export async function deleteTemplate(
   req: Request<{ form_id: string }>,
   res: Response,
 ) {
-  // DELETE /api/admin/templates/:template_id
+  // DELETE /api/admin/templates/:form_id
 
   try {
     const { form_id } = req.params;
 
-     if (!form_id) {
-      return res.status(400).json({ message: "form_id is required." });
+    if (!form_id) {
+      return res.status(400).json({
+        message: "form_id is required.",
+      });
     }
 
     const [existingTemplate] = await sql`
-      SELECT form_id FROM form_templates WHERE form_id = ${form_id}
+      SELECT form_id
+      FROM form_templates
+      WHERE form_id = ${form_id}
     `;
 
     if (!existingTemplate) {
@@ -27,29 +31,24 @@ export async function deleteTemplate(
       });
     }
 
-    await sql.query("BEGIN");
-
-    // form_components.form_id has no ON DELETE CASCADE, so child rows
-    // must be removed first or the delete below violates the FK constraint.
+    // Delete child records first because there is no ON DELETE CASCADE.
     await sql`
-      DELETE FROM form_components WHERE form_id = ${form_id}
+      DELETE FROM form_components
+      WHERE form_id = ${form_id}
     `;
 
     const [deletedTemplate] = await sql`
       DELETE FROM form_templates
       WHERE form_id = ${form_id}
-      RETURNING *;
+      RETURNING *
     `;
-
-    await sql.query("COMMIT");
 
     return res.status(200).json({
       message: "Template deleted successfully!",
-      template: deletedTemplate[0],
+      template: deletedTemplate,
     });
   } catch (error) {
     console.error("DELETE TEMPLATE ERROR:", error);
-    await sql.query("ROLLBACK"); // Rollback the transaction in case of an error
 
     return res.status(500).json({
       message: "Failed to delete template",
