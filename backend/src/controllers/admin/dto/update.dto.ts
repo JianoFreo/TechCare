@@ -23,7 +23,6 @@ export namespace updateUser {
   }
 
   export interface user {
-    id: number;
     user_id: string;
     username: string;
     first_name: string;
@@ -40,13 +39,11 @@ export namespace updateUser {
     role: string;
     department: string | null;
     employment_status: string | null;
-    date_hired: string;
-    shift_start: string;
-    shift_end: string;
-    last_login: string | null;
-    account_status: boolean;
+    date_hired: string | null;
+    shift_start: string | null;
+    shift_end: string | null;
     profile_photo: string | null;
-    active: boolean;
+    account_status: boolean;
     created_at: string;
     updated_at: string;
   }
@@ -66,7 +63,7 @@ export namespace updateUserStatus {
     account_status: boolean;
   }
 
-  export interface updatedAccount {
+  export interface updatedAccountStatus {
     user_id: string;
     first_name: string;
     last_name: string;
@@ -77,7 +74,7 @@ export namespace updateUserStatus {
 
   export interface response {
     message: string;
-    updatedAccountStatus: updatedAccount[];
+    updatedAccountStatus: updatedAccountStatus[];
   }
 
   export interface error {
@@ -86,13 +83,16 @@ export namespace updateUserStatus {
 }
 
 export namespace updateFormTemplate {
-  export interface componentBody {
+  export interface component {
+    form_component_id?: string;
+    form_id?: string;
     type_id: string;
     label: string;
     field_key: string;
     display_order: number;
     settings?: Record<string, unknown> | null;
     validation?: Record<string, unknown> | null;
+    [key: string]: unknown;
   }
 
   export interface body {
@@ -100,32 +100,19 @@ export namespace updateFormTemplate {
     form_description?: string | null;
     service_id?: string;
     status?: string;
-    form_components: componentBody[];
+    form_components: component[];
   }
 
   export interface template {
-    id: number;
     form_id: string;
     form_name: string;
     form_description: string | null;
     service_id: string;
     status: string;
-    created_by: string;
     version: number;
     created_at: string;
     updated_at: string;
-  }
-
-  export interface component {
-    id: number;
-    form_component_id: string;
-    form_id: string;
-    type_id: string;
-    label: string;
-    field_key: string;
-    display_order: number;
-    settings: Record<string, unknown> | null;
-    validation: Record<string, unknown> | null;
+    [key: string]: unknown;
   }
 
   export interface response {
