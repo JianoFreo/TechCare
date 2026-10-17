@@ -1,6 +1,5 @@
-
 import { sql } from "../../config/db.js";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import type {
   getAllUsers,
   getAllActivities,
@@ -10,43 +9,20 @@ import type {
   getAllFormTemplates,
 } from "./dto/get.dto.js";
 
-// =========================
 // GET ALL USERS
-// =========================
 export async function getAllUsers(
-  req: Request<{}, getAllUsers.response | getAllUsers.error, {}>,
+  req: Request,
   res: Response<getAllUsers.response | getAllUsers.error>,
 ) {
-  // GET /api/admin/users
   try {
     const users = await sql`
       SELECT
-        id,
-        user_id,
-        username,
-        first_name,
-        middle_name,
-        last_name,
-        suffix,
-        sex,
-        email,
-        contact_number,
-        emergency_contact_name,
-        emergency_contact,
-        address,
-        birthdate,
-        role,
-        department,
-        employment_status,
-        date_hired,
-        shift_start,
-        shift_end,
-        last_login,
-        account_status,
-        profile_photo,
-        active,
-        created_at,
-        updated_at
+        id, user_id, username, first_name, middle_name, last_name,
+        suffix, sex, email, contact_number, emergency_contact_name,
+        emergency_contact, address, birthdate, role, department,
+        employment_status, date_hired, shift_start, shift_end,
+        last_login, account_status, profile_photo, active,
+        created_at, updated_at
       FROM users
     `;
 
@@ -62,44 +38,11 @@ export async function getAllUsers(
   }
 }
 
-// Example response:
-// {
-//   "users": [
-//     {
-//       "user_id": "USR-2026-0001",
-//       "username": "admin",
-//       "first_name": "Admin",
-//       "middle_name": null,
-//       "last_name": "User",
-//       "suffix": null,
-//       "sex": "Male",
-//       "email": "admin@example.com",
-//       "contact_number": "1234567890",
-//       "emergency_contact_name": "Emergency Contact",
-//       "emergency_contact": "09123456789",
-//       "address": "Manila, Philippines",
-//       "birthdate": "1990-01-01",
-//       "role": "Administrator",
-//       "department": "Administration",
-//       "employment_status": "Regular",
-//       "date_hired": "2026-06-28",
-//       "shift_start": "08:00:00",
-//       "shift_end": "17:00:00",
-//       "profile_photo": "https://...",
-//       "created_at": "2026-06-28T20:19:10.904Z",
-//       "updated_at": "2026-06-28T20:19:10.904Z"
-//     }
-//   ]
-// }
-
-// =========================
 // GET ALL ACTIVITIES
-// =========================
 export async function getAllActivities(
-  req: Request<{}, getAllActivities.response | getAllActivities.error, {}>,
+  req: Request,
   res: Response<getAllActivities.response | getAllActivities.error>,
 ) {
-  // GET /api/admin/activities
   try {
     const activities = await sql`
       SELECT
@@ -138,16 +81,11 @@ export async function getAllActivities(
   }
 }
 
-//----------------------------------------------------------------------------------------------------------------//
-
-// =========================
 // GET ALL SERVICES
-// =========================
 export async function getAllservices(
-  req: Request<{}, getAllservices.response | getAllservices.error, {}>,
+  req: Request,
   res: Response<getAllservices.response | getAllservices.error>,
 ) {
-  // GET /api/admin/services
   try {
     const services = await sql`
       SELECT *
@@ -157,22 +95,6 @@ export async function getAllservices(
     return res.status(200).json({
       services,
     } as getAllservices.response);
-
-    // {
-    //   "services": [
-    //     {
-    //       "service_id": "SVC-2026-0001",
-    //       "service_type": "Laboratory",
-    //       "service_name": "Blood Test",
-    //       "price": "250.00",
-    //       "active": true,
-    //       "room": "Laboratory",
-    //       "service_category": "Diagnostic",
-    //       "created_at": "2026-07-02T08:00:00.000Z",
-    //       "updated_at": "2026-07-02T08:00:00.000Z"
-    //     }
-    //   ]
-    // }
   } catch (error) {
     console.error("GET ALL SERVICES ERROR:", error);
 
@@ -182,16 +104,11 @@ export async function getAllservices(
   }
 }
 
-//----------------------------------------------------------------------------------------------------------------//
-
-// =========================
 // GET MY ACTIVITIES
-// =========================
 export async function getMyActivities(
-  req: Request<{}, getMyActivities.response | getMyActivities.error, {}>,
+  req: Request,
   res: Response<getMyActivities.response | getMyActivities.error>,
 ) {
-  // GET /api/admin/activity
   try {
     const activities = await sql`
       SELECT *
@@ -210,20 +127,6 @@ export async function getMyActivities(
     return res.status(200).json({
       activities,
     } as getMyActivities.response);
-
-    // {
-    //   "activities": [
-    //     {
-    //       "activity_id": "ACT-2026-0001",
-    //       "user_id": "USR-2026-0001",
-    //       "service_name": "Blood Test",
-    //       "details": {
-    //         "action": "Created request"
-    //       },
-    //       "created_at": "2026-06-28T20:19:10.904Z"
-    //     }
-    //   ]
-    // }
   } catch (error) {
     console.error("GET MY ACTIVITIES ERROR:", error);
 
@@ -233,20 +136,14 @@ export async function getMyActivities(
   }
 }
 
-// =========================
 // GET ALL FORM TEMPLATES
-// =========================
 export async function getAllFormTemplates(
-  req: Request<
-    {},
-    getAllFormTemplates.response | getAllFormTemplates.error,
-    {},
-    getAllFormTemplates.query
-  >,
+  req: Request,
   res: Response<getAllFormTemplates.response | getAllFormTemplates.error>,
 ) {
   try {
-    const { service_id, status } = req.query;
+    const { service_id, status } =
+      req.query as getAllFormTemplates.query;
 
     const templates = await sql`
       SELECT *
@@ -272,18 +169,10 @@ export async function getAllFormTemplates(
   }
 }
 
-// =========================
 // GET FORM TEMPLATE BY ID
-// =========================
 export async function getFormTemplateById(
-  req: Request<
-    getFormTemplateById.params,
-    getFormTemplateById.response | getFormTemplateById.error,
-    {}
-  >,
-  res: Response<
-    getFormTemplateById.response | getFormTemplateById.error
-  >,
+  req: Request,
+  res: Response<getFormTemplateById.response | getFormTemplateById.error>,
 ) {
   try {
     const { form_id } = req.params;

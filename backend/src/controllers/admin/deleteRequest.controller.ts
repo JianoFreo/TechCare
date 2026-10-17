@@ -4,11 +4,7 @@ import { sql } from "../../config/db.js";
 import type { deleteTemplate } from "./dto/delete.dto.js";
 
 export async function deleteTemplate(
-  req: Request<
-    deleteTemplate.params,
-    deleteTemplate.response | deleteTemplate.error,
-    {}
-  >,
+  req: Request,
   res: Response<
     deleteTemplate.response | deleteTemplate.error
   >,

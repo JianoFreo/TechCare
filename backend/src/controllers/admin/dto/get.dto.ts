@@ -156,9 +156,6 @@ export namespace getAllFormTemplates {
 // GET FORM TEMPLATE BY ID
 // =========================
 export namespace getFormTemplateById {
-  export interface params {
-    form_id: string;
-  }
 
   export interface template {
     id: number;
