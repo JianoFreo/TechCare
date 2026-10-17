@@ -2,7 +2,8 @@
 import { sql } from "../../config/db.js";
 import cloudinary from "../../config/cloudinary.js";
 import bcrypt from "bcryptjs";
-import { Request, Response } from "express";
+import { registerFormComponentTypes } from "../../utils/formComponentTypes.js";
+import { NextFunction, Request, Response } from "express";
 import {
   generateUserId,
   generateServiceId,
@@ -457,7 +458,7 @@ export async function addFormTemplates(
         AND status = 'Published'
     `;
 
-    if (checkExisting) {
+    if (status === "Published" && checkExisting) {
       return res.status(400).json({
         message: "An active form template already exist for the service.",
       } as addFormTemplates.error);

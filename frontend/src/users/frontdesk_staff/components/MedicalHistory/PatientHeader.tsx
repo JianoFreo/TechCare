@@ -21,9 +21,9 @@ function PatientHeader({ patient }: PatientHeaderProps) {
 
   const age = calculateAge(patient.birthdate);
 
-  const isSeniorCitizen = true;
+  const isSeniorCitizen = false;
   // TODO: replace with a real patient field
-  const isPWD = true;
+  const isPWD = false;
 
   return (
     <div className="flex justify-between border mx-6 mt-5 px-5 py-3 border-gray-200 rounded-xl shadow-lg">

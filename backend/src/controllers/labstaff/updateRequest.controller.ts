@@ -62,27 +62,75 @@ export async function acceptQueueEntry(req: Request, res: Response) {
 export async function completeQueueEntry(req: Request, res: Response) {
   try {
     const { queue_id } = req.params;
-    const { room } = req.body as { room?: string };
+    const { room } = (req.body ?? {}) as { room?: string };
 
     if (!queue_id) {
-      return res.status(400).json({ message: "Queue ID is required!" });
+      return res.status(400).json({
+        message: "Queue ID is required!",
+      });
     }
-    if (!room) {
-      return res.status(400).json({ message: "room is required" });
+
+    if (typeof room !== "string" || !room.trim()) {
+      return res.status(400).json({
+        message: "room is required",
+      });
     }
 
     const [updated] = await sql`
-      UPDATE queue_entries q
-      SET
-        status = 'Collected',
-        updated_at = NOW()
-      FROM services s
-      WHERE q.queue_id = ${queue_id}
-        AND q.queue_id LIKE 'LAB-%'
-        AND s.service_id = q.service_id
-        AND s.room = ${room}
-        AND LOWER(q.status) IN ('serving')
-      RETURNING q.*
+      WITH completed_queue AS (
+        UPDATE queue_entries q
+        SET
+          status = 'Completed',
+          updated_at = CASE
+            WHEN LOWER(q.status) = 'completed' THEN q.updated_at
+            ELSE NOW()
+          END
+        FROM services s
+        WHERE q.queue_id = ${queue_id}
+          AND q.queue_id LIKE 'LAB-%'
+          AND s.service_id = q.service_id
+          AND s.room = ${room}
+          AND LOWER(q.status) IN ('serving', 'completed')
+          AND (
+            LOWER(q.status) = 'completed'
+            OR EXISTS (
+              SELECT 1
+              FROM laboratory_request_items ri
+              JOIN services item_service
+                ON item_service.service_id = ri.service_id
+              WHERE ri.queue_id = q.queue_id
+                AND item_service.room = ${room}
+                AND LOWER(ri.status) IN (
+                  'requested',
+                  'waiting',
+                  'serving',
+                  'specimen collected'
+                )
+            )
+          )
+        RETURNING q.*
+      ),
+      collected_items AS (
+        UPDATE laboratory_request_items ri
+        SET
+          status = 'Specimen Collected',
+          updated_at = NOW()
+        FROM completed_queue cq, services s
+        WHERE ri.queue_id = cq.queue_id
+          AND s.service_id = ri.service_id
+          AND s.room = ${room}
+          AND LOWER(ri.status) IN (
+            'requested',
+            'waiting',
+            'serving'
+          )
+        RETURNING ri.lab_item_id
+      )
+      SELECT
+        cq.*,
+        (SELECT COUNT(*)::int FROM collected_items)
+          AS collected_item_count
+      FROM completed_queue cq
     `;
 
     if (!updated) {
@@ -95,27 +143,45 @@ export async function completeQueueEntry(req: Request, res: Response) {
       `;
 
       if (!existing) {
-        return res.status(404).json({ message: "Queue entry not found." });
+        return res.status(404).json({
+          message: "Queue entry not found.",
+        });
       }
+
       if (existing.room !== room) {
-        return res
-          .status(403)
-          .json({ message: "This queue belongs to a different room." });
+        return res.status(403).json({
+          message: "This queue belongs to a different room.",
+        });
       }
+
+      if (String(existing.status).toLowerCase() === "serving") {
+        return res.status(409).json({
+          message:
+            "No laboratory request items are available for specimen collection in this room.",
+        });
+      }
+
       return res.status(409).json({
-        message: `Queue is ${existing.status} and can't be completed.`,
+        message: "Queue is " + existing.status + " and can't be completed.",
       });
     }
 
+    const { collected_item_count, ...queue } = updated;
+
     return res.status(200).json({
       message: "Queue entry completed.",
-      queue: updated,
+      queue,
+      collected_item_count,
     });
   } catch (error) {
     console.error("Unable to complete queue", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
   }
 }
+
 
 export async function skipQueueEntry(req: Request, res: Response) {
   try {
@@ -292,6 +358,54 @@ export async function cancelQueueEntry(req: Request, res: Response) {
     return res.status(500).json({
       message: "Internal Server Error",
     });
+  }
+}
+
+
+export async function startLaboratoryAnalysis(req: Request, res: Response) {
+  const { room, lab_item_ids } = req.body ?? {};
+  if (
+    typeof room !== "string" ||
+    !room.trim() ||
+    !Array.isArray(lab_item_ids) ||
+    !lab_item_ids.length ||
+    lab_item_ids.length > 100 ||
+    lab_item_ids.some((id) => typeof id !== "string" || !id.trim()) ||
+    new Set(lab_item_ids).size !== lab_item_ids.length
+  ) {
+    return res
+      .status(400)
+      .json({
+        message: "A room and distinct laboratory item IDs are required.",
+      });
+  }
+  try {
+    const items = await sql`
+      WITH eligible AS MATERIALIZED (
+        SELECT ri.lab_item_id FROM laboratory_request_items ri
+        JOIN services s ON s.service_id = ri.service_id
+        WHERE ri.lab_item_id = ANY(${lab_item_ids}::text[]) AND s.room = ${room}
+          AND ri.status IN ('Specimen Collected', 'In Progress')
+          AND NOT EXISTS (SELECT 1 FROM laboratory_results r WHERE r.lab_item_id = ri.lab_item_id)
+        FOR UPDATE OF ri
+      )
+      UPDATE laboratory_request_items ri SET status = 'In Progress',
+        updated_at = CASE WHEN ri.status = 'In Progress' THEN ri.updated_at ELSE NOW() END
+      WHERE ri.lab_item_id IN (SELECT lab_item_id FROM eligible)
+        AND (SELECT count(*) FROM eligible) = ${lab_item_ids.length}
+      RETURNING ri.lab_item_id, ri.status
+    `;
+    if (items.length !== lab_item_ids.length)
+      return res
+        .status(409)
+        .json({
+          message:
+            "Some tests are already completed or are not collected samples in this room. Refresh the list.",
+        });
+    return res.json({ items });
+  } catch (error) {
+    console.error("Unable to start analysis:", error);
+    return res.status(500).json({ message: "Unable to start analysis." });
   }
 }
 

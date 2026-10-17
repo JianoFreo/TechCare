@@ -2,7 +2,8 @@
 import { sql } from "../../config/db.js";
 import cloudinary from "../../config/cloudinary.js";
 import bcrypt from "bcryptjs";
-import type { Request, Response } from "express";
+import { registerFormComponentTypes } from "../../utils/formComponentTypes.js";
+import { Request, Response } from "express";
 import { logActivity } from "../../utils/activityLogger.js";
 import type {
   updateUser,
@@ -220,6 +221,7 @@ export async function updateUserStatus(
 // =========================
 // UPDATE FORM TEMPLATE
 // =========================
+
 export async function updateFormTemplate(
   req: Request<
     updateFormTemplate.params,
@@ -229,7 +231,13 @@ export async function updateFormTemplate(
   res: Response<updateFormTemplate.response | updateFormTemplate.error>,
 ) {
   const { form_id } = req.params;
-  const { form_name, form_description, status, form_components } = req.body;
+  const {
+    form_name,
+    form_description,
+    service_id,
+    status,
+    form_components,
+  } = req.body;
 
   if (!form_id) {
     return res.status(400).json({
@@ -260,63 +268,84 @@ export async function updateFormTemplate(
       });
     }
 
-    // NOTE: For Neon HTTP queries, separate BEGIN/COMMIT calls may not share
-    // the same connection. Use a transaction-capable client for atomic writes.
+    const serviceId = service_id ?? checkExisting.service_id;
+    const updatedStatus = status ?? checkExisting.status;
 
-    const [formUpdated] = await sql`
-      UPDATE form_templates
-      SET
-        form_name = ${form_name},
-        form_description = ${form_description ?? null},
-        status = ${status ?? checkExisting.status},
-        version = version + 1,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE form_id = ${form_id}
-      RETURNING *
-    `;
-
-    await sql`
-      DELETE FROM form_components
-      WHERE form_id = ${form_id}
-    `;
-
-    const componentsUpdated: updateFormTemplate.component[] = [];
-
-    for (let index = 0; index < form_components.length; index++) {
-      const componentData = form_components[index];
-      const form_component_id = `FC-${form_id}-${index}`;
-
-      const [component] = await sql`
-        INSERT INTO form_components (
-          form_component_id,
-          form_id,
-          type_id,
-          label,
-          field_key,
-          display_order,
-          settings,
-          validation
-        )
-        VALUES (
-          ${form_component_id},
-          ${form_id},
-          ${componentData.type_id},
-          ${componentData.label},
-          ${componentData.field_key},
-          ${componentData.display_order},
-          ${JSON.stringify(componentData.settings ?? null)}::jsonb,
-          ${JSON.stringify(componentData.validation ?? null)}::jsonb
-        )
-        RETURNING *
+    if (updatedStatus === "Published") {
+      const [published] = await sql`
+        SELECT form_id
+        FROM form_templates
+        WHERE service_id = ${serviceId}
+          AND status = 'Published'
+          AND form_id <> ${form_id}
       `;
 
-      componentsUpdated.push(component as updateFormTemplate.component);
+      if (published) {
+        return res.status(400).json({
+          message:
+            "An active form template already exists for this service.",
+        });
+      }
     }
+
+    const results = await sql.transaction([
+      registerFormComponentTypes(),
+
+      sql`
+        UPDATE form_templates
+        SET
+          form_name = ${form_name},
+          form_description = ${form_description ?? null},
+          service_id = ${serviceId},
+          status = ${updatedStatus},
+          version = version + 1,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE form_id = ${form_id}
+        RETURNING *
+      `,
+
+      sql`
+        DELETE FROM form_components
+        WHERE form_id = ${form_id}
+      `,
+
+      ...form_components.map((component, index) => {
+        const form_component_id = `FC-${form_id}-${index}`;
+
+        return sql`
+          INSERT INTO form_components (
+            form_component_id,
+            form_id,
+            type_id,
+            label,
+            field_key,
+            display_order,
+            settings,
+            validation
+          )
+          VALUES (
+            ${form_component_id},
+            ${form_id},
+            ${component.type_id},
+            ${component.label},
+            ${component.field_key},
+            ${component.display_order},
+            ${JSON.stringify(component.settings ?? null)}::jsonb,
+            ${JSON.stringify(component.validation ?? null)}::jsonb
+          )
+          RETURNING *
+        `;
+      }),
+    ]);
+
+    const [formUpdated] = results[1];
+    const componentsUpdated = results.slice(3).flat();
 
     return res.status(200).json({
       message: "Form template updated successfully",
       formUpdated: formUpdated as updateFormTemplate.template,
-      componentsUpdated,
+      componentsUpdated:
+        componentsUpdated as updateFormTemplate.component[],
     } as updateFormTemplate.response);
   } catch (error) {
     console.error("UPDATE FORM TEMPLATE ERROR:", error);
