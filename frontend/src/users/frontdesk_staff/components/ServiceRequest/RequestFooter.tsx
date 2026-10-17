@@ -30,7 +30,7 @@ function RequestFooter({ patient, onSelectPatient }: RequestFooterProps) {
   }`;
 
   // TODO: replace with real patient fields
-  const isSeniorCitizen = true;
+  const isSeniorCitizen = false;
   const isPWD = false;
 
   return (

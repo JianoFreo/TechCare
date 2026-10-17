@@ -65,10 +65,15 @@ export async function completeQueueEntry(req: Request, res: Response) {
     const { room } = (req.body ?? {}) as { room?: string };
 
     if (!queue_id) {
-      return res.status(400).json({ message: "Queue ID is required!" });
+      return res.status(400).json({
+        message: "Queue ID is required!",
+      });
     }
+
     if (typeof room !== "string" || !room.trim()) {
-      return res.status(400).json({ message: "room is required" });
+      return res.status(400).json({
+        message: "room is required",
+      });
     }
 
     const [updated] = await sql`
@@ -91,38 +96,41 @@ export async function completeQueueEntry(req: Request, res: Response) {
             OR EXISTS (
               SELECT 1
               FROM laboratory_request_items ri
-              JOIN services item_service ON item_service.service_id = ri.service_id
+              JOIN services item_service
+                ON item_service.service_id = ri.service_id
               WHERE ri.queue_id = q.queue_id
                 AND item_service.room = ${room}
                 AND LOWER(ri.status) IN (
-                  'requested', 'waiting', 'serving', 'specimen collected'
+                  'requested',
+                  'waiting',
+                  'serving',
+                  'specimen collected'
                 )
             )
           )
         RETURNING q.*
-      ), collected_items AS (
+      ),
+      collected_items AS (
         UPDATE laboratory_request_items ri
-        SET status = 'Specimen Collected', updated_at = NOW()
+        SET
+          status = 'Specimen Collected',
+          updated_at = NOW()
         FROM completed_queue cq, services s
         WHERE ri.queue_id = cq.queue_id
           AND s.service_id = ri.service_id
           AND s.room = ${room}
-          AND LOWER(ri.status) IN ('requested', 'waiting', 'serving')
+          AND LOWER(ri.status) IN (
+            'requested',
+            'waiting',
+            'serving'
+          )
         RETURNING ri.lab_item_id
       )
-      SELECT cq.*, (SELECT COUNT(*)::int FROM collected_items) AS collected_item_count
+      SELECT
+        cq.*,
+        (SELECT COUNT(*)::int FROM collected_items)
+          AS collected_item_count
       FROM completed_queue cq
-      UPDATE queue_entries q
-      SET
-        status = 'Collected',
-        updated_at = NOW()
-      FROM services s
-      WHERE q.queue_id = ${queue_id}
-        AND q.queue_id LIKE 'LAB-%'
-        AND s.service_id = q.service_id
-        AND s.room = ${room}
-        AND LOWER(q.status) IN ('serving')
-      RETURNING q.*
     `;
 
     if (!updated) {
@@ -135,25 +143,31 @@ export async function completeQueueEntry(req: Request, res: Response) {
       `;
 
       if (!existing) {
-        return res.status(404).json({ message: "Queue entry not found." });
+        return res.status(404).json({
+          message: "Queue entry not found.",
+        });
       }
+
       if (existing.room !== room) {
-        return res
-          .status(403)
-          .json({ message: "This queue belongs to a different room." });
+        return res.status(403).json({
+          message: "This queue belongs to a different room.",
+        });
       }
+
       if (String(existing.status).toLowerCase() === "serving") {
         return res.status(409).json({
           message:
             "No laboratory request items are available for specimen collection in this room.",
         });
       }
+
       return res.status(409).json({
         message: "Queue is " + existing.status + " and can't be completed.",
       });
     }
 
     const { collected_item_count, ...queue } = updated;
+
     return res.status(200).json({
       message: "Queue entry completed.",
       queue,
@@ -161,9 +175,13 @@ export async function completeQueueEntry(req: Request, res: Response) {
     });
   } catch (error) {
     console.error("Unable to complete queue", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
   }
 }
+
 
 export async function skipQueueEntry(req: Request, res: Response) {
   try {
