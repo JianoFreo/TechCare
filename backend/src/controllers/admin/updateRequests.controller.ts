@@ -1,9 +1,8 @@
-
 import { sql } from "../../config/db.js";
 import cloudinary from "../../config/cloudinary.js";
 import bcrypt from "bcryptjs";
 import { registerFormComponentTypes } from "../../utils/formComponentTypes.js";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { logActivity } from "../../utils/activityLogger.js";
 import type {
   updateUser,
@@ -15,11 +14,7 @@ import type {
 // UPDATE USER
 // =========================
 export async function updateUser(
-  req: Request<
-    updateUser.params,
-    updateUser.response | updateUser.error,
-    updateUser.body
-  >,
+  req: Request,
   res: Response<updateUser.response | updateUser.error>,
 ) {
   // PATCH /api/admin/users/:user_id
@@ -46,14 +41,14 @@ export async function updateUser(
       date_hired,
       shift_start,
       shift_end,
-    } = req.body;
+    } = req.body as updateUser.body;
 
     // =========================
     // PASSWORD
     // =========================
     let hashedPassword: string | null = null;
 
-    if (password?.trim()) {
+    if (typeof password === "string" && password.trim()) {
       hashedPassword = await bcrypt.hash(password, 10);
     }
 
@@ -79,19 +74,37 @@ export async function updateUser(
         username = COALESCE(${username ?? null}, username),
         password_hash = COALESCE(${hashedPassword}, password_hash),
         first_name = COALESCE(${first_name ?? null}, first_name),
-        middle_name = COALESCE(${middle_name ?? null}, middle_name),
+        middle_name = CASE
+          WHEN ${middle_name === undefined} THEN middle_name
+          ELSE ${middle_name ?? null}
+        END,
         last_name = COALESCE(${last_name ?? null}, last_name),
-        suffix = COALESCE(${suffix ?? null}, suffix),
+        suffix = CASE
+          WHEN ${suffix === undefined} THEN suffix
+          ELSE ${suffix ?? null}
+        END,
         sex = COALESCE(${sex ?? null}, sex),
         email = COALESCE(${email ?? null}, email),
         contact_number = COALESCE(${contact_number ?? null}, contact_number),
-        emergency_contact_name = COALESCE(${emergency_contact_name ?? null}, emergency_contact_name),
-        emergency_contact = COALESCE(${emergency_contact ?? null}, emergency_contact),
+        emergency_contact_name = CASE
+          WHEN ${emergency_contact_name === undefined} THEN emergency_contact_name
+          ELSE ${emergency_contact_name ?? null}
+        END,
+        emergency_contact = CASE
+          WHEN ${emergency_contact === undefined} THEN emergency_contact
+          ELSE ${emergency_contact ?? null}
+        END,
         address = COALESCE(${address ?? null}, address),
         birthdate = COALESCE(${birthdate ?? null}, birthdate),
         role = COALESCE(${role ?? null}, role),
-        department = COALESCE(${department ?? null}, department),
-        employment_status = COALESCE(${employment_status ?? null}, employment_status),
+        department = CASE
+          WHEN ${department === undefined} THEN department
+          ELSE ${department ?? null}
+        END,
+        employment_status = CASE
+          WHEN ${employment_status === undefined} THEN employment_status
+          ELSE ${employment_status ?? null}
+        END,
         date_hired = COALESCE(${date_hired ?? null}, date_hired),
         shift_start = COALESCE(${shift_start ?? null}, shift_start),
         shift_end = COALESCE(${shift_end ?? null}, shift_end),
@@ -135,27 +148,27 @@ export async function updateUser(
 // UPDATE USER STATUS
 // =========================
 export async function updateUserStatus(
-  req: Request<
-    updateUserStatus.params,
-    updateUserStatus.response | updateUserStatus.error,
-    updateUserStatus.body
-  >,
+  req: Request,
   res: Response<updateUserStatus.response | updateUserStatus.error>,
 ) {
   try {
     const { user_id } = req.params;
-    const { account_status } = req.body;
-
+    const { account_status } = req.body as updateUserStatus.body;
+    if (typeof user_id !== "string" || !user_id) {
+      return res.status(400).json({
+        message: "User ID is required.",
+      } as updateUserStatus.error);
+    }
     if (account_status === undefined) {
       return res.status(400).json({
         message: "Account status is required.",
-      });
+      } as updateUserStatus.error);
     }
 
     if (typeof account_status !== "boolean") {
       return res.status(400).json({
         message: "Account status must be a boolean.",
-      });
+      } as updateUserStatus.error);
     }
 
     if (user_id === req.user.user_id) {
@@ -164,13 +177,13 @@ export async function updateUserStatus(
         actionName: "user.deactivate",
         status: "blocked",
         targetType: "user",
-        targetId: user_id,
+        targetId: user_id as string,
         metadata: { reason: "self-deactivation attempt" },
       });
-
+      
       return res.status(400).json({
         message: `You can't ${account_status ? "activate" : "deactivate"} your own account.`,
-      });
+      } as updateUserStatus.error);
     }
 
     const updatedAccountStatus = await sql`
@@ -191,7 +204,7 @@ export async function updateUserStatus(
     if (updatedAccountStatus.length === 0) {
       return res.status(404).json({
         message: "User not found.",
-      });
+      } as updateUserStatus.error);
     }
 
     await logActivity({
@@ -214,7 +227,7 @@ export async function updateUserStatus(
 
     return res.status(500).json({
       message: "Internal Server Error.",
-    });
+    } as updateUserStatus.error);
   }
 }
 
@@ -223,26 +236,18 @@ export async function updateUserStatus(
 // =========================
 
 export async function updateFormTemplate(
-  req: Request<
-    updateFormTemplate.params,
-    updateFormTemplate.response | updateFormTemplate.error,
-    updateFormTemplate.body
-  >,
+  req: Request,
   res: Response<updateFormTemplate.response | updateFormTemplate.error>,
 ) {
   const { form_id } = req.params;
-  const {
-    form_name,
-    form_description,
-    service_id,
-    status,
-    form_components,
-  } = req.body;
+
+  const { form_name, form_description, service_id, status, form_components } =
+    req.body as updateFormTemplate.body;
 
   if (!form_id) {
     return res.status(400).json({
       message: "form_id is required.",
-    });
+    } as updateFormTemplate.error);
   }
 
   if (
@@ -252,7 +257,7 @@ export async function updateFormTemplate(
   ) {
     return res.status(400).json({
       message: "Required fields missing.",
-    });
+    } as updateFormTemplate.error);
   }
 
   try {
@@ -265,7 +270,7 @@ export async function updateFormTemplate(
     if (!checkExisting) {
       return res.status(404).json({
         message: "Form template not found.",
-      });
+      } as updateFormTemplate.error);
     }
 
     const serviceId = service_id ?? checkExisting.service_id;
@@ -282,9 +287,8 @@ export async function updateFormTemplate(
 
       if (published) {
         return res.status(400).json({
-          message:
-            "An active form template already exists for this service.",
-        });
+          message: "An active form template already exists for this service.",
+        } as updateFormTemplate.error);
       }
     }
 
@@ -337,21 +341,20 @@ export async function updateFormTemplate(
         `;
       }),
     ]);
-
+    
     const [formUpdated] = results[1];
     const componentsUpdated = results.slice(3).flat();
 
     return res.status(200).json({
       message: "Form template updated successfully",
       formUpdated: formUpdated as updateFormTemplate.template,
-      componentsUpdated:
-        componentsUpdated as updateFormTemplate.component[],
+      componentsUpdated: componentsUpdated as updateFormTemplate.component[],
     } as updateFormTemplate.response);
   } catch (error) {
     console.error("UPDATE FORM TEMPLATE ERROR:", error);
 
     return res.status(500).json({
       message: "Internal Server Error",
-    });
+    } as updateFormTemplate.error);
   }
 }

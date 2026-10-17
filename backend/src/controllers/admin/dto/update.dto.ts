@@ -1,8 +1,5 @@
-export namespace updateUser {
-  export interface params {
-    user_id: string;
-  }
 
+export namespace updateUser {
   export interface body {
     username?: string;
     password?: string;
@@ -65,10 +62,6 @@ export namespace updateUser {
 }
 
 export namespace updateUserStatus {
-  export interface params {
-    user_id: string;
-  }
-
   export interface body {
     account_status: boolean;
   }
@@ -93,10 +86,6 @@ export namespace updateUserStatus {
 }
 
 export namespace updateFormTemplate {
-  export interface params {
-    form_id: string;
-  }
-
   export interface componentBody {
     type_id: string;
     label: string;
@@ -109,8 +98,8 @@ export namespace updateFormTemplate {
   export interface body {
     form_name: string;
     form_description?: string | null;
-    service_id: string;
-    status: string;
+    service_id?: string;
+    status?: string;
     form_components: componentBody[];
   }
 

@@ -15,7 +15,7 @@ export async function login(
   res: Response<login.response | login.error>,
 ) {
   try {
-    const { username, password } = req.body;
+    const { username, password } = req.body as login.body;
 
     // =========================
     // REQUIRED CREDENTIALS
@@ -23,7 +23,7 @@ export async function login(
     if (!username || !password) {
       return res.status(400).json({
         message: "Username and password are required",
-      });
+      } as login.error);
     }
 
     // Explicitly enabled local development shortcut. Never used in production.
@@ -97,7 +97,7 @@ export async function login(
     if (!account) {
       return res.status(401).json({
         message: "Invalid username or email",
-      });
+      } as login.error);
     }
 
     // =========================
@@ -108,7 +108,7 @@ export async function login(
     if (!isMatch) {
       return res.status(401).json({
         message: "Invalid username or password",
-      });
+      } as login.error);
     }
 
     // =========================
@@ -118,7 +118,7 @@ export async function login(
       return res.status(403).json({
         message:
           "Your account has been deactivated. Please contact the administrator.",
-      });
+      } as login.error);
     }
 
     // =========================
@@ -202,6 +202,6 @@ export async function login(
 
     return res.status(500).json({
       error: "Internal Server Error",
-    });
+    } as login.error);
   }
 }

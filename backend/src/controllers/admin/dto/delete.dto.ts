@@ -1,8 +1,5 @@
 
 export namespace deleteTemplate {
-  export interface params {
-    form_id: string;
-  }
 
   export interface template {
     id: number;

@@ -24,11 +24,7 @@ import type {
 // ADD USER
 // =========================
 export async function addUser(
-  req: Request<
-    {},
-    addUser.response | addUser.error,
-    addUser.body
-  >,
+  req: Request,
   res: Response<addUser.response | addUser.error>,
 ) {
   // POST /api/admin/add-user
@@ -229,11 +225,7 @@ export async function addUser(
 // ADD SERVICE
 // =========================
 export async function addService(
-  req: Request<
-    {},
-    addService.response | addService.error,
-    addService.body
-  >,
+  req: Request,
   res: Response<addService.response | addService.error>,
 ) {
   // POST /api/admin/services
@@ -313,11 +305,7 @@ export async function addService(
 // ADD ACTIVITY
 // =========================
 export async function addActivity(
-  req: Request<
-    {},
-    addActivity.response | addActivity.error,
-    addActivity.body
-  >,
+  req: Request,
   res: Response<addActivity.response | addActivity.error>,
 ) {
   // POST /api/admin/activities
@@ -372,11 +360,7 @@ export async function addActivity(
 // ADD ACTION
 // =========================
 export async function addAction(
-  req: Request<
-    {},
-    addAction.response | addAction.error,
-    addAction.body
-  >,
+  req: Request,
   res: Response<addAction.response | addAction.error>,
 ) {
   try {
@@ -422,11 +406,7 @@ export async function addAction(
 // ADD FORM TEMPLATES
 // =========================
 export async function addFormTemplates(
-  req: Request<
-    {},
-    addFormTemplates.response | addFormTemplates.error,
-    addFormTemplates.body
-  >,
+  req: Request,
   res: Response<addFormTemplates.response | addFormTemplates.error>,
 ) {
   const {
