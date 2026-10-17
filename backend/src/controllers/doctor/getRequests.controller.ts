@@ -242,3 +242,45 @@ export async function getMedicalHistoryFull(req: Request, res: Response) {
     return res.status(500).json({ message: "Failed to fetch full medical history" });
   }
 }
+
+// GET /api/doctor/laboratory-services
+// Active laboratory-type services a doctor can order (service_type starting
+// with "Laboratory"; Radiology etc. are not offered here).
+
+export async function getLaboratoryServices(_req: Request, res: Response) {
+  try {
+    const services = await sql`
+      SELECT service_id, service_name, service_type, price, room
+      FROM services
+      WHERE active = TRUE
+        AND LOWER(service_type) LIKE 'laboratory%'
+      ORDER BY service_name ASC
+    `;
+    return res.status(200).json({ services });
+  } catch (error) {
+    console.error("Error fetching laboratory services:", error);
+    return res.status(500).json({ message: "Failed to fetch laboratory services." });
+  }
+}
+
+// GET /api/doctor/consultation-patients/:patient_id
+// Basic demographics for the consultation header (doctor-accessible).
+export async function getConsultationPatient(req: Request, res: Response) {
+  try {
+    const { patient_id } = req.params;
+    const rows = await sql`
+      SELECT patient_id, first_name, middle_name, last_name, suffix, sex,
+             to_char(birthdate, 'YYYY-MM-DD') AS birthdate,
+             contact_number, address, image_url
+      FROM patients
+      WHERE patient_id = ${patient_id}
+    `;
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Patient not found." });
+    }
+    return res.status(200).json({ patient: rows[0] });
+  } catch (error) {
+    console.error("Error fetching consultation patient:", error);
+    return res.status(500).json({ message: "Failed to fetch patient." });
+  }
+}
