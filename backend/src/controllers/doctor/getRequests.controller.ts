@@ -385,12 +385,12 @@ export async function getMedicalHistoryFull(
 
     return res.status(400).json({
       message: "Invalid record type.",
-    });
+    } as getMedicalHistoryFull.error);
   } catch (error) {
     console.error("Error fetching full medical history:", error);
 
     return res.status(500).json({
       message: "Failed to fetch full medical history",
-    });
+    } as getMedicalHistoryFull.error);
   }
 }
