@@ -16,7 +16,7 @@ export async function getMedicalHistory(
   res: Response<getMedicalHistory.response | getMedicalHistory.error>,
 ) {
   try {
-    const { patient_id } = req.params;
+    const { patient_id } = req.params as getMedicalHistory.params;
     const {
       search,
       service_category,
@@ -25,7 +25,7 @@ export async function getMedicalHistory(
       end_date,
       page = "1",
       limit = "10",
-    } = req.query;
+    } = req.query as getMedicalHistory.query;
 
     const pageNum = Math.max(parseInt(page) || 1, 1);
     const limitNum = Math.min(Math.max(parseInt(limit) || 10, 1), 50);
@@ -91,14 +91,14 @@ export async function getMedicalHistory(
         total,
         total_pages: Math.ceil(total / limitNum),
       },
-    });
+    } as getMedicalHistory.response);
   } catch (error) {
     console.error("Error fetching medical history:", error);
 
     return res.status(500).json({
       message: "Failed to fetch medical history",
       detail: error instanceof Error ? error.message : String(error),
-    });
+    } as getMedicalHistory.error);
   }
 }
 
@@ -112,7 +112,8 @@ export async function getMedicalHistoryDetails(
   >,
 ) {
   try {
-    const { record_type, record_id } = req.params;
+    const { record_type, record_id } =
+      req.params as getMedicalHistoryDetails.params;
 
     if (record_type === "laboratory") {
       const [labDetails] = await sql`
@@ -137,7 +138,7 @@ export async function getMedicalHistoryDetails(
       if (!labDetails) {
         return res.status(404).json({
           message: "Laboratory record not found.",
-        });
+        } as getMedicalHistoryDetails.error);
       }
 
       const results = await sql`
@@ -169,19 +170,22 @@ export async function getMedicalHistoryDetails(
         requested_by_role: labDetails.requested_by_role,
         processed_by: labDetails.processed_by,
         processed_by_role: labDetails.processed_by_role,
-        results: results.map((row) => ({
-          result_id: Number(row.result_id),
-          result_value: row.result_value,
-          unit: row.unit,
-          reference_range: row.reference_range,
-          flag: row.flag,
-          remarks: row.remarks,
-          verified_by: row.verified_by,
-          verified_at: row.verified_at ? String(row.verified_at) : null,
-          image_url: row.image_url,
-          created_at: String(row.created_at),
-        })),
-      });
+        results: results.map(
+          (row) =>
+            ({
+              result_id: Number(row.result_id),
+              result_value: row.result_value,
+              unit: row.unit,
+              reference_range: row.reference_range,
+              flag: row.flag,
+              remarks: row.remarks,
+              verified_by: row.verified_by,
+              verified_at: row.verified_at ? String(row.verified_at) : null,
+              image_url: row.image_url,
+              created_at: String(row.created_at),
+            }) as getMedicalHistoryDetails.laboratoryResult,
+        ),
+      } as getMedicalHistoryDetails.laboratoryResponse);
     }
 
     if (record_type === "consultation") {
@@ -204,7 +208,7 @@ export async function getMedicalHistoryDetails(
       if (!consDetails) {
         return res.status(404).json({
           message: "Consultation record not found.",
-        });
+        } as getMedicalHistoryDetails.error);
       }
 
       const prescription = await sql`
@@ -239,8 +243,8 @@ export async function getMedicalHistoryDetails(
           valid_until: row.valid_until,
           prescribed_at: String(row.prescribed_at),
           prescribed_by: row.prescribed_by,
-        })),
-      });
+        })) as getMedicalHistoryDetails.prescription[],
+      } as getMedicalHistoryDetails.consultationResponse);
     }
 
     return res.status(400).json({
@@ -251,7 +255,7 @@ export async function getMedicalHistoryDetails(
 
     return res.status(500).json({
       message: "Failed to fetch medical history details",
-    });
+    } as getMedicalHistoryDetails.error);
   }
 }
 
@@ -260,9 +264,7 @@ export async function getMedicalHistoryFull(
     getMedicalHistoryFull.params,
     getMedicalHistoryFull.response | getMedicalHistoryFull.error
   >,
-  res: Response<
-    getMedicalHistoryFull.response | getMedicalHistoryFull.error
-  >,
+  res: Response<getMedicalHistoryFull.response | getMedicalHistoryFull.error>,
 ) {
   try {
     const { record_type, record_id } = req.params;
@@ -294,7 +296,7 @@ export async function getMedicalHistoryFull(
       if (!fullLab) {
         return res.status(404).json({
           message: "Laboratory record not found.",
-        });
+        } as getMedicalHistoryFull.error);
       }
 
       return res.status(200).json({
@@ -306,16 +308,14 @@ export async function getMedicalHistoryFull(
         result_value: fullLab.result_value,
         remarks: fullLab.remarks,
         verified_by: fullLab.verified_by,
-        verified_at: fullLab.verified_at
-          ? String(fullLab.verified_at)
-          : null,
+        verified_at: fullLab.verified_at ? String(fullLab.verified_at) : null,
         service_name: String(fullLab.service_name),
         room: fullLab.room,
         requested_by: fullLab.requested_by,
         requested_by_role: fullLab.requested_by_role,
         processed_by: fullLab.processed_by,
         processed_by_role: fullLab.processed_by_role,
-      });
+      } as getMedicalHistoryFull.laboratoryResponse);
     }
 
     if (record_type === "consultation") {
@@ -341,7 +341,7 @@ export async function getMedicalHistoryFull(
       if (!consDetails) {
         return res.status(404).json({
           message: "Consultation record not found.",
-        });
+        } as getMedicalHistoryFull.error);
       }
 
       const prescription = await sql`
@@ -379,8 +379,8 @@ export async function getMedicalHistoryFull(
           valid_until: row.valid_until,
           prescribed_at: String(row.prescribed_at),
           prescribed_by: row.prescribed_by,
-        })),
-      });
+        })) as getMedicalHistoryFull.prescription[],
+      } as getMedicalHistoryFull.consultationResponse);
     }
 
     return res.status(400).json({

@@ -93,10 +93,13 @@ export namespace getMedicalHistoryDetails {
     diagnosis: string | null;
     notes: string | null;
     consulted_at: string;
+    presenting_complaint: string | null;
+    vital_signs: unknown;
+    physical_examination: string | null;
     service_name: string;
     room: string | null;
     consulted_by: string | null;
-    prescription: prescription[];
+    prescription: getMedicalHistoryDetails.prescription[];
   }
 
   export type response = laboratoryResponse | consultationResponse;
@@ -110,6 +113,15 @@ export namespace getMedicalHistoryFull {
   export interface params {
     record_type: "consultation" | "laboratory";
     record_id: string;
+  }
+
+  export interface prescription {
+    prescription_id: string;
+    prescription_items: unknown;
+    notes: string | null;
+    valid_until: string | null;
+    prescribed_at: string;
+    prescribed_by: string | null;
   }
 
   export interface laboratoryResponse {
@@ -144,7 +156,7 @@ export namespace getMedicalHistoryFull {
     service_name: string;
     room: string | null;
     consulted_by: string | null;
-    prescription: getMedicalHistoryDetails.prescription[];
+    prescription: prescription[];
   }
 
   export type response = laboratoryResponse | consultationResponse;
