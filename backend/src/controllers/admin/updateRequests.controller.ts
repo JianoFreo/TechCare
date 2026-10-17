@@ -1,566 +1,360 @@
-
-import { pool, sql } from "../../config/db.js";
+import { sql } from "../../config/db.js";
+import cloudinary from "../../config/cloudinary.js";
+import bcrypt from "bcryptjs";
+import { registerFormComponentTypes } from "../../utils/formComponentTypes.js";
 import type { Request, Response } from "express";
-import {
-  generateLaboratoryRequestID,
-  generateLaboratoryItemID,
-  generatePrescriptionId,
-} from "../../utils/generateId.js";
-import {
-  validateLabRequest,
-  validateFindings,
-} from "../../utils/consultationValidation.js";
-import { resolveDoctorId } from "../../utils/resolveDoctorId.js";
-import { generateConsultationRecordID } from "../../utils/generateConsultationId.js";
+import { logActivity } from "../../utils/activityLogger.js";
 import type {
-  addLaboratoryRequest,
-  addPrescriptions,
-  addConsultationFindings,
-} from "./dto/post.dto.js";
+  updateUser,
+  updateUserStatus,
+  updateFormTemplate,
+} from "./dto/update.dto.js";
 
-export async function addLaboratoryRequest(
-  req: Request<
-    object,
-    addLaboratoryRequest.response | addLaboratoryRequest.error,
-    addLaboratoryRequest.body
-  >,
-  res: Response<
-    addLaboratoryRequest.response | addLaboratoryRequest.error
-  >,
+// =========================
+// UPDATE USER
+// =========================
+export async function updateUser(
+  req: Request,
+  res: Response<updateUser.response | updateUser.error>,
 ) {
-  const validation = validateLabRequest(req.body);
-
-  if (!validation.ok) {
-    return res.status(400).json({
-      message: "Validation failed.",
-      errors: validation.errors,
-    });
-  }
-
-  const requested_by = resolveDoctorId(req);
-
-  if (!requested_by) {
-    return res.status(401).json({
-      message: "Doctor could not be identified.",
-    });
-  }
-
-  const {
-    patient_id,
-    consultation_record_id,
-    service_ids,
-    priority,
-    request_date,
-    estimated_release_date,
-  } = validation.value;
-
+  // PATCH /api/admin/users/:user_id
   try {
-    const services = await sql`
-      SELECT service_id, service_type, active
-      FROM services
-      WHERE service_id = ANY(${service_ids}::text[])
+    const { user_id } = req.params;
+
+    const {
+      username,
+      password,
+      first_name,
+      middle_name,
+      last_name,
+      suffix,
+      sex,
+      email,
+      contact_number,
+      emergency_contact_name,
+      emergency_contact,
+      address,
+      birthdate,
+      role,
+      department,
+      employment_status,
+      date_hired,
+      shift_start,
+      shift_end,
+    } = req.body as updateUser.body;
+
+    // =========================
+    // PASSWORD
+    // =========================
+    let hashedPassword: string | null = null;
+
+    if (typeof password === "string" && password.trim()) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
+    // =========================
+    // PROFILE PHOTO
+    // =========================
+    let profilePhoto: string | null = null;
+
+    if (req.file) {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "techcare/user_photos",
+      });
+
+      profilePhoto = uploadResult.secure_url;
+    }
+
+    // =========================
+    // UPDATE USER
+    // =========================
+    const updatedUser = await sql`
+      UPDATE users
+      SET
+        username = COALESCE(${username ?? null}, username),
+        password_hash = COALESCE(${hashedPassword}, password_hash),
+        first_name = COALESCE(${first_name ?? null}, first_name),
+        middle_name = CASE
+          WHEN ${middle_name === undefined} THEN middle_name
+          ELSE ${middle_name ?? null}
+        END,
+        last_name = COALESCE(${last_name ?? null}, last_name),
+        suffix = CASE
+          WHEN ${suffix === undefined} THEN suffix
+          ELSE ${suffix ?? null}
+        END,
+        sex = COALESCE(${sex ?? null}, sex),
+        email = COALESCE(${email ?? null}, email),
+        contact_number = COALESCE(${contact_number ?? null}, contact_number),
+        emergency_contact_name = CASE
+          WHEN ${emergency_contact_name === undefined} THEN emergency_contact_name
+          ELSE ${emergency_contact_name ?? null}
+        END,
+        emergency_contact = CASE
+          WHEN ${emergency_contact === undefined} THEN emergency_contact
+          ELSE ${emergency_contact ?? null}
+        END,
+        address = COALESCE(${address ?? null}, address),
+        birthdate = COALESCE(${birthdate ?? null}, birthdate),
+        role = COALESCE(${role ?? null}, role),
+        department = CASE
+          WHEN ${department === undefined} THEN department
+          ELSE ${department ?? null}
+        END,
+        employment_status = CASE
+          WHEN ${employment_status === undefined} THEN employment_status
+          ELSE ${employment_status ?? null}
+        END,
+        date_hired = COALESCE(${date_hired ?? null}, date_hired),
+        shift_start = COALESCE(${shift_start ?? null}, shift_start),
+        shift_end = COALESCE(${shift_end ?? null}, shift_end),
+        profile_photo = COALESCE(${profilePhoto}, profile_photo),
+        updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ${user_id}
+      RETURNING *;
     `;
 
-    const found = new Map(
-      services.map((service) => [String(service.service_id), service]),
-    );
-
-    const unknown = service_ids.filter((id) => !found.has(id));
-
-    if (unknown.length > 0) {
-      return res.status(400).json({
-        message: "Validation failed.",
-        errors: {
-          services: `Unknown service: ${unknown.join(", ")}`,
-        },
+    // =========================
+    // USER NOT FOUND
+    // =========================
+    if (updatedUser.length === 0) {
+      return res.status(404).json({
+        message: "User not found",
       });
     }
 
-    const notLab = service_ids.filter((id) => {
-      const service = found.get(id);
+    // =========================
+    // REMOVE SENSITIVE DATA
+    // =========================
+    const { password_hash, ...safeUser } = updatedUser[0];
 
-      return (
-        !service ||
-        !String(service.service_type)
-          .toLowerCase()
-          .startsWith("laboratory") ||
-        !service.active
-      );
-    });
-
-    if (notLab.length > 0) {
-      return res.status(400).json({
-        message: "Validation failed.",
-        errors: {
-          services: `Not an available laboratory test: ${notLab.join(", ")}`,
-        },
-      });
-    }
-
-    if (consultation_record_id) {
-      const consultation = await sql`
-        SELECT patient_id
-        FROM consultation_records
-        WHERE consultation_record_id = ${consultation_record_id}
-      `;
-
-      if (consultation.length === 0) {
-        return res.status(404).json({
-          message: "Consultation record not found.",
-        });
-      }
-
-      if (consultation[0].patient_id !== patient_id) {
-        return res.status(400).json({
-          message: "Consultation record belongs to a different patient.",
-        });
-      }
-    }
+    // =========================
+    // RESPONSE
+    // =========================
+    return res.status(200).json({
+      message: "User updated successfully!",
+      user: safeUser,
+    } as updateUser.response);
   } catch (error) {
-    console.error("Error validating laboratory request:", error);
+    console.error("UPDATE USER ERROR:", error);
 
     return res.status(500).json({
-      message: "Internal server error.",
+      message: "Failed to update user",
     });
-  }
-
-  const client = await pool.connect();
-
-  try {
-    await client.query("BEGIN");
-    await client.query(
-      "SELECT pg_advisory_xact_lock(hashtext('lab_ids'))",
-    );
-
-    const request_id = await generateLaboratoryRequestID(client);
-
-    const { rows: laboratory_request_result } = await client.query(
-      `INSERT INTO laboratory_requests (
-        request_id,
-        consultation_record_id,
-        patient_id,
-        requested_by,
-        is_priority,
-        request_date,
-        estimated_release_date
-      )
-      VALUES (
-        $1, $2, $3, $4, $5,
-        COALESCE($6::date, CURRENT_DATE),
-        $7::date
-      )
-      RETURNING
-        id,
-        request_id,
-        consultation_record_id,
-        patient_id,
-        requested_by,
-        status,
-        is_paid,
-        is_priority,
-        to_char(request_date, 'YYYY-MM-DD') AS request_date,
-        to_char(estimated_release_date, 'YYYY-MM-DD')
-          AS estimated_release_date,
-        requested_at,
-        updated_at`,
-      [
-        request_id,
-        consultation_record_id,
-        patient_id,
-        requested_by,
-        priority === "Yes",
-        request_date,
-        estimated_release_date,
-      ],
-    );
-
-    const laboratory_item_result: addLaboratoryRequest.item[] = [];
-
-    for (const service_id of service_ids) {
-      const lab_item_id = await generateLaboratoryItemID(client);
-
-      const { rows } = await client.query(
-        `INSERT INTO laboratory_request_items (
-          lab_item_id,
-          request_id,
-          service_id,
-          status
-        )
-        VALUES ($1, $2, $3, 'Requested')
-        RETURNING *`,
-        [lab_item_id, request_id, service_id],
-      );
-
-      laboratory_item_result.push(
-        rows[0] as addLaboratoryRequest.item,
-      );
-    }
-
-    await client.query("COMMIT");
-
-    return res.status(201).json({
-      message: "Laboratory request added successfully.",
-      request: laboratory_request_result,
-      items: laboratory_item_result,
-    } as addLaboratoryRequest.response);
-  } catch (error) {
-    console.error("Error adding laboratory request:", error);
-
-    await client.query("ROLLBACK").catch(console.error);
-
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === "23503"
-    ) {
-      return res.status(400).json({
-        message: "Invalid patient, doctor or service ID.",
-      });
-    }
-
-    return res.status(500).json({
-      message: "Internal server error.",
-    });
-  } finally {
-    client.release();
   }
 }
 
-export async function addPrescriptions(
-  req: Request<
-    { consultation_record_id: string },
-    addPrescriptions.response | addPrescriptions.error,
-    addPrescriptions.body
-  >,
-  res: Response<
-    addPrescriptions.response | addPrescriptions.error
-  >,
+// =========================
+// UPDATE USER STATUS
+// =========================
+export async function updateUserStatus(
+  req: Request,
+  res: Response<updateUserStatus.response | updateUserStatus.error>,
 ) {
-  const { consultation_record_id } = req.params;
-  const { items, valid_until = null, notes = null } = req.body;
-  const user_id = req.user?.user_id;
-
-  if (!consultation_record_id) {
-    return res.status(400).json({
-      message: "Consultation record ID is required.",
-    });
-  }
-
-  if (!Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({
-      message: "At least one medication is required.",
-    });
-  }
-
-  const cleanItems: addPrescriptions.item[] = [];
-
-  for (const item of items) {
-    const medication =
-      typeof item.medication === "string" ? item.medication.trim() : "";
-    const dosage =
-      typeof item.dosage === "string" ? item.dosage.trim() : "";
-    const frequency =
-      typeof item.frequency === "string" ? item.frequency.trim() : "";
-    const duration =
-      typeof item.duration === "string" ? item.duration.trim() : undefined;
-    const instructions =
-      typeof item.instructions === "string"
-        ? item.instructions.trim()
-        : undefined;
-
-    if (!medication || !dosage || !frequency) {
+  try {
+    const { user_id } = req.params;
+    const { account_status } = req.body as updateUserStatus.body;
+    if (typeof user_id !== "string" || !user_id) {
       return res.status(400).json({
-        message: "Each medication needs a name, dosage, and frequency.",
-      });
+        message: "User ID is required.",
+      } as updateUserStatus.error);
+    }
+    if (account_status === undefined) {
+      return res.status(400).json({
+        message: "Account status is required.",
+      } as updateUserStatus.error);
     }
 
-    cleanItems.push({
-      medication,
-      dosage,
-      frequency,
-      duration,
-      quantity: item.quantity,
-      instructions,
+    if (typeof account_status !== "boolean") {
+      return res.status(400).json({
+        message: "Account status must be a boolean.",
+      } as updateUserStatus.error);
+    }
+
+    if (user_id === req.user.user_id) {
+      await logActivity({
+        userId: req.user.user_id,
+        actionName: "user.deactivate",
+        status: "blocked",
+        targetType: "user",
+        targetId: user_id as string,
+        metadata: { reason: "self-deactivation attempt" },
+      });
+      
+      return res.status(400).json({
+        message: `You can't ${account_status ? "activate" : "deactivate"} your own account.`,
+      } as updateUserStatus.error);
+    }
+
+    const updatedAccountStatus = await sql`
+      UPDATE users
+      SET
+        account_status = ${account_status},
+        updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ${user_id}
+      RETURNING
+        user_id,
+        first_name,
+        last_name,
+        middle_name,
+        role,
+        account_status;
+    `;
+
+    if (updatedAccountStatus.length === 0) {
+      return res.status(404).json({
+        message: "User not found.",
+      } as updateUserStatus.error);
+    }
+
+    await logActivity({
+      userId: req.user.user_id,
+      actionName: account_status ? "user.activate" : "user.deactivate",
+      status: "success",
+      targetType: "user",
+      targetId: user_id,
+      metadata: {
+        newStatus: account_status ? "activated" : "deactivated",
+      },
     });
+
+    return res.status(200).json({
+      message: `User successfully ${account_status ? "activated" : "deactivated"}.`,
+      updatedAccountStatus,
+    } as updateUserStatus.response);
+  } catch (error) {
+    console.error("UPDATE USER STATUS ERROR:", error);
+
+    return res.status(500).json({
+      message: "Internal Server Error.",
+    } as updateUserStatus.error);
+  }
+}
+
+// =========================
+// UPDATE FORM TEMPLATE
+// =========================
+
+export async function updateFormTemplate(
+  req: Request,
+  res: Response<updateFormTemplate.response | updateFormTemplate.error>,
+) {
+  const { form_id } = req.params;
+
+  const { form_name, form_description, service_id, status, form_components } =
+    req.body as updateFormTemplate.body;
+
+  if (!form_id) {
+    return res.status(400).json({
+      message: "form_id is required.",
+    } as updateFormTemplate.error);
   }
 
   if (
-    valid_until &&
-    !/^\d{4}-\d{2}-\d{2}$/.test(valid_until)
+    !form_name?.trim() ||
+    !Array.isArray(form_components) ||
+    form_components.length === 0
   ) {
     return res.status(400).json({
-      message: "valid_until must be YYYY-MM-DD.",
-    });
+      message: "Required fields missing.",
+    } as updateFormTemplate.error);
   }
-
-  const client = await pool.connect();
 
   try {
-    await client.query("BEGIN");
-
-    const { rows: consultation } = await client.query(
-      `SELECT patient_id, doctor_id
-       FROM consultation_records
-       WHERE consultation_record_id = $1`,
-      [consultation_record_id],
-    );
-
-    if (consultation.length === 0) {
-      await client.query("ROLLBACK");
-
-      return res.status(404).json({
-        message: "Consultation record not found.",
-      });
-    }
-
-    if (consultation[0].doctor_id !== user_id) {
-      await client.query("ROLLBACK");
-
-      return res.status(403).json({
-        message: "You can only prescribe for your own consultations.",
-      });
-    }
-
-    await client.query(
-      "SELECT pg_advisory_xact_lock(hashtext('prescription_ids'))",
-    );
-
-    const prescription_id = await generatePrescriptionId();
-
-    const { rows } = await client.query(
-      `INSERT INTO prescription_records (
-        prescription_id,
-        consultation_record_id,
-        patient_id,
-        prescriber_id,
-        valid_until,
-        prescription_items,
-        notes
-      )
-      VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7)
-      RETURNING *`,
-      [
-        prescription_id,
-        consultation_record_id,
-        consultation[0].patient_id,
-        user_id,
-        valid_until,
-        JSON.stringify(cleanItems),
-        notes,
-      ],
-    );
-
-    await client.query("COMMIT");
-
-    return res.status(201).json({
-      message: "Prescription added successfully.",
-      prescription: rows[0],
-    } as addPrescriptions.response);
-  } catch (error) {
-    await client.query("ROLLBACK").catch(console.error);
-    console.error("Error adding prescription:", error);
-
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === "23503"
-    ) {
-      return res.status(400).json({
-        message: "Invalid consultation, patient, or user.",
-      });
-    }
-
-    return res.status(500).json({
-      message: "Internal server error.",
-    });
-  } finally {
-    client.release();
-  }
-}
-
-export async function addConsultationFindings(
-  req: Request<
-    object,
-    addConsultationFindings.response | addConsultationFindings.error,
-    addConsultationFindings.body
-  >,
-  res: Response<
-    addConsultationFindings.response | addConsultationFindings.error
-  >,
-) {
-  const patient_id =
-    typeof req.body.patient_id === "string"
-      ? req.body.patient_id.trim()
-      : "";
-
-  if (!patient_id) {
-    return res.status(400).json({
-      message: "Validation failed.",
-      errors: {
-        patient_id: "Patient is required.",
-      },
-    });
-  }
-
-  const validation = validateFindings(req.body);
-
-  if (!validation.ok) {
-    return res.status(400).json({
-      message: "Validation failed.",
-      errors: validation.errors,
-    });
-  }
-
-  const doctor_id = resolveDoctorId(req);
-
-  if (!doctor_id) {
-    return res.status(401).json({
-      message: "Doctor could not be identified.",
-    });
-  }
-
-  const consultation_type =
-    typeof req.body.consultation_type === "string" &&
-    req.body.consultation_type.trim()
-      ? req.body.consultation_type.trim().slice(0, 255)
-      : "Initial";
-
-  try {
-    let service_id =
-      typeof req.body.service_id === "string"
-        ? req.body.service_id.trim()
-        : "";
-
-    if (service_id) {
-      const service = await sql`
-        SELECT service_type
-        FROM services
-        WHERE service_id = ${service_id}
-      `;
-
-      if (service.length === 0) {
-        return res.status(400).json({
-          message: "Invalid service ID.",
-        });
-      }
-
-      if (
-        !String(service[0].service_type)
-          .toLowerCase()
-          .startsWith("consultation")
-      ) {
-        return res.status(400).json({
-          message: "Service is not a consultation service.",
-        });
-      }
-    } else {
-      const fallback = await sql`
-        SELECT service_id
-        FROM services
-        WHERE active = TRUE
-          AND LOWER(service_type) LIKE 'consultation%'
-        ORDER BY id ASC
-        LIMIT 1
-      `;
-
-      if (fallback.length === 0) {
-        return res.status(400).json({
-          message:
-            "No active Consultation service exists. Ask an admin to add one under Service Pricing (service type: Consultation).",
-          errors: {
-            service_id: "No active consultation service is available.",
-          },
-        });
-      }
-
-      service_id = String(fallback[0].service_id);
-    }
-
-    const patient = await sql`
-      SELECT 1
-      FROM patients
-      WHERE patient_id = ${patient_id}
+    const [checkExisting] = await sql`
+      SELECT *
+      FROM form_templates
+      WHERE form_id = ${form_id}
     `;
 
-    if (patient.length === 0) {
+    if (!checkExisting) {
       return res.status(404).json({
-        message: "Patient not found.",
-      });
+        message: "Form template not found.",
+      } as updateFormTemplate.error);
     }
 
-    const {
-      presenting_complaint,
-      diagnosis,
-      physical_examination,
-    } = validation.value;
+    const serviceId = service_id ?? checkExisting.service_id;
+    const updatedStatus = status ?? checkExisting.status;
 
-    const client = await pool.connect();
+    if (updatedStatus === "Published") {
+      const [published] = await sql`
+        SELECT form_id
+        FROM form_templates
+        WHERE service_id = ${serviceId}
+          AND status = 'Published'
+          AND form_id <> ${form_id}
+      `;
 
-    try {
-      await client.query("BEGIN");
-
-      await client.query(
-        "SELECT pg_advisory_xact_lock(hashtext('consultation_ids'))",
-      );
-
-      const consultation_record_id =
-        await generateConsultationRecordID(client);
-
-      const { rows } = await client.query(
-        `INSERT INTO consultation_records (
-          consultation_record_id,
-          patient_id,
-          doctor_id,
-          service_id,
-          consultation_type,
-          diagnosis,
-          presenting_complaint,
-          physical_examination
-        )
-        VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8::jsonb)
-        RETURNING *`,
-        [
-          consultation_record_id,
-          patient_id,
-          doctor_id,
-          service_id,
-          consultation_type,
-          JSON.stringify(diagnosis),
-          JSON.stringify(presenting_complaint),
-          JSON.stringify(physical_examination),
-        ],
-      );
-
-      await client.query("COMMIT");
-
-      return res.status(201).json({
-        message: "Consultation findings saved successfully.",
-        consultation: rows[0],
-      } as addConsultationFindings.response);
-    } catch (error) {
-      await client.query("ROLLBACK").catch(console.error);
-      throw error;
-    } finally {
-      client.release();
+      if (published) {
+        return res.status(400).json({
+          message: "An active form template already exists for this service.",
+        } as updateFormTemplate.error);
+      }
     }
+
+    const results = await sql.transaction([
+      registerFormComponentTypes(),
+
+      sql`
+        UPDATE form_templates
+        SET
+          form_name = ${form_name},
+          form_description = ${form_description ?? null},
+          service_id = ${serviceId},
+          status = ${updatedStatus},
+          version = version + 1,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE form_id = ${form_id}
+        RETURNING *
+      `,
+
+      sql`
+        DELETE FROM form_components
+        WHERE form_id = ${form_id}
+      `,
+
+      ...form_components.map((component, index) => {
+        const form_component_id = `FC-${form_id}-${index}`;
+
+        return sql`
+          INSERT INTO form_components (
+            form_component_id,
+            form_id,
+            type_id,
+            label,
+            field_key,
+            display_order,
+            settings,
+            validation
+          )
+          VALUES (
+            ${form_component_id},
+            ${form_id},
+            ${component.type_id},
+            ${component.label},
+            ${component.field_key},
+            ${component.display_order},
+            ${JSON.stringify(component.settings ?? null)}::jsonb,
+            ${JSON.stringify(component.validation ?? null)}::jsonb
+          )
+          RETURNING *
+        `;
+      }),
+    ]);
+    
+    const [formUpdated] = results[1];
+    const componentsUpdated = results.slice(3).flat();
+
+    return res.status(200).json({
+      message: "Form template updated successfully",
+      formUpdated: formUpdated as updateFormTemplate.template,
+      componentsUpdated: componentsUpdated as updateFormTemplate.component[],
+    } as updateFormTemplate.response);
   } catch (error) {
-    console.error("Error saving consultation findings:", error);
-
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === "23503"
-    ) {
-      return res.status(400).json({
-        message: "Invalid patient, doctor or service ID.",
-      });
-    }
+    console.error("UPDATE FORM TEMPLATE ERROR:", error);
 
     return res.status(500).json({
-      message: "Failed to save consultation findings.",
-    });
+      message: "Internal Server Error",
+    } as updateFormTemplate.error);
   }
 }
