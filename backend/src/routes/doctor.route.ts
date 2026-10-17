@@ -5,16 +5,14 @@ import doctorMiddleware from "../middlewares/doctor.middleware.js";
 import {
   addLaboratoryRequest,
   addPrescriptions,
+  addConsultationFindings
 } from "../controllers/doctor/postRequests.controller.js";
-import {
-  addConsultationFindings,
-  getLaboratoryServices,
-  getConsultationPatient,
-} from "../controllers/doctor/consultationFindings.controller.js";
 import {
   getMedicalHistory,
   getMedicalHistoryDetails,
   getMedicalHistoryFull,
+  getLaboratoryServices,
+  getConsultationPatient,
 } from "../controllers/doctor/getRequests.controller.js";
 const router = Router();
 
