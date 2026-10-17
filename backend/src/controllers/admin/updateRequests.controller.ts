@@ -157,18 +157,18 @@ export async function updateUserStatus(
     if (typeof user_id !== "string" || !user_id) {
       return res.status(400).json({
         message: "User ID is required.",
-      });
+      } as updateUserStatus.error);
     }
     if (account_status === undefined) {
       return res.status(400).json({
         message: "Account status is required.",
-      });
+      } as updateUserStatus.error);
     }
 
     if (typeof account_status !== "boolean") {
       return res.status(400).json({
         message: "Account status must be a boolean.",
-      });
+      } as updateUserStatus.error);
     }
 
     if (user_id === req.user.user_id) {
@@ -180,10 +180,10 @@ export async function updateUserStatus(
         targetId: user_id as string,
         metadata: { reason: "self-deactivation attempt" },
       });
-
+      
       return res.status(400).json({
         message: `You can't ${account_status ? "activate" : "deactivate"} your own account.`,
-      });
+      } as updateUserStatus.error);
     }
 
     const updatedAccountStatus = await sql`
@@ -204,7 +204,7 @@ export async function updateUserStatus(
     if (updatedAccountStatus.length === 0) {
       return res.status(404).json({
         message: "User not found.",
-      });
+      } as updateUserStatus.error);
     }
 
     await logActivity({
@@ -227,7 +227,7 @@ export async function updateUserStatus(
 
     return res.status(500).json({
       message: "Internal Server Error.",
-    });
+    } as updateUserStatus.error);
   }
 }
 
@@ -247,7 +247,7 @@ export async function updateFormTemplate(
   if (!form_id) {
     return res.status(400).json({
       message: "form_id is required.",
-    });
+    } as updateFormTemplate.error);
   }
 
   if (
@@ -257,7 +257,7 @@ export async function updateFormTemplate(
   ) {
     return res.status(400).json({
       message: "Required fields missing.",
-    });
+    } as updateFormTemplate.error);
   }
 
   try {
@@ -270,7 +270,7 @@ export async function updateFormTemplate(
     if (!checkExisting) {
       return res.status(404).json({
         message: "Form template not found.",
-      });
+      } as updateFormTemplate.error);
     }
 
     const serviceId = service_id ?? checkExisting.service_id;
@@ -288,7 +288,7 @@ export async function updateFormTemplate(
       if (published) {
         return res.status(400).json({
           message: "An active form template already exists for this service.",
-        });
+        } as updateFormTemplate.error);
       }
     }
 
@@ -341,7 +341,7 @@ export async function updateFormTemplate(
         `;
       }),
     ]);
-
+    
     const [formUpdated] = results[1];
     const componentsUpdated = results.slice(3).flat();
 
@@ -355,6 +355,6 @@ export async function updateFormTemplate(
 
     return res.status(500).json({
       message: "Internal Server Error",
-    });
+    } as updateFormTemplate.error);
   }
 }
