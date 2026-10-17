@@ -2,6 +2,8 @@
 import { sql } from "../../config/db.js";
 import cloudinary from "../../config/cloudinary.js";
 import bcrypt from "bcryptjs";
+import { registerFormComponentTypes } from "../../utils/formComponentTypes.js";
+import { Request, Response } from "express";
 import type { Request, Response } from "express";
 import { logActivity } from "../../utils/activityLogger.js";
 import type {
@@ -229,7 +231,8 @@ export async function updateFormTemplate(
   res: Response<updateFormTemplate.response | updateFormTemplate.error>,
 ) {
   const { form_id } = req.params;
-  const { form_name, form_description, status, form_components } = req.body;
+  const { form_name, form_description, service_id, status, form_components } =
+    req.body;
 
   if (!form_id) {
     return res.status(400).json({
@@ -260,6 +263,31 @@ export async function updateFormTemplate(
       });
     }
 
+    const serviceId = service_id || checkExisting.service_id;
+    if (status === "Published") {
+      const [published] = await sql`
+        SELECT form_id FROM form_templates
+        WHERE service_id = ${serviceId}
+          AND status = 'Published'
+          AND form_id <> ${form_id}
+      `;
+      if (published) {
+        return res.status(400).json({
+          message: "An active form template already exists for this service.",
+        });
+      }
+    }
+
+    const results = await sql.transaction([
+      registerFormComponentTypes(),
+      sql`
+      UPDATE form_templates
+      SET form_name = ${form_name},
+          form_description = ${form_description},
+          service_id = ${serviceId},
+          status = ${status},
+          version = version + 1,
+          updated_at = CURRENT_TIMESTAMP
     // NOTE: For Neon HTTP queries, separate BEGIN/COMMIT calls may not share
     // the same connection. Use a transaction-capable client for atomic writes.
 
@@ -273,8 +301,26 @@ export async function updateFormTemplate(
         updated_at = CURRENT_TIMESTAMP
       WHERE form_id = ${form_id}
       RETURNING *
-    `;
+    `,
 
+      sql`
+      DELETE FROM form_components WHERE form_id = ${form_id}
+    `,
+
+      ...form_components.map((c, index) => {
+        const form_component_id = `FC-${form_id}-${index}`;
+
+        return sql`
+        INSERT INTO form_components
+          (form_component_id, form_id, type_id, label, field_key, display_order, settings, validation)
+        VALUES
+          (${form_component_id}, ${form_id}, ${c.type_id}, ${c.label}, ${c.field_key}, ${c.display_order}, ${c.settings}, ${c.validation})
+        RETURNING *
+      `;
+      }),
+    ]);
+    const [formUpdated] = results[1];
+    const componentsUpdated = results.slice(3).flat();
     await sql`
       DELETE FROM form_components
       WHERE form_id = ${form_id}
@@ -319,6 +365,8 @@ export async function updateFormTemplate(
       componentsUpdated,
     } as updateFormTemplate.response);
   } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
     console.error("UPDATE FORM TEMPLATE ERROR:", error);
 
     return res.status(500).json({

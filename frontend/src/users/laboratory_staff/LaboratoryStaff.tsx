@@ -9,22 +9,10 @@ import LaboratoryResults from "./pages/LaboratoryResults";
 import type { QueueEntry } from "../../interface/Queue";
 import type { Service } from "../../interface/Service";
 
-type LabRequest = {
-  request_id: string;
-  consultation_id: string | null;
-  patient_id: string;
-  doctor_id: string | null;
-  test_type: string;
-  results: Record<string, unknown> | null;
-  status: string;
-  requested_at: string;
-  updated_at: string;
-};
-
 function LaboratoryStaff() {
   const [open, setOpen] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [requestItems, setRequestItems] = useState<LabRequest[]>([]);
+  const [requestItems, setRequestItems] = useState<Request[]>([]);
   const [queues, setQueues] = useState<QueueEntry[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
@@ -78,10 +66,12 @@ function LaboratoryStaff() {
   ];
 
   useEffect(() => {
+    // Laboratory Results loads its own accepted, sample-collected requests.
+    if (page === "laboratory-results") return;
     (async () => {
       await loadData();
     })();
-  }, [loadData]);
+  }, [loadData, page]);
 
   return (
     <div className="flex min-h-screen cursor-default">
@@ -112,10 +102,7 @@ function LaboratoryStaff() {
         <LaboratoryResults
           open={open}
           setOpen={setOpen}
-          requests={requestItems}
-          loading={loading}
-          error={error}
-          loadData={() => loadData()}
+          room={room}
         />
       )}
     </div>
