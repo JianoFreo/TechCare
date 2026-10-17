@@ -236,7 +236,7 @@ const TABLES: {
       presenting_complaint    JSONB,
       vital_signs             JSONB,
       physical_examination    JSONB,
-      notes                   JSONB,
+      notes                   text,
       consulted_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
     columns: {

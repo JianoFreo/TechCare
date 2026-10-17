@@ -1,17 +1,37 @@
+
 import { sql } from "../../config/db.js";
 import cloudinary from "../../config/cloudinary.js";
 import bcrypt from "bcryptjs";
 import { registerFormComponentTypes } from "../../utils/formComponentTypes.js";
 import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import {
   generateUserId,
   generateServiceId,
   generateActivityId,
 } from "../../utils/generateId.js";
+import type {
+  addUser,
+  addService,
+  addActivity,
+  addAction,
+  addFormTemplates,
+} from "./dto/post.dto.js";
 
-///// the tokenantion on ad user is just for testing purposes,
+///// the token generation on add user is just for testing purposes,
 /// it will be removed later on. optional lang kasi no need tokens right after sign up, its usually on login========
-export async function addUser(req: Request, res: Response) {
+
+// =========================
+// ADD USER
+// =========================
+export async function addUser(
+  req: Request<
+    {},
+    addUser.response | addUser.error,
+    addUser.body
+  >,
+  res: Response<addUser.response | addUser.error>,
+) {
   // POST /api/admin/add-user
   try {
     const {
@@ -54,14 +74,14 @@ export async function addUser(req: Request, res: Response) {
     ) {
       return res.status(400).json({
         message: "Please fill out all required fields",
-      });
+      } as addUser.error);
     }
 
     // =========================
     // CHECK EXISTING USER
     // =========================
     const existingUser = await sql`
-      SELECT *
+      SELECT user_id
       FROM users
       WHERE username = ${username}
          OR email = ${email}
@@ -71,7 +91,7 @@ export async function addUser(req: Request, res: Response) {
     if (existingUser.length > 0) {
       return res.status(409).json({
         message: "Username, email, or contact number already exists",
-      });
+      } as addUser.error);
     }
 
     // =========================
@@ -162,7 +182,7 @@ export async function addUser(req: Request, res: Response) {
     // REMOVE SENSITIVE DATA
     // =========================
     // Prevents the password hash from being sent to the client.
-    const { password_hash, ...safeUser } = signUpResult[0]; // it just removed the password hash from the response, so that it won't be sent to the client. This is a security measure to protect sensitive information.
+    const { password_hash, ...safeUser } = signUpResult[0];
 
     // =========================
     // RESPONSE
@@ -170,10 +190,11 @@ export async function addUser(req: Request, res: Response) {
     return res.status(201).json({
       user: safeUser,
       message: "User created successfully!",
-    });
+    } as addUser.response);
+
     // {
     //   "user": {
-    //     "user_id": 123,
+    //     "user_id": "USR-2026-0001",
     //     "username": "jiano",
     //     "first_name": "Jiano",
     //     "middle_name": "Freo",
@@ -186,7 +207,7 @@ export async function addUser(req: Request, res: Response) {
     //     "emergency_contact": "09987654321",
     //     "address": "Manila, Philippines",
     //     "birthdate": "2002-05-15",
-    //     "role": "admin",
+    //     "role": "Administrator",
     //     "department": "IT",
     //     "employment_status": "Full-time",
     //     "date_hired": "2026-08-21",
@@ -201,15 +222,26 @@ export async function addUser(req: Request, res: Response) {
 
     return res.status(500).json({
       message: "Error while creating new user",
-    });
+    } as addUser.error);
   }
 }
 
-export async function addService(req: Request, res: Response) {
-  // post /api/admin/services
+// =========================
+// ADD SERVICE
+// =========================
+export async function addService(
+  req: Request<
+    {},
+    addService.response | addService.error,
+    addService.body
+  >,
+  res: Response<addService.response | addService.error>,
+) {
+  // POST /api/admin/services
   try {
     const { service_name, price, service_type, service_category, room } =
       req.body;
+
     if (
       !service_name ||
       price === undefined ||
@@ -218,111 +250,186 @@ export async function addService(req: Request, res: Response) {
       !service_category ||
       !room
     ) {
-      return res.status(400).json({ message: "All fields are required" });
-    } else if (isNaN(price)) {
-      return res.status(400).json({ message: "Price must be a number" });
+      return res.status(400).json({
+        message: "All fields are required",
+      } as addService.error);
+    }
+
+    if (isNaN(Number(price)) || Number(price) < 0) {
+      return res.status(400).json({
+        message: "Price must be a valid non-negative number",
+      } as addService.error);
     }
 
     const existingService = await sql`
-        SELECT * FROM services
-        WHERE service_name = ${service_name}
+      SELECT service_id
+      FROM services
+      WHERE service_name = ${service_name}
     `;
+
     if (existingService.length > 0) {
-      return res.status(200).json({ message: "Service already exists" });
+      return res.status(409).json({
+        message: "Service already exists",
+      } as addService.error);
     }
+
     const serviceId = await generateServiceId();
+
     const newService = await sql`
       INSERT INTO services (
         service_id,
-        service_type, 
-        service_name, 
-        service_category, 
-        price, 
+        service_type,
+        service_name,
+        service_category,
+        price,
         room
       )
       VALUES (
         ${serviceId},
-        ${service_type},  
-        ${service_name}, 
-        ${service_category}, 
-        ${price}, 
+        ${service_type},
+        ${service_name},
+        ${service_category},
+        ${Number(price)},
         ${room}
       )
-      RETURNING *;
+      RETURNING *
     `;
-    res
-      .status(201)
-      .json({ message: "Service added successfully!", service: newService[0] });
+
+    return res.status(201).json({
+      message: "Service added successfully!",
+      service: newService[0],
+    } as addService.response);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "error on service controller" });
+    console.error("ADD SERVICE ERROR:", error);
+
+    return res.status(500).json({
+      error: "error on service controller",
+    } as addService.error);
   }
 }
 
-export async function addActivity(req: Request, res: Response) {
-  // post /api/admin/activities
+//----------------------------------------------------------------------------------------------------------------//
+
+// =========================
+// ADD ACTIVITY
+// =========================
+export async function addActivity(
+  req: Request<
+    {},
+    addActivity.response | addActivity.error,
+    addActivity.body
+  >,
+  res: Response<addActivity.response | addActivity.error>,
+) {
+  // POST /api/admin/activities
   try {
     const user_id = req.user.user_id;
-    const { activity_id, service_name, details } = req.body;
-    const serviceName = await sql`
-    SELECT service_name
-    FROM services
-    WHERE service_name = ${service_name}
+    const { service_name, details } = req.body;
+
+    const [service] = await sql`
+      SELECT service_name
+      FROM services
+      WHERE service_name = ${service_name}
     `;
-    if (!serviceName) {
-      res.json({ message: "there is no service on that on our database" });
+
+    if (!service) {
+      return res.status(404).json({
+        error: "There is no service with that name in our database",
+      } as addActivity.error);
     }
+
     const activityId = await generateActivityId();
-    const response = await sql`
-      INSERT INTO system_activity (activity_id, user_id, service_name, details)
-      values (${activityId}, ${user_id}, ${service_name}, ${details})
+
+    const [activity] = await sql`
+      INSERT INTO system_activity (
+        activity_id,
+        user_id,
+        service_name,
+        details
+      )
+      VALUES (
+        ${activityId},
+        ${user_id},
+        ${service_name},
+        ${JSON.stringify(details)}::jsonb
+      )
+      RETURNING *
     `;
-    res.status(201).json({ user: response[0], message: "Sign up successful!" });
+
+    return res.status(201).json({
+      user: activity,
+      message: "Activity added successfully!",
+    } as addActivity.response);
   } catch (error) {
-    res.status(500).json({ error: "error on adding activity controller" });
+    console.error("ADD ACTIVITY ERROR:", error);
+
+    return res.status(500).json({
+      error: "error on adding activity controller",
+    } as addActivity.error);
   }
 }
 
-export async function addAction(req: Request, res: Response) {
+// =========================
+// ADD ACTION
+// =========================
+export async function addAction(
+  req: Request<
+    {},
+    addAction.response | addAction.error,
+    addAction.body
+  >,
+  res: Response<addAction.response | addAction.error>,
+) {
   try {
-    const { action_name, action_description, module, is_sensitive } = req.body;
+    const { action_name, action_description, module, is_sensitive } =
+      req.body;
 
     if (!action_name || !module) {
       return res.status(400).json({
         message: "Please fill out required fields.",
-      });
+      } as addAction.error);
     }
 
-    const newAction = await sql`
-      INSERT INTO actions(
+    const [newAction] = await sql`
+      INSERT INTO actions (
         action_name,
         action_description,
         module,
         is_sensitive
       )
-      VALUES(
+      VALUES (
         ${action_name},
         ${action_description ?? null},
         ${module},
         ${is_sensitive ?? true}
       )
-      RETURNING *;
+      RETURNING *
     `;
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Action successfully added.",
-      newAction,
-    });
+      newAction: [newAction],
+    } as addAction.response);
   } catch (error) {
-    console.error(error);
+    console.error("ADD ACTION ERROR:", error);
 
     return res.status(500).json({
       message: "Internal Server Error",
-    });
+    } as addAction.error);
   }
 }
 
-export async function addFormTemplates(req: Request, res: Response) {
+// =========================
+// ADD FORM TEMPLATES
+// =========================
+export async function addFormTemplates(
+  req: Request<
+    {},
+    addFormTemplates.response | addFormTemplates.error,
+    addFormTemplates.body
+  >,
+  res: Response<addFormTemplates.response | addFormTemplates.error>,
+) {
   const {
     form_name,
     form_description,
@@ -341,53 +448,90 @@ export async function addFormTemplates(req: Request, res: Response) {
   ) {
     return res.status(400).json({
       message: "Required fields missing.",
-    });
+    } as addFormTemplates.error);
   }
 
   try {
     const [checkExisting] = await sql`
-    SELECT form_id FROM form_templates
-    WHERE service_id = ${service_id}
-    AND status = 'Published'
+      SELECT form_id
+      FROM form_templates
+      WHERE service_id = ${service_id}
+        AND status = 'Published'
     `;
 
     if (status === "Published" && checkExisting) {
       return res.status(400).json({
         message: "An active form template already exist for the service.",
-      });
+      } as addFormTemplates.error);
     }
 
+    // NOTE: For Neon HTTP queries, separate BEGIN/COMMIT calls may not share
+    // the same connection. Use a transaction-capable client for atomic writes.
     const form_id = `F-${Date.now()}`;
-    const results = await sql.transaction([
-      registerFormComponentTypes(),
-      sql`
-      INSERT INTO form_templates (form_id, form_name, form_description, service_id, status, created_by)
-      VALUES (${form_id}, ${form_name}, ${form_description}, ${service_id}, ${status}, ${created_by})
-      RETURNING *
-    `,
-      ...form_components.map((c, index) => {
-        const form_component_id = `FC-${form_id}-${index}`;
 
-        return sql`
-          INSERT INTO form_components
-            (form_component_id, form_id, type_id, label, field_key, display_order, settings, validation)
-          VALUES
-            (${form_component_id}, ${form_id}, ${c.type_id}, ${c.label}, ${c.field_key}, ${c.display_order}, ${c.settings}, ${c.validation})
-          RETURNING *
-        `;
-      }),
-    ]);
-    const [formCreated] = results[1];
-    const componentsCreated = results.slice(2).flat();
-    res.status(201).json({
+    const [formCreated] = await sql`
+      INSERT INTO form_templates (
+        form_id,
+        form_name,
+        form_description,
+        service_id,
+        status,
+        created_by
+      )
+      VALUES (
+        ${form_id},
+        ${form_name},
+        ${form_description ?? null},
+        ${service_id},
+        ${status ?? "Published"},
+        ${created_by}
+      )
+      RETURNING *
+    `;
+
+    const componentsCreated: addFormTemplates.component[] = [];
+
+    for (let index = 0; index < form_components.length; index++) {
+      const component = form_components[index];
+      const form_component_id = `FC-${form_id}-${index}`;
+
+      const [createdComponent] = await sql`
+        INSERT INTO form_components (
+          form_component_id,
+          form_id,
+          type_id,
+          label,
+          field_key,
+          display_order,
+          settings,
+          validation
+        )
+        VALUES (
+          ${form_component_id},
+          ${form_id},
+          ${component.type_id},
+          ${component.label},
+          ${component.field_key},
+          ${component.display_order},
+          ${JSON.stringify(component.settings ?? null)}::jsonb,
+          ${JSON.stringify(component.validation ?? null)}::jsonb
+        )
+        RETURNING *
+      `;
+
+      componentsCreated.push(createdComponent as addFormTemplates.component);
+    }
+
+    return res.status(201).json({
       message: "Form successfully created",
       formCreated,
       componentsCreated,
-    });
+    } as addFormTemplates.response);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
+    console.error("ADD FORM TEMPLATES ERROR:", error);
+
+    return res.status(500).json({
       message: "Internal Server Error",
-    });
+    } as addFormTemplates.error);
   }
 }

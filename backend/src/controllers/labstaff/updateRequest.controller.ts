@@ -112,6 +112,17 @@ export async function completeQueueEntry(req: Request, res: Response) {
       )
       SELECT cq.*, (SELECT COUNT(*)::int FROM collected_items) AS collected_item_count
       FROM completed_queue cq
+      UPDATE queue_entries q
+      SET
+        status = 'Collected',
+        updated_at = NOW()
+      FROM services s
+      WHERE q.queue_id = ${queue_id}
+        AND q.queue_id LIKE 'LAB-%'
+        AND s.service_id = q.service_id
+        AND s.room = ${room}
+        AND LOWER(q.status) IN ('serving')
+      RETURNING q.*
     `;
 
     if (!updated) {
@@ -282,9 +293,7 @@ export async function cancelQueueEntry(req: Request, res: Response) {
 
     // Only waiting, skipped, or serving entries can be cancelled.
     if (
-      !["waiting", "skipped", "serving"].includes(
-        String(status).toLowerCase(),
-      )
+      !["waiting", "skipped", "serving"].includes(String(status).toLowerCase())
     ) {
       return res.status(409).json({
         message: `Queue entry cannot be cancelled because its status is ${status}.`,

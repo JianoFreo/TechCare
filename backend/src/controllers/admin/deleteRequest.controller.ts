@@ -1,58 +1,48 @@
+
+import type { Request, Response } from "express";
 import { sql } from "../../config/db.js";
-import { Request, Response } from "express";
+import type { deleteTemplate } from "./dto/delete.dto.js";
 
-// =========================
-// DELETE TEMPLATE
-// =========================
 export async function deleteTemplate(
-  req: Request<{ form_id: string }>,
-  res: Response,
+  req: Request<
+    deleteTemplate.params,
+    deleteTemplate.response | deleteTemplate.error,
+    {}
+  >,
+  res: Response<
+    deleteTemplate.response | deleteTemplate.error
+  >,
 ) {
-  // DELETE /api/admin/templates/:template_id
-
   try {
     const { form_id } = req.params;
 
-     if (!form_id) {
-      return res.status(400).json({ message: "form_id is required." });
-    }
-
-    const [existingTemplate] = await sql`
-      SELECT form_id FROM form_templates WHERE form_id = ${form_id}
-    `;
-
-    if (!existingTemplate) {
-      return res.status(404).json({
-        message: "Template not found",
+    if (!form_id) {
+      return res.status(400).json({
+        message: "Form ID is required.",
       });
     }
 
-    await sql.query("BEGIN");
-
-    // form_components.form_id has no ON DELETE CASCADE, so child rows
-    // must be removed first or the delete below violates the FK constraint.
-    await sql`
-      DELETE FROM form_components WHERE form_id = ${form_id}
-    `;
-
-    const [deletedTemplate] = await sql`
+    const [template] = await sql`
       DELETE FROM form_templates
       WHERE form_id = ${form_id}
-      RETURNING *;
+      RETURNING *
     `;
 
-    await sql.query("COMMIT");
+    if (!template) {
+      return res.status(404).json({
+        message: "Form template not found.",
+      });
+    }
 
     return res.status(200).json({
-      message: "Template deleted successfully!",
-      template: deletedTemplate[0],
+      message: "Form template deleted successfully!",
+      template: template as deleteTemplate.template,
     });
   } catch (error) {
-    console.error("DELETE TEMPLATE ERROR:", error);
-    await sql.query("ROLLBACK"); // Rollback the transaction in case of an error
+    console.error("Error deleting form template:", error);
 
     return res.status(500).json({
-      message: "Failed to delete template",
+      message: "Internal server error.",
     });
   }
 }

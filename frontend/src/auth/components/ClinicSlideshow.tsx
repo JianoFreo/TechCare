@@ -10,32 +10,32 @@ const CLINIC_SLIDES: SlideItem[] = [
   {
     src: "/assets/clinic-reception.webp",
     title: "Reception & Waiting Area",
-    subtitle: "Intay ka muna dito malamig o kaya punta ka sa website namin track mo queue",
+    subtitle: "Stay cool in our reception and waiting area, or conveniently track your queue status directly on our website.",
   },
   {
     src: "/assets/clinic-extraction.webp",
     title: "Extraction & Triage Area",
-    subtitle: "Onti lang lalagay sa stool cup yah hindi buong ebaks",
+    subtitle: "The extraction area is the designated space where medical professionals safely perform procedures and collect diagnostic specimens.",
   },
   {
     src: "/assets/clinic-consultation.webp",
     title: "Consultation Room",
-    subtitle: "Comfortable room for kiddos",
+    subtitle: "Meet with your attending physician for your check-up and medical results discussion.",
   },
   {
     src: "/assets/clinic-lab.webp",
     title: "Diagnostic Laboratory",
-    subtitle: "Panis sa equipment nagngangawngaw bagong luto",
+    subtitle: "State-of-the-art facility for accurate and timely diagnostic testing.",
   },
   {
     src: "/assets/clinic-xray.webp",
     title: "Radiology & Imaging",
-    subtitle: "Scan natin kung ikaw pa ba",
+    subtitle: "Advanced imaging technology for precise diagnosis.",
   },
   {
     src: "/assets/clinic-xray-room.webp",
     title: "X-Ray Facility",
-    subtitle: "Angas taga-batanggas",
+    subtitle: "Modern x-ray equipment for high-quality imaging.",
   },
 ];
 

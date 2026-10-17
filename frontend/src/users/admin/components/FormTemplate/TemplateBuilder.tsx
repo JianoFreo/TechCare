@@ -41,22 +41,22 @@ export default function TemplateBuilder({
   onBackToLibrary,
 }: TemplateBuilderProps) {
   const [templateName, setTemplateName] = useState(
-    initialTemplate?.form_name || ""
+    initialTemplate?.form_name || "",
   );
   const [description, setDescription] = useState(
-    initialTemplate?.form_description || ""
+    initialTemplate?.form_description || "",
   );
   // category stores the real service_id directly
   const [category, setCategory] = useState(
-    initialTemplate?.service_id || services[0]?.service_id || ""
+    initialTemplate?.service_id || services[0]?.service_id || "",
   );
   const [components, setComponents] = useState<BuilderComponent[]>(
     initialTemplate?.components && initialTemplate.components.length > 0
       ? [...initialTemplate.components]
-      : DEFAULT_NEW_COMPONENTS
+      : DEFAULT_NEW_COMPONENTS,
   );
   const [selectedId, setSelectedId] = useState<string | null>(
-    initialTemplate?.components?.[0]?.id || DEFAULT_NEW_COMPONENTS[0].id
+    initialTemplate?.components?.[0]?.id || DEFAULT_NEW_COMPONENTS[0].id,
   );
   const [showPreview, setShowPreview] = useState(false);
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
@@ -88,12 +88,18 @@ export default function TemplateBuilder({
       fieldKey: `field_${Date.now().toString().slice(-4)}`,
       order: components.length + 1,
       settings: {
-        width: type === "section_header" || type === "line_divider" || type === "table" ? "FULL" : "1/2",
+        width:
+          type === "section_header" ||
+          type === "line_divider" ||
+          type === "table"
+            ? "FULL"
+            : "1/2",
         alignment: "left",
         showInPreview: true,
         required: false,
         placeholder: type === "number_field" ? "0.00" : "Enter value",
-        checkboxOptions: type === "checkbox" ? ["Option 1", "Option 2"] : undefined,
+        checkboxOptions:
+          type === "checkbox" ? ["Option 1", "Option 2"] : undefined,
         tableColumns:
           type === "table"
             ? [
@@ -108,7 +114,11 @@ export default function TemplateBuilder({
       },
     };
 
-    if (targetIndex !== undefined && targetIndex >= 0 && targetIndex <= components.length) {
+    if (
+      targetIndex !== undefined &&
+      targetIndex >= 0 &&
+      targetIndex <= components.length
+    ) {
       const updated = [...components];
       updated.splice(targetIndex, 0, newComponent);
       setComponents(updated.map((c, i) => ({ ...c, order: i + 1 })));
@@ -198,7 +208,9 @@ export default function TemplateBuilder({
 
     const createdBy = initialTemplate?.created_by || getCurrentUserId();
     if (!createdBy) {
-      setNoticeMessage("Could not determine current user. Please log in again.");
+      setNoticeMessage(
+        "Could not determine current user. Please log in again.",
+      );
       return;
     }
 
@@ -227,7 +239,7 @@ export default function TemplateBuilder({
         await api.put(
           `api/admin/form-templates/${initialTemplate.form_id}`,
           payload,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         setNoticeMessage("Template updated successfully.");
       } else {
@@ -237,7 +249,7 @@ export default function TemplateBuilder({
         setNoticeMessage(
           status === "Published"
             ? "Template published successfully."
-            : "Draft saved successfully."
+            : "Draft saved successfully.",
         );
       }
 
@@ -253,8 +265,7 @@ export default function TemplateBuilder({
     }
   };
 
-  const selectedComponent =
-    components.find((c) => c.id === selectedId) || null;
+  const selectedComponent = components.find((c) => c.id === selectedId) || null;
 
   return (
     <div className="flex flex-col gap-5 w-full">
@@ -290,7 +301,9 @@ export default function TemplateBuilder({
           </button>
           <span>&gt;</span>
           <span className="text-gray-900">
-            {isEditMode ? initialTemplate?.form_name || "Edit Template" : "New Template"}
+            {isEditMode
+              ? initialTemplate?.form_name || "Edit Template"
+              : "New Template"}
           </span>
         </div>
 
@@ -375,9 +388,7 @@ export default function TemplateBuilder({
             <input
               type="text"
               disabled
-              value={
-                initialTemplate?.form_id || "Generated after saving"
-              }
+              value={initialTemplate?.form_id || "Generated after saving"}
               className="w-44 px-3 py-2 border border-gray-200 bg-gray-50 text-gray-400 rounded-xl text-xs font-mono select-none"
             />
           </div>
