@@ -1,4 +1,3 @@
-import Header from "#components/Header";
 import React from "react";
 import PrescriptionManager from "../components/prescription/PrescriptionManager";
 
@@ -17,13 +16,6 @@ function Consultation({
 }: ConsultationProps) {
   return (
     <main className="flex-1 min-w-0 bg-gray-50/50 min-h-screen overflow-y-auto">
-      <Header
-        open={open}
-        loading={loading}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Consultation"
-      />
 
       <div className="p-6 md:p-8">
         <PrescriptionManager />

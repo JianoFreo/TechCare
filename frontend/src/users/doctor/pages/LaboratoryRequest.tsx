@@ -1,5 +1,4 @@
-import Header from "#components/Header";
-import React from "react";
+import React, { useEffect } from "react";
 import ConsultationWorkspace from "../components/laboratoryRequest/ConsultationWorkspace";
 
 type LaboratoryRequestProps = {
@@ -15,15 +14,15 @@ function LaboratoryRequest({
   setOpen,
   loading,
 }: LaboratoryRequestProps) {
+  useEffect(() => {
+      async function action() {
+        await loadData();
+      }
+      action();
+    }, [loadData]);
   return (
     <main className="flex-1 min-w-0 ">
-      <Header
-        open={open}
-        loading={loading}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Laboratory Request"
-      />
+
       <div className="p-6 md:p-8">
         <ConsultationWorkspace initialTab="laboratory-request" />
       </div>
