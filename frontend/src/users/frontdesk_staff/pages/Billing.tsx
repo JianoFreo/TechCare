@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Header from "../../../components/Header";
 import type { UnpaidRequests } from "../../../interface/Billing";
 import UnpaidRequestsTable from "../components/Billing/UnpaidRequestsTable";
 import api from "#lib/axios";
@@ -46,13 +45,6 @@ function Billing({
 
   return (
     <main className="flex-1 min-w-0">
-      <Header
-        open={open}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Billing"
-        loading={loading}
-      />
 
       {error && (
         <p role="alert" className="mb-2 text-sm text-red-600">

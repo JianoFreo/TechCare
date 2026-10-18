@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { UserPlus } from "lucide-react";
-import Header from "../../../components/Header";
 import api from "../../../lib/axios";
+import calculateAge from "../../../utils/calculateAge";
 
 type PatientRegistrationProps = {
   open: boolean;
@@ -111,7 +111,7 @@ function PatientRegistration({ open, setOpen, loadData, loading }: PatientRegist
     setForm((f) => ({ ...f, [key]: v }));
 
   const age = form.birthdate
-    ? String(Math.max(0, Math.floor((Date.now() - new Date(form.birthdate).getTime()) / 31557600000)))
+    ? String(Math.max(0, calculateAge(form.birthdate)))
     : "";
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -166,7 +166,7 @@ function PatientRegistration({ open, setOpen, loadData, loading }: PatientRegist
     } catch (error: unknown) {
       alert(
         (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
-          "Something went wrong",
+        "Something went wrong",
       );
       console.error(error);
     } finally {
@@ -176,7 +176,6 @@ function PatientRegistration({ open, setOpen, loadData, loading }: PatientRegist
 
   return (
     <main className="flex-1 min-w-0">
-      <Header loading={loading} open={open} setOpen={setOpen} loadData={loadData} page="Patient Registration" />
 
       <div className="w-full px-6 pb-8">
         <h2 className="mb-4 text-xl font-semibold text-gray-700">Register Patient</h2>

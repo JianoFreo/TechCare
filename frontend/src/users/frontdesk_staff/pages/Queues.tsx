@@ -1,4 +1,3 @@
-import Header from "#components/Header";
 import React, { useCallback, useMemo, useState } from "react";
 import type {
   PriorityFilter,
@@ -94,13 +93,6 @@ function Queues({
 
   return (
     <main className="flex-1 min-w-0 ">
-      <Header
-        loading={loading}
-        open={open}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Queues"
-      />
 
       <div className="flex  items-center  justify-between px-6">
         <div>

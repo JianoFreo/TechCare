@@ -15,6 +15,7 @@ import FrontdeskDashboard from "./pages/FrontdeskDashboard";
 import PatientRecords from "./pages/PatientRecords";
 import PatientRegistration from "./pages/PatientRegistration";
 import ServiceRequest from "./pages/ServiceRequest";
+import Header from "../../components/Header";
 import Queues from "./pages/Queues";
 import type { QueueRequests } from "../../interface/Queue";
 import type { UnpaidRequests } from "../../interface/Billing";
@@ -71,6 +72,7 @@ function FrontdeskStaff() {
       setLoading(false);
     }
   }, []);
+  
   const navItems = [
     {
       page: "dashboard",
@@ -103,6 +105,9 @@ function FrontdeskStaff() {
       icon: <Receipt size={20} />,
     },
   ];
+  const currentPage =
+    navItems.find((item) => item.page === page)?.label ??
+    "Dashboard";
 
   useEffect(() => {
     (async () => {
@@ -112,82 +117,98 @@ function FrontdeskStaff() {
 
   return (
     <div className="flex min-h-screen">
-      <SideBar open={open} page={page} setPage={setPage} navItems={navItems} />
-
-      {page === "dashboard" && (
-        <FrontdeskDashboard
-          patients={patients}
-          billing={billing}
-          queues={queues}
+      <SideBar
+        open={open}
+        page={page}
+        setPage={setPage} 
+        navItems={navItems}
+      />
+      <div className="flex-1 min-w-0">
+        <Header
+          page={currentPage}
+          loading={loading}
           open={open}
           setOpen={setOpen}
           loadData={loadData}
-          loading={loading}
         />
-      )}
 
-      {page === "patient-registration" && (
-        <PatientRegistration
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-          loading={loading}
-        />
-      )}
+        <div className="pb-6">
+          {page === "dashboard" && (
+            <FrontdeskDashboard
+              patients={patients}
+              billing={billing}
+              queues={queues}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+              loading={loading}
+            />
+          )}
 
-      {page === "patient-records" && (
-        <PatientRecords
-          patients={patients}
-          selectedPatient={selectedPatient}
-          setSelectedPatient={setSelectedPatient}
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-          loading={loading}
-        />
-      )}
+          {page === "patient-registration" && (
+            <PatientRegistration
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+              loading={loading}
+            />
+          )}
 
-      {page === "queues" && (
-        <Queues
-          queues={queues}
-          queueRequests={queueRequests}
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-          loading={loading}
-        />
-      )}
+          {page === "patient-records" && (
+            <PatientRecords
+              patients={patients}
+              selectedPatient={selectedPatient}
+              setSelectedPatient={setSelectedPatient}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+              loading={loading}
+            />
+          )}
 
-      {page === "service-request" && (
-        <ServiceRequest
-          services={services}
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-          loading={loading}
-        />
-      )}
+          {page === "queues" && (
+            <Queues
+              queues={queues}
+              queueRequests={queueRequests}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+              loading={loading}
+            />
+          )}
 
-      {page === "billing" && (
-        <Billing
-          unpaidRequests={unpaidRequests}
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-          loading={loading}
-        />
-      )}
+          {page === "service-request" && (
+            <ServiceRequest
+              services={services}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+              loading={loading}
+            />
+          )}
 
-      {page === "patient-medical-history" && (
-        <MedicalHistory
-          open={open}
-          patients={patients}
-          selectedPatient={patientIdParam}
-          setOpen={setOpen}
-          loadData={loadData}
-          loading={loading}
-        />
-      )}
+          {page === "billing" && (
+            <Billing
+              unpaidRequests={unpaidRequests}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+              loading={loading}
+            />
+          )}
+
+          {page === "patient-medical-history" && (
+            <MedicalHistory
+              open={open}
+              patients={patients}
+              selectedPatient={patientIdParam}
+              setOpen={setOpen}
+              loadData={loadData}
+              loading={loading}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

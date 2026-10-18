@@ -1,6 +1,6 @@
 
 import { Bell, LogOut } from "lucide-react";
-import type { Dispatch, SetStateAction } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 
 import UserHeader from "./Header/UserHeader";
 import api from "../lib/axios";
@@ -21,9 +21,10 @@ function Header({
   loadData,
 }: HeaderProps) {
   const role = sessionStorage.getItem("role") ?? "";
-
+  const [logoutStatus, setLogoutStatus] = useState("Logout");
   async function handleLogout() {
     try {
+      setLogoutStatus("Logging out...");
       const user = JSON.parse(
         sessionStorage.getItem("user") || "{}",
       );
@@ -38,6 +39,7 @@ function Header({
     } finally {
       sessionStorage.clear();
       window.location.href = "/login";
+      setLogoutStatus("Logout");
     }
   }
 
@@ -90,7 +92,7 @@ function Header({
           className="flex items-center gap-2 border border-red-300 text-red-700 px-3 py-2 rounded-md cursor-pointer transition-colors hover:bg-red-50"
         >
           <LogOut size={18} strokeWidth={1.5} />
-          <span>Logout</span>
+          <span>{logoutStatus}</span>
         </button>
       </div>
     </header>

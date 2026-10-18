@@ -1,4 +1,3 @@
-import Header from "../../../components/Header";
 import React, { useState } from "react";
 import ServiceTypeTabs from "../components/ServiceRequest/ServiceTypeTabs";
 import ServiceSelectionPanel from "../components/ServiceRequest/ServiceSelectionPanel";
@@ -103,13 +102,6 @@ function ServiceRequest({
 
   return (
     <main className="flex-1 min-w-0 pb-8">
-      <Header
-        loading={loading}
-        open={open}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Service Request"
-      />
       <h1 className="text-2xl font-bold px-6">Select Service Type</h1>
       <ServiceTypeTabs
         activeTab={activeTab}
