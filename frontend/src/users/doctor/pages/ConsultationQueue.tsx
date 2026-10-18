@@ -1,5 +1,4 @@
-import Header from "#components/Header";
-import React from "react";
+import React, { useEffect } from "react";
 
 type ConsultationQueueProps = {
   loadData: () => Promise<void>;
@@ -14,15 +13,15 @@ function ConsultationQueue({
   setOpen,
   loading,
 }: ConsultationQueueProps) {
+  useEffect(() => {
+      async function action() {
+        await loadData();
+      }
+      action();
+    }, [loadData]);
   return (
     <main className="flex-1 min-w-0 ">
-      <Header
-        open={open}
-        loading={loading}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Consultation Queue"
-      />
+     
       ConsultationQueue
     </main>
   );

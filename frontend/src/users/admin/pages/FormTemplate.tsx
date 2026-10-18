@@ -1,11 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import api from "#lib/axios";
-import Header from "../../../components/Header";
 import TemplateLibrary from "../components/FormTemplate/TemplateLibrary";
 import TemplateBuilder from "../components/FormTemplate/TemplateBuilder";
 import {
   dbComponentToBuilderComponent,
-  type FormTemplate,
+  type FormTemplate as FormTemplateData,
 } from "../../../interface/FormTemplate";
 import { Loader2 } from "lucide-react";
 
@@ -16,46 +15,45 @@ export interface ServiceOption {
   service_category: string;
 }
 
-interface FormTemplateProps {
-  open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  loading: boolean;
-  loadData: () => Promise<void>;
-}
 
-function isValidFormTemplate(rec: any): rec is FormTemplate {
+function isValidFormTemplate(rec: unknown): rec is FormTemplateData {
+  if (typeof rec !== "object" || rec === null) {
+    return false;
+  }
+
+  const record = rec as Record<string, unknown>;
+
   return (
-    rec &&
-    typeof rec.form_id === "string" &&
-    typeof rec.form_name === "string" &&
-    typeof rec.service_id === "string" &&
-    rec.service_id.length > 0
+    typeof record.form_id === "string" &&
+    typeof record.form_name === "string" &&
+    typeof record.service_id === "string" &&
+    record.service_id.length > 0
   );
 }
 
-function isValidService(rec: any): rec is ServiceOption {
+function isValidService(rec: unknown): rec is ServiceOption {
+  if (typeof rec !== "object" || rec === null) {
+    return false;
+  }
+
+  const record = rec as Record<string, unknown>;
+
   return (
-    rec &&
-    typeof rec.service_id === "string" &&
-    typeof rec.service_name === "string"
+    typeof record.service_id === "string" &&
+    typeof record.service_name === "string"
   );
 }
 
-export default function FormTemplate({
-  open,
-  setOpen,
-  loading,
-  loadData,
-}: FormTemplateProps) {
+export default function FormTemplate() {
   const [viewMode, setViewMode] = useState<"library" | "builder">("library");
 
-  const [formTemplates, setFormTemplates] = useState<FormTemplate[]>([]);
+  const [formTemplates, setFormTemplates] = useState<FormTemplateData[]>([]);
   const [services, setServices] = useState<ServiceOption[]>([]);
 
   const [fetching, setFetching] = useState<boolean>(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const [editingTemplate, setEditingTemplate] = useState<FormTemplate | null>(
+  const [editingTemplate, setEditingTemplate] = useState<FormTemplateData | null>(
     null,
   );
 
@@ -65,14 +63,13 @@ export default function FormTemplate({
     setFetchError(null);
 
     try {
-      const token = localStorage.getItem("token");
-      const headers = { Authorization: `Bearer ${token}` };
+      // const [templatesRes, servicesRes] = await Promise.all([
+      //   api.get("/api/admin/form-templates"),
+      //   api.get("/api/admin/services"),
+      // ]);
 
-      const [templatesRes, servicesRes] = await Promise.all([
-        api.get("api/admin/form-templates", { headers }),
-        api.get("api/admin/services", { headers }),
-      ]);
-
+      const templatesRes = await api.get("/api/admin/form-templates");
+      const servicesRes = await api.get("/api/admin/services");
       const rawTemplates = templatesRes.data.formTemplates ?? [];
       const validTemplates = rawTemplates.filter(isValidFormTemplate);
       if (validTemplates.length !== rawTemplates.length) {
@@ -100,7 +97,10 @@ export default function FormTemplate({
 
   // Automatically fetch templates when component mounts
   useEffect(() => {
-    fetchFormTemplates();
+    async function action() {
+      await fetchFormTemplates()
+    }
+    action();
   }, [fetchFormTemplates]);
 
   const handleCreateNew = () => {
@@ -109,7 +109,7 @@ export default function FormTemplate({
   };
 
   // Updated handleEditTemplate to fetch full form details & components from GET /api/admin/form-templates/:form_id
-  const handleEditTemplate = async (template: FormTemplate) => {
+  const handleEditTemplate = async (template: FormTemplateData) => {
     try {
       const token = localStorage.getItem("token");
       const response = await api.get(
@@ -117,7 +117,7 @@ export default function FormTemplate({
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      const fullTemplate: FormTemplate = {
+      const fullTemplate: FormTemplateData = {
         ...response.data.formTemplate,
         components: (response.data.components ?? []).map(
           dbComponentToBuilderComponent,
@@ -158,13 +158,7 @@ export default function FormTemplate({
 
   return (
     <main className="flex-1 min-w-0 overflow-y-auto">
-      <Header
-        open={open}
-        loading={loading}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Form Templates"
-      />
+
 
       <div className="mt-4 px-6">
         {/* CHANGED: Conditional UI rendering for Loading, Error, or Template Views */}

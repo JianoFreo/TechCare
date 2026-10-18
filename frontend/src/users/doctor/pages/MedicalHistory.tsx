@@ -10,7 +10,6 @@ import {
   X,
 } from "lucide-react";
 import api from "../../../lib/axios";
-import Header from "../../../components/Header";
 
 const PAGE_SIZE = 10;
 const API = "/api/doctor/medical-history";
@@ -141,7 +140,7 @@ function parseLooseJson(value: unknown): unknown {
   }
   const result: Record<string, string> = {};
   const pattern = /"([^"]+)"\s*:\s*"([\s\S]*?)"+\s*(?=,\s*"[^"]+"\s*:|\}\s*$)/g;
-  for (let m; (m = pattern.exec(text)); ) result[m[1]] = m[2];
+  for (let m; (m = pattern.exec(text));) result[m[1]] = m[2];
   return Object.keys(result).length
     ? result
     : text.replace(/^[{[]\s*/, "").replace(/\s*[}\]]$/, "");
@@ -181,13 +180,31 @@ function entriesOf(value: unknown) {
   return Object.entries(p).filter(([, v]) => display(v));
 }
 
-function describeError(err: any, fallback: string) {
-  const status = err?.response?.status;
+function describeError(err: unknown, fallback: string): string {
+  if (typeof err !== "object" || err === null) {
+    return fallback;
+  }
+
+  const error = err as {
+    response?: {
+      status?: number;
+      data?: {
+        detail?: unknown;
+        message?: unknown;
+      };
+    };
+    message?: string;
+  };
+
+  const status = error.response?.status;
   const msg =
-    err?.response?.data?.detail ?? err?.response?.data?.message ?? err?.message;
+    error.response?.data?.detail ??
+    error.response?.data?.message ??
+    error.message;
+
   return !status && !msg
     ? fallback
-    : `${fallback} (${status ?? "no response"}${msg ? `: ${msg}` : ""})`;
+    : `${fallback} (${status ?? "no response"}${msg ? `: ${String(msg)}` : ""})`;
 }
 
 /** GET `url` when it or `params` change (null = idle). Aborts stale requests. */
@@ -259,9 +276,8 @@ const ErrorBox = ({ message }: { message: string }) => (
 const StatusPill = ({ status }: { status?: string | null }) =>
   status ? (
     <span
-      className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-semibold ${
-        STATUS_COLORS[status.toLowerCase()] ?? "bg-red-50 text-red-700"
-      }`}
+      className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-semibold ${STATUS_COLORS[status.toLowerCase()] ?? "bg-red-50 text-red-700"
+        }`}
     >
       {status}
     </span>
@@ -457,9 +473,9 @@ function VisitDetails({
       ? []
       : isLab
         ? [
-            ["Requested By", d.requested_by, d.requested_by_role],
-            ["Processed By", d.processed_by, d.processed_by_role],
-          ]
+          ["Requested By", d.requested_by, d.requested_by_role],
+          ["Processed By", d.processed_by, d.processed_by_role],
+        ]
         : [["Consulted By", d.consulted_by]];
     rows = [
       isLab
@@ -589,20 +605,20 @@ function FullRecordModal({
     ? []
     : isLab
       ? [
-          ["Lab Item ID", full.lab_item_id],
-          ["Status", full.status],
-          ["Room", full.room],
-          ["Last updated", fmtDateTime(full.updated_at)],
-          ["Requested By", full.requested_by, full.requested_by_role],
-          ["Processed By", full.processed_by, full.processed_by_role],
-        ]
+        ["Lab Item ID", full.lab_item_id],
+        ["Status", full.status],
+        ["Room", full.room],
+        ["Last updated", fmtDateTime(full.updated_at)],
+        ["Requested By", full.requested_by, full.requested_by_role],
+        ["Processed By", full.processed_by, full.processed_by_role],
+      ]
       : [
-          ["Consultation ID", full.consultation_record_id],
-          ["Type", full.consultation_type],
-          ["Room", full.room],
-          ["Consulted By", full.consulted_by],
-          ["Date & Time", fmtDateTime(full.consulted_at)],
-        ];
+        ["Consultation ID", full.consultation_record_id],
+        ["Type", full.consultation_type],
+        ["Room", full.room],
+        ["Consulted By", full.consulted_by],
+        ["Date & Time", fmtDateTime(full.consulted_at)],
+      ];
   const results = full?.results ?? [];
   const prescriptions = full?.prescription ?? [];
 
@@ -808,9 +824,14 @@ function MedicalHistoryContent({
   // Keep the selection if it's still on the page, otherwise pick the first row.
   useEffect(() => {
     const recs = list.data?.records;
-    setSelected((prev) =>
-      recs ? (recs.find((r) => same(r, prev)) ?? recs[0] ?? null) : null,
-    );
+
+    async function action() {
+      setSelected((prev) =>
+        recs ? (recs.find((r) => same(r, prev)) ?? recs[0] ?? null) : null,
+      );
+    }
+
+    action();
   }, [list.data]);
 
   const recordUrl = selected
@@ -848,13 +869,7 @@ function MedicalHistoryContent({
 
   return (
     <main className="min-w-0 flex-1 bg-slate-50">
-      <Header
-        open={open}
-        loading={loading}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Medical History"
-      />
+
 
       <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_21rem]">
         <section className="flex min-h-[32rem] flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -964,9 +979,8 @@ function MedicalHistoryContent({
                     <button
                       type="button"
                       onClick={() => setSelected(r)}
-                      className={`flex flex-1 items-center gap-4 border-b border-slate-100 px-2 py-3 text-left transition hover:bg-slate-50 ${
-                        same(selected, r) ? "bg-slate-50" : ""
-                      }`}
+                      className={`flex flex-1 items-center gap-4 border-b border-slate-100 px-2 py-3 text-left transition hover:bg-slate-50 ${same(selected, r) ? "bg-slate-50" : ""
+                        }`}
                     >
                       <div className="w-24 shrink-0">
                         <p className="text-xs font-semibold text-slate-900">
@@ -1017,11 +1031,10 @@ function MedicalHistoryContent({
                   key={n}
                   type="button"
                   onClick={() => setPage(n)}
-                  className={`h-7 min-w-7 rounded-md px-2 font-semibold ${
-                    n === page
+                  className={`h-7 min-w-7 rounded-md px-2 font-semibold ${n === page
                       ? "bg-red-800 text-white"
                       : "border border-slate-200 text-slate-600"
-                  }`}
+                    }`}
                 >
                   {n}
                 </button>

@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import {
@@ -5,35 +6,43 @@ import {
   Users,
   BadgeDollarSign,
   FileText,
-  SquareActivityIcon,
+  SquareActivity,
 } from "lucide-react";
+
+import SideBar from "../../components/SideBar";
+import Header from "../../components/Header";
+
 import UserManagement from "./pages/UserManagement";
 import AdminDashboard from "./pages/AdminDashboard";
-import SideBar from "../../components/SideBar";
 import ServicePricingManagement from "./pages/ServicePricing";
 import ActivityMonitoring from "./pages/ActivityMonitoring";
 import FormTemplate from "./pages/FormTemplate";
+
 import api from "../../lib/axios";
+
 import type { User } from "../../interface/User";
 import type { Service } from "../../interface/Service";
 import type { Activity } from "../../interface/Activity";
 
-// each element must be either:
-
-// No object at all (the array is empty)
-// A complete Activity object
-
 function Admin() {
   const [users, setUsers] = useState<User[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [activities, setActivities] = useState<Activity[]>([]); // Acitivities[] this means that this object structure can be a lot of objects // array
+  const [activities, setActivities] = useState<Activity[]>([]);
+  
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(true);
+
   const [searchParams, setSearchParams] = useSearchParams();
   const page = searchParams.get("page") ?? "dashboard";
+
   function setPage(newPage: string) {
-    setSearchParams({ page: newPage });
+    setSearchParams((previous) => {
+      const next = new URLSearchParams(previous);
+      next.set("page", newPage);
+      return next;
+    });
   }
+
   const navItems = [
     {
       page: "dashboard",
@@ -53,7 +62,7 @@ function Admin() {
     {
       page: "activity-monitoring",
       label: "Activity Monitoring",
-      icon: <SquareActivityIcon size={20} />,
+      icon: <SquareActivity size={20} />,
     },
     {
       page: "form-template",
@@ -61,81 +70,114 @@ function Admin() {
       icon: <FileText size={20} />,
     },
   ];
+
+  const currentPage =
+    navItems.find((item) => item.page === page)?.label ??
+    "Dashboard";
+
   const loadData = useCallback(async () => {
+    setLoading(true);
+
     try {
-      setLoading(true);
-      const serviceResponse = await api.get("/api/admin/services");
-      const userResponse = await api.get("/api/admin/users");
-      const activityResponse = await api.get("/api/admin/activities");
+      const [
+        serviceResponse,
+        userResponse,
+        activityResponse,
+      ] = await Promise.all([
+        api.get("/api/admin/services"),
+        api.get("/api/admin/users"),
+        api.get("/api/admin/activities"),
+      ]);
 
-      setActivities(activityResponse.data.activities);
-      console.log("Services data:", activityResponse.data);
-
-      setServices(serviceResponse.data.services);
-      console.log("services data:", userResponse.data);
-
-      setUsers(userResponse.data.users);
-      console.log("Users data:", userResponse.data.users);
+      setServices(serviceResponse.data.services ?? []);
+      setUsers(userResponse.data.users ?? []);
+      setActivities(activityResponse.data.activities ?? []);
     } catch (error) {
-      console.log("Error fetching services:", error);
+      console.error("Error loading admin data:", error);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  // Fetch the admin data when this component mounts.
   useEffect(() => {
-    (async () => {
+    async function action(){
       await loadData();
-    })();
+    };
+    action()
   }, [loadData]);
 
   return (
-    <div className="flex min-h-screen">
-      <SideBar open={open} page={page} setPage={setPage} navItems={navItems} />
+    <div className="flex min-h-screen bg-gray-50">
+      <SideBar
+        open={open}
+        page={page}
+        setPage={setPage}
+        navItems={navItems}
+      />
 
-      {page === "dashboard" && (
-        <AdminDashboard
-          loading={loading}
-          users={users}
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-        />
-      )}
-      {page === "user-management" && (
-        <UserManagement
-          loading={loading}
-          users={users}
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-        />
-      )}
-      {page === "service-pricing" && (
-        <ServicePricingManagement
-          loading={loading}
-          services={services}
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-        />
-      )}
-      {page === "activity-monitoring" && (
-        <ActivityMonitoring
-          loading={loading}
-          activities={activities}
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-        />
-      )}
-      {page === "form-template" && (
-        <FormTemplate
+      <div className="flex-1 min-w-0">
+        <Header
+          page={currentPage}
           loading={loading}
           open={open}
           setOpen={setOpen}
           loadData={loadData}
         />
-      )}
+
+        <div className="pb-6">
+          {page === "dashboard" && (
+            <AdminDashboard users={users} />
+          )}
+
+          {page === "user-management" && (
+            <UserManagement
+              loading={loading}
+              users={users}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+            />
+          )}
+
+          {page === "service-pricing" && (
+            <ServicePricingManagement
+              loading={loading}
+              services={services}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+            />
+          )}
+
+          {page === "activity-monitoring" && (
+            <ActivityMonitoring
+              loading={loading}
+              activities={activities}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+            />
+          )}
+
+          {page === "form-template" && <FormTemplate />}
+
+          {!navItems.some((item) => item.page === page) && (
+            <div className="mx-6 rounded-xl border border-gray-200 bg-white p-8 text-center">
+              <h2 className="font-semibold text-gray-800">
+                Page not found
+              </h2>
+              <button
+                type="button"
+                onClick={() => setPage("dashboard")}
+                className="mt-3 text-sm text-sky-600 hover:underline"
+              >
+                Return to Dashboard
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

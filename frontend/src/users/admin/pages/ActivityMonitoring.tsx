@@ -1,4 +1,3 @@
-import Header from "../../../components/Header";
 import { useEffect, useState } from "react";
 import ActivityDetails from "../components/ActivityMonitoring/ActivityDetails";
 import ActivityTable from "../components/ActivityMonitoring/ActivityTable";
@@ -24,10 +23,7 @@ type ActivityModalProps = {
 
 function ActivityMonitoring({
   activities,
-  open,
-  setOpen,
   loadData,
-  loading,
 }: ActivityModalProps) {
   useEffect(() => {
     loadData();
@@ -111,13 +107,6 @@ function ActivityMonitoring({
 
   return (
     <main className="flex-1 min-w-0">
-      <Header
-        loading={loading}
-        open={open}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Activity Monitoring"
-      />
       <div className="mx-6">
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>

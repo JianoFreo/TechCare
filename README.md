@@ -26,6 +26,8 @@ A full-stack clinic management system: patient records, front-desk queueing, lab
 
 Same shape in all 4 deployment scenarios below — only `CORS_ORIGIN` needs to change per scenario.
 
+## you can seed data and test database, you just have to run npm run seed -- --force to the backend root
+
 ```
 PORT=5000
 MODE=development

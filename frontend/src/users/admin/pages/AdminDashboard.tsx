@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+
 import {
   Users,
   UserCheck,
@@ -9,29 +9,16 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-import Header from "../../../components/Header";
 import type { User } from "../../../interface/User";
 
 type AdminDashboardProps = {
   users: User[];
-  open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  loadData: () => Promise<void>;
-  loading: boolean;
 };
 
-function AdminDashboard({
-  users,
-  open,
-  setOpen,
-  loadData,
-  loading,
-}: AdminDashboardProps) {
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const doctors = users.filter((user) => user.role === "doctor").length;
+function AdminDashboard({ users }: AdminDashboardProps) {
+  const doctors = users.filter(
+    (user) => user.role === "doctor",
+  ).length;
 
   const labStaff = users.filter(
     (user) => user.role === "laboratory-staff",
@@ -41,88 +28,62 @@ function AdminDashboard({
     (user) => user.role === "frontdesk-staff",
   ).length;
 
-  const patients = users.filter((user) => user.role === "patient").length;
+  const patients = users.filter(
+    (user) => user.role === "patient",
+  ).length;
+
+  // Assumes User.active is a boolean.
+  const activeUsers = users.filter(
+    (user) => user.active === true,
+  ).length;
 
   return (
-    <main className="flex-1 min-w-0">
-      <Header
-        loading={loading}
-        open={open}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Admin Dashboard"
-      />
-
+    <main className="min-w-0">
       <div className="space-y-6 px-6">
-        {/* =========================
-                    DASHBOARD SUMMARY
-                ========================== */}
+        {/* Dashboard summary */}
         <section className="bg-white border border-gray-300 rounded-2xl overflow-hidden">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-300">
-            {/* Total Users */}
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Users size={20} strokeWidth={1.5} />
+            <SummaryItem
+              icon={<Users size={20} strokeWidth={1.5} />}
+              label="Total Users"
+              value={users.length}
+              description="Registered accounts"
+            />
 
-                <p className="text-sm text-gray-500">Total Users</p>
-              </div>
+            <SummaryItem
+              icon={<UserCheck size={20} strokeWidth={1.5} />}
+              label="Active Users"
+              value={activeUsers}
+              description="Currently active accounts"
+            />
 
-              <p className="text-3xl font-semibold">{users.length}</p>
+            <SummaryItem
+              icon={<Activity size={20} strokeWidth={1.5} />}
+              label="Today's Activity"
+              value="—"
+              description="Activity summary unavailable"
+            />
 
-              <p className="text-sm text-gray-400 mt-2">Registered accounts</p>
-            </div>
-
-            {/* Active Users */}
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <UserCheck size={20} strokeWidth={1.5} />
-
-                <p className="text-sm text-gray-500">Active Users</p>
-              </div>
-
-              <p className="text-3xl font-semibold">{users.length}</p>
-
-              <p className="text-sm text-gray-400 mt-2">Currently registered</p>
-            </div>
-
-            {/* Today's Activity */}
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Activity size={20} strokeWidth={1.5} />
-
-                <p className="text-sm text-gray-500">Today's Activity</p>
-              </div>
-
-              <p className="text-3xl font-semibold">—</p>
-
-              <p className="text-sm text-gray-400 mt-2">No activity data</p>
-            </div>
-
-            {/* System Status */}
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <ShieldCheck size={20} strokeWidth={1.5} />
-
-                <p className="text-sm text-gray-500">System Status</p>
-              </div>
-
-              <p className="text-xl font-semibold">Operational</p>
-
-              <p className="text-sm text-gray-400 mt-2">All systems running</p>
-            </div>
+            <SummaryItem
+              icon={<ShieldCheck size={20} strokeWidth={1.5} />}
+              label="System Status"
+              value="Operational"
+              description="Status not verified by this page"
+              valueClassName="text-xl"
+            />
           </div>
         </section>
 
-        {/* =========================
-                    SYSTEM OVERVIEW
-                ========================== */}
+        {/* Users by role */}
         <section className="bg-white border border-gray-300 rounded-2xl overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-300">
             <div className="flex items-center gap-3">
               <ClipboardList size={20} strokeWidth={1.5} />
 
               <div>
-                <h2 className="text-lg font-semibold">System Overview</h2>
+                <h2 className="text-lg font-semibold">
+                  System Overview
+                </h2>
 
                 <p className="text-sm text-gray-500 mt-1">
                   Overview of registered users by role
@@ -132,71 +93,33 @@ function AdminDashboard({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-300">
-            {/* Doctors */}
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Doctors</p>
+            <RoleSummary
+              icon={<Stethoscope size={22} strokeWidth={1.5} />}
+              label="Doctors"
+              value={doctors}
+              description="Registered doctors"
+            />
 
-                  <p className="text-3xl font-semibold mt-2">{doctors}</p>
-                </div>
+            <RoleSummary
+              icon={<FlaskConical size={22} strokeWidth={1.5} />}
+              label="Laboratory Staff"
+              value={labStaff}
+              description="Registered laboratory staff"
+            />
 
-                <Stethoscope size={22} strokeWidth={1.5} />
-              </div>
+            <RoleSummary
+              icon={<ClipboardList size={22} strokeWidth={1.5} />}
+              label="Front Desk Staff"
+              value={frontDeskStaff}
+              description="Registered front desk staff"
+            />
 
-              <p className="text-sm text-gray-400 mt-3">Registered doctors</p>
-            </div>
-
-            {/* Laboratory Staff */}
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Laboratory Staff</p>
-
-                  <p className="text-3xl font-semibold mt-2">{labStaff}</p>
-                </div>
-
-                <FlaskConical size={22} strokeWidth={1.5} />
-              </div>
-
-              <p className="text-sm text-gray-400 mt-3">
-                Registered laboratory staff
-              </p>
-            </div>
-
-            {/* Front Desk */}
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Front Desk Staff</p>
-
-                  <p className="text-3xl font-semibold mt-2">
-                    {frontDeskStaff}
-                  </p>
-                </div>
-
-                <ClipboardList size={22} strokeWidth={1.5} />
-              </div>
-
-              <p className="text-sm text-gray-400 mt-3">
-                Registered front desk staff
-              </p>
-            </div>
-
-            {/* Patients */}
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Patients</p>
-
-                  <p className="text-3xl font-semibold mt-2">{patients}</p>
-                </div>
-
-                <Users size={22} strokeWidth={1.5} />
-              </div>
-
-              <p className="text-sm text-gray-400 mt-3">Registered patients</p>
-            </div>
+            <RoleSummary
+              icon={<Users size={22} strokeWidth={1.5} />}
+              label="Patients"
+              value={patients}
+              description="Registered patients"
+            />
           </div>
         </section>
       </div>
@@ -204,66 +127,70 @@ function AdminDashboard({
   );
 }
 
-export default AdminDashboard;
+type SummaryItemProps = {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  description: string;
+  valueClassName?: string;
+};
 
-/*
-=========================================================
-PREVIOUS ADMIN DASHBOARD IMPLEMENTATION
-=========================================================
+function SummaryItem({
+  icon,
+  label,
+  value,
+  description,
+  valueClassName = "text-3xl",
+}: SummaryItemProps) {
+  return (
+    <div className="p-6">
+      <div className="flex items-center gap-3 mb-4">
+        {icon}
+        <p className="text-sm text-gray-500">{label}</p>
+      </div>
 
-import axios from "axios";
-import { useEffect, useState } from "react";
+      <p className={`${valueClassName} font-semibold`}>
+        {value}
+      </p>
 
-function AdminDashboard() {
+      <p className="text-sm text-gray-400 mt-2">
+        {description}
+      </p>
+    </div>
+  );
+}
 
-    const [totalUsers, setTotalUsers] = useState(0);
+type RoleSummaryProps = {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  description: string;
+};
 
-    const loadAdminDashboard = async () => {
-        try {
-            const response = await axios.get("/admin");
+function RoleSummary({
+  icon,
+  label,
+  value,
+  description,
+}: RoleSummaryProps) {
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm text-gray-500">{label}</p>
+          <p className="text-3xl font-semibold mt-2">
+            {value}
+          </p>
+        </div>
 
-            setTotalUsers(response.data.totalUsers);
+        {icon}
+      </div>
 
-            console.log("Admin dashboard data:", response.data);
-
-        } catch (error) {
-            console.error(
-                "Error fetching admin dashboard data:",
-                error
-            );
-        }
-    };
-
-    useEffect(() => {
-        loadAdminDashboard();
-    }, []);
-
-    return (
-        <>
-            <div className="status">
-
-                <div>
-                    <h1>Admin Dashboard</h1>
-
-                    <button
-                        onClick={() => {
-                            console.log("Reloading dashboard...");
-                            loadAdminDashboard();
-                        }}
-                        className="reload-button"
-                    >
-                        Reload Dashboard
-                    </button>
-
-                    <div className="total-users">
-                        Total Users: {totalUsers}
-                    </div>
-                </div>
-
-            </div>
-        </>
-    );
+      <p className="text-sm text-gray-400 mt-3">
+        {description}
+      </p>
+    </div>
+  );
 }
 
 export default AdminDashboard;
-*/

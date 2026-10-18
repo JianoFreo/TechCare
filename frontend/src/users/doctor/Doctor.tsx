@@ -1,4 +1,6 @@
+
 import SideBar from "#components/SideBar";
+import Header from "#components/Header";
 import { useCallback, useState } from "react";
 import {
   LayoutGrid,
@@ -20,17 +22,15 @@ function Doctor() {
   const [loading] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const page = searchParams.get("page") ?? "dashboard";
+
   function setPage(newPage: string) {
     setSearchParams((prev) => {
-    const next =
-      new URLSearchParams(prev);
-
-    next.set("page", newPage);
-
-    return next;
-  });
-
+      const next = new URLSearchParams(prev);
+      next.set("page", newPage);
+      return next;
+    });
   }
+
   const navItems = [
     {
       page: "dashboard",
@@ -64,52 +64,78 @@ function Doctor() {
     },
   ];
 
+  const currentPage =
+    navItems.find((item) => item.page === page)?.label ?? "Dashboard";
+
   const loadData = useCallback(async () => {}, []);
 
   return (
-    <div className="flex min-h-screen">
-      <SideBar open={open} page={page} setPage={setPage} navItems={navItems} />
-      {page === "dashboard" && <DoctorDashboard />}
-      {(page === "consultation" || page === "prescription") && (
-        <Consultation
+    <div className="flex min-h-screen bg-gray-50">
+      <SideBar
+        open={open}
+        page={page}
+        setPage={setPage}
+        navItems={navItems}
+      />
+
+      <div className="flex-1 min-w-0">
+        <Header
+          page={currentPage}
           loading={loading}
           open={open}
           setOpen={setOpen}
           loadData={loadData}
         />
-      )}
-      {page === "digitized-document" && (
-        <DigitizedDocument
-          loading={loading}
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-        />
-      )}
-      {page === "consultation-queue" && (
-        <ConsultationQueue
-          loading={loading}
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-        />
-      )}
-      {page === "medical-history" && (
-        <MedicalHistory
-          loading={loading}
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-        />
-      )}
-      {page === "laboratory-request" && (
-        <LaboratoryRequest
-          loading={loading}
-          open={open}
-          setOpen={setOpen}
-          loadData={loadData}
-        />
-      )}
+
+        <div className="pb-6">
+          {page === "dashboard" && <DoctorDashboard />}
+
+          {(page === "consultation" || page === "prescription") && (
+            <Consultation
+              loading={loading}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+            />
+          )}
+
+          {page === "digitized-document" && (
+            <DigitizedDocument
+              loading={loading}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+            />
+          )}
+
+          {page === "consultation-queue" && (
+            <ConsultationQueue
+              loading={loading}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+            />
+          )}
+
+          {page === "medical-history" && (
+            <MedicalHistory
+              loading={loading}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+            />
+          )}
+
+          {page === "laboratory-request" && (
+            <LaboratoryRequest
+              loading={loading}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

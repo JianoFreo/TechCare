@@ -1,5 +1,5 @@
 import Header from "#components/Header";
-import React from "react";
+import React, { useEffect } from "react";
 
 type DigitizedDocumentProps = {
   loadData: () => Promise<void>;
@@ -14,15 +14,14 @@ function DigitizedDocument({
   setOpen,
   loading,
 }: DigitizedDocumentProps) {
+  useEffect(() => {
+      async function action() {
+        await loadData();
+      }
+      action();
+    }, [loadData]);
   return (
     <main className="flex-1 min-w-0 ">
-      <Header
-        open={open}
-        loading={loading}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Digitized Document"
-      />
       DigitizedDocument
     </main>
   );
