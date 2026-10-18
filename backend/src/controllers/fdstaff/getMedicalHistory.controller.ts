@@ -1,5 +1,6 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { sql } from "../../config/db.js";
+import type { getPatientMedicalHistory } from "./dto/get.dto.js";
 
 type MedicalHistoryConsultationRow = {
   consultation_record_id: string;
@@ -91,12 +92,15 @@ function buildFullName(parts: Array<string | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
 
-export async function getPatientMedicalHistory(req: Request, res: Response) {
+export async function getPatientMedicalHistory(
+  req: Request,
+  res: Response<getPatientMedicalHistory.response | getPatientMedicalHistory.error>,
+) {
   try {
     const { patient_id } = req.params;
 
     if (!patient_id) {
-      return res.status(400).json({ message: "Patient ID is required." });
+      return res.status(400).json({ message: "Patient ID is required." } as getPatientMedicalHistory.error);
     }
 
     const patientRows = await sql`
@@ -109,7 +113,7 @@ export async function getPatientMedicalHistory(req: Request, res: Response) {
     const patient = patientRows[0];
 
     if (!patient) {
-      return res.status(404).json({ message: "Patient not found." });
+      return res.status(404).json({ message: "Patient not found." } as getPatientMedicalHistory.error);
     }
 
     const consultations = (await sql`
@@ -322,9 +326,9 @@ export async function getPatientMedicalHistory(req: Request, res: Response) {
         labRequests: labRequestHistory.length,
         labItems: labItems.length,
       },
-    });
+    } as getPatientMedicalHistory.response);
   } catch (error) {
     console.error("getPatientMedicalHistory error:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" } as getPatientMedicalHistory.error);
   }
 }

@@ -1,13 +1,29 @@
 import { sql } from "../../config/db.js";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
+import type {
+  getLaboratoryRequestDetails,
+  getLaboratoryQueues,
+  getRoomSpecificServices,
+  getLaboratoryQueueItems,
+  getAnalysisItems,
+  getSavedLaboratoryResults,
+  getAnalysisReadyRequests,
+  getAvailableFormTemplates,
+  getReleasedLaboratoryResults,
+} from "./dto/get.dto.js";
 
-export async function getLaboratoryRequestDetails(req: Request, res: Response) {
+export async function getLaboratoryRequestDetails(
+  req: Request,
+  res: Response<
+    getLaboratoryRequestDetails.response | getLaboratoryRequestDetails.error
+  >,
+) {
   try {
     const { queue_id } = req.params;
     const room = typeof req.query.room === "string" ? req.query.room : "";
 
     if (!room) {
-      return res.status(400).json({ message: "room is required" });
+      return res.status(400).json({ message: "room is required" } as getLaboratoryRequestDetails.error);
     }
 
     const result = await sql`
@@ -73,17 +89,20 @@ export async function getLaboratoryRequestDetails(req: Request, res: Response) {
     `;
 
     if (result.length === 0) {
-      return res.status(404).json({ message: "Laboratory request not found" });
+      return res.status(404).json({ message: "Laboratory request not found" } as getLaboratoryRequestDetails.error);
     }
 
-    return res.status(200).json(result[0].response);
+    return res.status(200).json(result[0].response as getLaboratoryRequestDetails.response);
   } catch (error) {
     console.error("getLaboratoryRequestDetails:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" } as getLaboratoryRequestDetails.error);
   }
 }
 
-export async function getLaboratoryQueues(req: Request, res: Response) {
+export async function getLaboratoryQueues(
+  req: Request,
+  res: Response<getLaboratoryQueues.response | getLaboratoryQueues.error>,
+) {
   try {
     const { room } = req.params;
 
@@ -103,19 +122,22 @@ export async function getLaboratoryQueues(req: Request, res: Response) {
       ORDER BY q.queue_number ASC
     `;
 
-    return res.status(200).json(queues);
+    return res.status(200).json(queues as unknown as getLaboratoryQueues.response);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" } as getLaboratoryQueues.error);
   }
 }
 
-export async function getRoomSpecificServices(req: Request, res: Response) {
+export async function getRoomSpecificServices(
+  req: Request,
+  res: Response<getRoomSpecificServices.response | getRoomSpecificServices.error>,
+) {
   const { room } = req.params;
   if (!room) {
-    res.status(400).json({
+    return res.status(400).json({
       message: "Room field is required.",
-    });
+    } as getRoomSpecificServices.error);
   }
   try {
     const services = await sql`
@@ -124,16 +146,19 @@ export async function getRoomSpecificServices(req: Request, res: Response) {
     ORDER BY service_id ASC
       `;
     if (!services) {
-      res.json({ message: "there are no services" });
+      return res.json({ message: "there are no services" } as getRoomSpecificServices.response);
     }
-    res.status(200).json(services);
+    return res.status(200).json(services as unknown as getRoomSpecificServices.response);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" } as getRoomSpecificServices.error);
   }
 }
 
-export async function getLaboratoryQueueItems(req: Request, res: Response) {
+export async function getLaboratoryQueueItems(
+  req: Request,
+  res: Response<getLaboratoryQueueItems.response | getLaboratoryQueueItems.error>,
+) {
   try {
     const { queue_id } = req.params;
 
@@ -157,16 +182,19 @@ export async function getLaboratoryQueueItems(req: Request, res: Response) {
       ORDER BY ri.created_at ASC
     `;
 
-    return res.status(200).json(items);
+    return res.status(200).json(items as unknown as getLaboratoryQueueItems.response);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" } as getLaboratoryQueueItems.error);
   }
 }
 
-export async function getAnalysisItems(req: Request, res: Response) {
+export async function getAnalysisItems(
+  req: Request,
+  res: Response<getAnalysisItems.response | getAnalysisItems.error>,
+) {
   const room = typeof req.query.room === "string" ? req.query.room.trim() : "";
-  if (!room) return res.status(400).json({ message: "room is required" });
+  if (!room) return res.status(400).json({ message: "room is required" } as getAnalysisItems.error);
   try {
     const items = await sql`
       SELECT ri.lab_item_id, ri.request_id, ri.service_id, ri.queue_id, ri.status,
@@ -190,16 +218,19 @@ export async function getAnalysisItems(req: Request, res: Response) {
         AND ri.status IN ('Specimen Collected', 'In Progress', 'Completed', 'Released')
       ORDER BY ri.created_at ASC
     `;
-    return res.json(items);
+    return res.json(items as unknown as getAnalysisItems.response);
   } catch (error) {
     console.error("Unable to load analysis items:", error);
-    return res.status(500).json({ message: "Unable to load analysis items." });
+    return res.status(500).json({ message: "Unable to load analysis items." } as getAnalysisItems.error);
   }
 }
 
-export async function getSavedLaboratoryResults(req: Request, res: Response) {
+export async function getSavedLaboratoryResults(
+  req: Request,
+  res: Response<getSavedLaboratoryResults.response | getSavedLaboratoryResults.error>,
+) {
   const room = typeof req.query.room === "string" ? req.query.room.trim() : "";
-  if (!room) return res.status(400).json({ message: "room is required" });
+  if (!room) return res.status(400).json({ message: "room is required" } as getSavedLaboratoryResults.error);
   try {
     const results = await sql`
       SELECT r.* FROM laboratory_results r
@@ -208,14 +239,17 @@ export async function getSavedLaboratoryResults(req: Request, res: Response) {
       WHERE s.room = ${room} AND r.status IN ('Pending', 'Released')
       ORDER BY r.updated_at DESC
     `;
-    return res.json({ results });
+    return res.json({ results: results as unknown as getSavedLaboratoryResults.resultItem[] } as getSavedLaboratoryResults.response);
   } catch (error) {
     console.error("Unable to load saved results:", error);
-    return res.status(500).json({ message: "Unable to load saved results." });
+    return res.status(500).json({ message: "Unable to load saved results." } as getSavedLaboratoryResults.error);
   }
 }
 
-export async function getAnalysisReadyRequests(req: Request, res: Response) {
+export async function getAnalysisReadyRequests(
+  req: Request,
+  res: Response<getAnalysisReadyRequests.response | getAnalysisReadyRequests.error>,
+) {
   try {
     const analysisReadyRequests = await sql`
       SELECT
@@ -234,14 +268,17 @@ export async function getAnalysisReadyRequests(req: Request, res: Response) {
       ORDER BY ri.created_at ASC
     `;
 
-    return res.status(200).json(analysisReadyRequests);
+    return res.status(200).json(analysisReadyRequests as unknown as getAnalysisReadyRequests.response);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" } as getAnalysisReadyRequests.error);
   }
 }
 
-export async function getAvailableFormTemplates(req: Request, res: Response) {
+export async function getAvailableFormTemplates(
+  req: Request,
+  res: Response<getAvailableFormTemplates.response | getAvailableFormTemplates.error>,
+) {
   try {
     const templates = await sql`
       SELECT
@@ -266,16 +303,17 @@ export async function getAvailableFormTemplates(req: Request, res: Response) {
       ORDER BY ft.version DESC, ft.form_name ASC
     `;
 
-    return res.status(200).json(templates);
+    return res.status(200).json(templates as unknown as getAvailableFormTemplates.response);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" } as getAvailableFormTemplates.error);
   }
 }
+
 // IMPORTANT: Fetches laboratory results only after they have been released.
 export async function getReleasedLaboratoryResults(
   req: Request,
-  res: Response,
+  res: Response<getReleasedLaboratoryResults.response | getReleasedLaboratoryResults.error>,
 ) {
   try {
     const results = await sql`
@@ -296,13 +334,13 @@ export async function getReleasedLaboratoryResults(
 
     return res.status(200).json({
       message: "Released laboratory results fetched successfully.",
-      results,
-    });
+      results: results as unknown as getReleasedLaboratoryResults.releasedResult[],
+    } as getReleasedLaboratoryResults.response);
   } catch (error) {
     console.error("Unable to fetch released laboratory results:", error);
 
     return res.status(500).json({
       message: "Internal Server Error",
-    });
+    } as getReleasedLaboratoryResults.error);
   }
 }
