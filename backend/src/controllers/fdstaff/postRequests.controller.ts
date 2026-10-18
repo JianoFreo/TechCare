@@ -2,7 +2,7 @@ import { sql } from "../../config/db.js";
 import { pool } from "../../config/db.js";
 import bcrypt from "bcryptjs";
 import { calculateAge } from "../../utils/calculateAge.js";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import cloudinary from "../../config/cloudinary.js";
 import {
   generateConsultationQueueId,
@@ -13,7 +13,17 @@ import {
   generateQueueNumberLaboratory,
   generateLaboratoryItemID,
 } from "../../utils/generateId.js";
-export async function addPatient(req: Request, res: Response) {
+import type {
+  addPatient,
+  addBills,
+  addToQueue,
+  addLaboratoryRequest,
+} from "./dto/post.dto.js";
+
+export async function addPatient(
+  req: Request,
+  res: Response<addPatient.response | addPatient.error>,
+) {
   // POST /api/fdstaff/patients
   try {
     const {
@@ -30,7 +40,7 @@ export async function addPatient(req: Request, res: Response) {
       birthdate,
       emergency_contact_name,
       emergency_contact,
-    } = req.body;
+    } = req.body as addPatient.body;
 
     // Validate required fields (matches NOT NULL columns on `patients`;
     // civil_status has a DB default so it's optional here)
@@ -46,7 +56,7 @@ export async function addPatient(req: Request, res: Response) {
       return res.status(400).json({
         message:
           "First name, last name, birthdate, sex, address, email, and contact number are required.",
-      });
+      } as addPatient.error);
     }
 
     // Check if patient already exists
@@ -63,7 +73,7 @@ export async function addPatient(req: Request, res: Response) {
       return res.status(400).json({
         message:
           "A patient with the same name, contact number, email, and date of birth already exists.",
-      });
+      } as addPatient.error);
     }
 
     const patientId = await generatePatientId();
@@ -126,14 +136,18 @@ export async function addPatient(req: Request, res: Response) {
 
     return res.status(201).json({
       message: "Patient added successfully.",
-      patient: { ...response[0], age },
-    });
+      patient: { ...response[0], age } as unknown as addPatient.patient,
+    } as addPatient.response);
   } catch (error: any) {
     console.dir(error, { depth: null });
-    return res.status(500).json({ message: "Failed to add patient." });
+    return res.status(500).json({ message: "Failed to add patient." } as addPatient.error);
   }
 }
-export async function addBills(req: Request, res: Response) {
+
+export async function addBills(
+  req: Request,
+  res: Response<addBills.response | addBills.error>,
+) {
   try {
     const {
       patient_id,
@@ -142,35 +156,7 @@ export async function addBills(req: Request, res: Response) {
       custom_service = [],
       payment_method = "Cash",
       status = "Unpaid",
-    }: {
-      patient_id: string;
-      services_ids: number[];
-      discount_pct?: number;
-      custom_service?: {
-        service_name: string;
-        price: number;
-      }[];
-      payment_method?: string;
-      status?: string;
-    } = req.body;
-
-    // {
-    //   "patient_id": "P-2024-0001",
-    //   "services_ids": [1, 3],
-    //   "custom_service": [
-    //     {
-    //       "service_name": "Medical Certificate",
-    //       "price": 200
-    //     },
-    //     {
-    //       "service_name": "Home Visit Fee",
-    //       "price": 500
-    //     }
-    //   ],
-    //   "discount_pct": 10,
-    //   "payment_method": "Cash",
-    //   "status": "Unpaid"
-    // }
+    } = req.body as addBills.body;
 
     const services: {
       service_name: string;
@@ -188,7 +174,7 @@ export async function addBills(req: Request, res: Response) {
       if (service.length === 0) {
         return res.status(404).json({
           message: `Service ID ${services_ids[i]} not found`,
-        });
+        } as addBills.error);
       }
 
       services.push({
@@ -233,190 +219,22 @@ export async function addBills(req: Request, res: Response) {
       bill: {
         ...bill[0],
         services,
-      },
-    });
-
-    // {
-    //   "message": "Bill created successfully",
-    //   "bill": {
-    //     "bill_id": 15,
-    //     "patient_id": "P-2024-0001",
-    //     "services_ids": [1, 3],
-    //     "services": [
-    //       {
-    //         "service_name": "Complete Blood Count (CBC)",
-    //         "price": 500
-    //       },
-    //       {
-    //         "service_name": "Chest X-Ray",
-    //         "price": 800
-    //       },
-    //       {
-    //         "service_name": "Medical Certificate",
-    //         "price": 200
-    //       },
-    //       {
-    //         "service_name": "Home Visit Fee",
-    //         "price": 500
-    //       }
-    //     ],
-    //     "discount_pct": "10.00",
-    //     "total_amount": "1800.00",
-    //     "payment_method": "Cash",
-    //     "status": "Unpaid",
-    //     "receipt_id": null,
-    //     "created_at": "2026-07-02T11:45:12.931Z",
-    //     "receipt_issued_at": null,
-    //     "billed_at": "2026-07-02T11:45:12.931Z"
-    //   }
-    // }
+      } as unknown as addBills.bill,
+    } as addBills.response);
   } catch (error) {
     console.error(error);
 
     return res.status(500).json({
       message: "Internal server error.",
-    });
+    } as addBills.error);
   }
 }
 
-// export async function addQueueEntry(req: Request, res: Response) {
-//   try {
-//     const { patient_id, service_id, service_type, is_priority } = req.body;
-//     let total;
-//     if (is_priority) {
-//       total = await sql`
-//         SELECT COUNT(*) AS total
-//         FROM queue_entries
-//         WHERE is_priority = TRUE
-//     `;
-//     } else {
-//       total = await sql`
-//       SELECT COUNT(*) AS total
-//       FROM queue_entries
-//       WHERE is_priority = FALSE
-//     `;
-//     }
-//     if (!patient_id || !service_id || !service_type) {
-//       return res.status(400).json({
-//         message: "patient_id, service_id, and service_type are required.",
-//       });
-//     }
-//     let queueId;
-//     if (service_type === "consultation") {
-//       queueId = await generateConsultationQueueId();
-//     }
-//     if (service_type === "laboratory") {
-//       queueId = await generateLaboratoryQueueId();
-//     }
-//     let patientName = null;
-//     if (patient_id) {
-//       patientName = await sql`
-//     SELECT last_name, first_name
-//     FROM patients
-//     WHERE patient_id = ${patient_id}
-//     `;
-//       if (patientName.length === 0) {
-//         return res
-//           .status(404)
-//           .json({ message: "the patient id you entered doesnt exist" });
-//       }
-//       patientName = patientName[0].last_name + ", " + patientName[0].first_name;
-//     }
-//     const newQueueNumber = Number(total[0].total) + 1;
-//     const newQueue = await sql`
-//         INSERT INTO queue_entries (queue_id, patient_id, patient_name, queue_number, service_id, service_type)
-//         VALUES (${queueId}, ${patient_id}, ${patientName}, ${newQueueNumber}, ${service_id}, ${service_type})
-//         RETURNING *;
-//     `;
-//     res.status(200).json({ newQueue, message: "added to queue" });
-//     console.log(newQueueNumber);
-//   } catch (error) {
-//     console.log(error);
-//   }
-// }
-
-// export async function addQueueEntry(req: Request, res: Response) {
-//   try {
-//     // Get the data sent by the frontend
-//     const { patient_id, service_id, is_priority } = req.body;
-
-//     // Make sure a service was selected
-//     if (!service_id || !patient_id) {
-//       return res.status(400).json({
-//         message: "service_id and patient_id are required.",
-//       });
-//     }
-
-//     // Retrieve the service type (consultation or laboratory)
-//     // based on the selected service_id
-//     const serviceType = await sql`
-//       SELECT service_type
-//       FROM services
-//       WHERE service_id = ${service_id}
-//     `;
-
-//     // Variables that will store the generated queue ID
-//     // and queue number
-//     let queueId;
-//     let queueNumber;
-
-//     // Generate consultation queue ID and number
-//     if (
-//       serviceType[0].service_type.split(" ")[0].toLowerCase() === "consultation"
-//     ) {
-//       queueId = await generateConsultationQueueId();
-//       queueNumber = await generateQueueNumberConsultation(); // Exammple return : CONS-0017
-//     }
-
-//     // Generate laboratory queue ID and number
-//     if (
-//       serviceType[0].service_type.split(" ")[0].toLowerCase() === "laboratory"
-//     ) {
-//       queueId = await generateLaboratoryQueueId();
-//       queueNumber = await generateQueueNumberLaboratory(); // Example return: LAB-0017
-//     }
-
-//     // Insert the new queue entry into the database
-//     const newQueue = await sql`
-//       INSERT INTO queue_entries (
-//         queue_id,
-//         patient_id,
-//         queue_number,
-//         service_id,
-//         is_priority,
-//         status
-//       )
-//       VALUES (
-//         ${queueId},
-//         ${patient_id},
-//         ${queueNumber},
-//         ${service_id},
-//         ${is_priority},
-//         'Waiting'
-//       )
-//       RETURNING *;
-//     `;
-
-//     // Send the newly created queue entry back to the client
-//     res.status(200).json({
-//       newQueue,
-//       message: "Added to queue",
-//     });
-//   } catch (error) {
-//     // Log unexpected server/database errors
-//     console.log(error);
-//     res.status(500).json({
-//       message: "Internal server error",
-//     });
-//   }
-// }
-
-export async function addToQueue(req: Request, res: Response) {
-  const { record_type, record_id, is_priority } = req.body as {
-    record_type?: string;
-    record_id?: string;
-    is_priority?: boolean;
-  };
+export async function addToQueue(
+  req: Request,
+  res: Response<addToQueue.response | addToQueue.error>,
+) {
+  const { record_type, record_id, is_priority } = req.body as addToQueue.body;
 
   if (
     (record_type !== "laboratory" && record_type !== "consultation") ||
@@ -425,7 +243,7 @@ export async function addToQueue(req: Request, res: Response) {
   ) {
     return res.status(400).json({
       message: "record_type, record_id and is_priority are required.",
-    });
+    } as addToQueue.error);
   }
 
   const client = await pool.connect();
@@ -454,11 +272,11 @@ export async function addToQueue(req: Request, res: Response) {
 
     if (rows.length === 0) {
       await client.query("ROLLBACK");
-      return res.status(404).json({ message: "Record not found." });
+      return res.status(404).json({ message: "Record not found." } as addToQueue.error);
     }
     if (rows[0].queue_id) {
       await client.query("ROLLBACK");
-      return res.status(409).json({ message: "Already added to the queue." });
+      return res.status(409).json({ message: "Already added to the queue." } as addToQueue.error);
     }
 
     const { patient_id, service_id } = rows[0];
@@ -503,21 +321,24 @@ export async function addToQueue(req: Request, res: Response) {
     await client.query("COMMIT");
     return res
       .status(201)
-      .json({ message: "Added to queue.", queue: queueRows[0] });
+      .json({ message: "Added to queue.", queue: queueRows[0] as unknown as addToQueue.queue } as addToQueue.response);
   } catch (error) {
     await client.query("ROLLBACK").catch(console.error);
     console.error("Error adding to queue:", error);
     if ((error as { code?: string }).code === "23503") {
-      return res.status(400).json({ message: "Invalid patient or service." });
+      return res.status(400).json({ message: "Invalid patient or service." } as addToQueue.error);
     }
-    return res.status(500).json({ message: "Internal server error." });
+    return res.status(500).json({ message: "Internal server error." } as addToQueue.error);
   } finally {
     client.release();
   }
 }
 
-export async function addLaboratoryRequest(req: Request, res: Response) {
-  const { patient_id, services } = req.body;
+export async function addLaboratoryRequest(
+  req: Request,
+  res: Response<addLaboratoryRequest.response | addLaboratoryRequest.error>,
+) {
+  const { patient_id, services } = req.body as addLaboratoryRequest.body;
   const user_id = "U-26-1001-0004";
 
   if (
@@ -529,7 +350,7 @@ export async function addLaboratoryRequest(req: Request, res: Response) {
     return res.status(400).json({
       message:
         "Patient ID and User ID are required and at least one service must be provided.",
-    });
+    } as addLaboratoryRequest.error);
   }
 
   const client = await pool.connect();
@@ -563,17 +384,17 @@ export async function addLaboratoryRequest(req: Request, res: Response) {
       message: "Laboratory request added successfully.",
       request: laboratory_request_result,
       items: laboratory_item_result,
-    });
+    } as addLaboratoryRequest.response);
   } catch (error: any) {
     console.error(error);
     await client.query("ROLLBACK").catch(console.error);
     if (error.code === "23503") {
       return res
         .status(400)
-        .json({ message: "Invalid patient or service ID." });
+        .json({ message: "Invalid patient or service ID." } as addLaboratoryRequest.error);
     }
     console.error(error);
-    return res.status(500).json({ message: "Internal server error." });
+    return res.status(500).json({ message: "Internal server error." } as addLaboratoryRequest.error);
   } finally {
     client.release();
   }

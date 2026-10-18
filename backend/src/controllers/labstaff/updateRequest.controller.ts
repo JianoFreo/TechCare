@@ -1,16 +1,31 @@
 import { sql } from "../../config/db.js";
-import { json, Request, Response } from "express";
+import type { Request, Response } from "express";
+import type {
+  acceptQueueEntry,
+  completeQueueEntry,
+  skipQueueEntry,
+  cancelQueueEntry,
+  startLaboratoryAnalysis,
+  releaseLaboratoryResult,
+} from "./dto/update.dto.js";
 
-export async function acceptQueueEntry(req: Request, res: Response) {
+export async function acceptQueueEntry(
+  req: Request<
+    acceptQueueEntry.params,
+    acceptQueueEntry.response | acceptQueueEntry.error,
+    acceptQueueEntry.body
+  >,
+  res: Response<acceptQueueEntry.response | acceptQueueEntry.error>,
+) {
   try {
-    const { queue_id } = req.params;
-    const { room } = req.body as { room?: string };
+    const { queue_id } = req.params as acceptQueueEntry.params;
+    const { room } = req.body as acceptQueueEntry.body;
 
     if (!queue_id) {
-      return res.status(400).json({ message: "Queue ID is required!" });
+      return res.status(400).json({ message: "Queue ID is required!" } as acceptQueueEntry.error);
     }
     if (!room) {
-      return res.status(400).json({ message: "room is required" });
+      return res.status(400).json({ message: "room is required" } as acceptQueueEntry.error);
     }
 
     const [updated] = await sql`
@@ -37,43 +52,50 @@ export async function acceptQueueEntry(req: Request, res: Response) {
       `;
 
       if (!existing) {
-        return res.status(404).json({ message: "Queue entry not found." });
+        return res.status(404).json({ message: "Queue entry not found." } as acceptQueueEntry.error);
       }
       if (existing.room !== room) {
         return res
           .status(403)
-          .json({ message: "This queue belongs to a different room." });
+          .json({ message: "This queue belongs to a different room." } as acceptQueueEntry.error);
       }
       return res.status(409).json({
         message: `Queue is ${existing.status} and can't be accepted.`,
-      });
+      } as acceptQueueEntry.error);
     }
 
     return res.status(200).json({
       message: "Queue entry accepted and now being served.",
       queue: updated,
-    });
+    } as acceptQueueEntry.response);
   } catch (error) {
     console.error("Unable to accept queue", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" } as acceptQueueEntry.error);
   }
 }
 
-export async function completeQueueEntry(req: Request, res: Response) {
+export async function completeQueueEntry(
+  req: Request<
+    completeQueueEntry.params,
+    completeQueueEntry.response | completeQueueEntry.error,
+    completeQueueEntry.body
+  >,
+  res: Response<completeQueueEntry.response | completeQueueEntry.error>,
+) {
   try {
-    const { queue_id } = req.params;
-    const { room } = (req.body ?? {}) as { room?: string };
+    const { queue_id } = req.params as completeQueueEntry.params;
+    const { room } = (req.body ?? {}) as completeQueueEntry.body;
 
     if (!queue_id) {
       return res.status(400).json({
         message: "Queue ID is required!",
-      });
+      } as completeQueueEntry.error);
     }
 
     if (typeof room !== "string" || !room.trim()) {
       return res.status(400).json({
         message: "room is required",
-      });
+      } as completeQueueEntry.error);
     }
 
     const [updated] = await sql`
@@ -145,25 +167,25 @@ export async function completeQueueEntry(req: Request, res: Response) {
       if (!existing) {
         return res.status(404).json({
           message: "Queue entry not found.",
-        });
+        } as completeQueueEntry.error);
       }
 
       if (existing.room !== room) {
         return res.status(403).json({
           message: "This queue belongs to a different room.",
-        });
+        } as completeQueueEntry.error);
       }
 
       if (String(existing.status).toLowerCase() === "serving") {
         return res.status(409).json({
           message:
             "No laboratory request items are available for specimen collection in this room.",
-        });
+        } as completeQueueEntry.error);
       }
 
       return res.status(409).json({
         message: "Queue is " + existing.status + " and can't be completed.",
-      });
+      } as completeQueueEntry.error);
     }
 
     const { collected_item_count, ...queue } = updated;
@@ -172,27 +194,32 @@ export async function completeQueueEntry(req: Request, res: Response) {
       message: "Queue entry completed.",
       queue,
       collected_item_count,
-    });
+    } as completeQueueEntry.response);
   } catch (error) {
     console.error("Unable to complete queue", error);
 
     return res.status(500).json({
       message: "Internal Server Error",
-    });
+    } as completeQueueEntry.error);
   }
 }
 
-
-export async function skipQueueEntry(req: Request, res: Response) {
+export async function skipQueueEntry(
+  req: Request<
+    skipQueueEntry.params,
+    skipQueueEntry.response | skipQueueEntry.error
+  >,
+  res: Response<skipQueueEntry.response | skipQueueEntry.error>,
+) {
   try {
     // Get the queue_id of the patient who wants to skip.
-    const { queue_id } = req.params;
+    const { queue_id } = req.params as skipQueueEntry.params;
 
     // Validate the queue ID.
     if (!queue_id) {
       return res.status(400).json({
         message: "Queue ID is required!",
-      });
+      } as skipQueueEntry.error);
     }
 
     // Find the patient's current queue entry.
@@ -209,7 +236,7 @@ export async function skipQueueEntry(req: Request, res: Response) {
     if (queue.length === 0) {
       return res.status(404).json({
         message: "Queue entry not found.",
-      });
+      } as skipQueueEntry.error);
     }
 
     const { queue_number: currentQueueNumber, service_id, status } = queue[0];
@@ -218,19 +245,10 @@ export async function skipQueueEntry(req: Request, res: Response) {
     if (!["waiting", "serving"].includes(String(status).toLowerCase())) {
       return res.status(409).json({
         message: `Queue entry cannot be skipped because its status is ${status}.`,
-      });
+      } as skipQueueEntry.error);
     }
 
     // Move the next waiting patient forward by one position.
-    //
-    // Example:
-    // Charlie = #3 (skipped)
-    // David = #4 (waiting)
-    //
-    // David becomes #3.
-    //
-    // Scoped to the same service_id and waiting status so this
-    // doesn't shift patients from other services or completed queues.
     await sql`
       UPDATE queue_entries
       SET
@@ -243,8 +261,6 @@ export async function skipQueueEntry(req: Request, res: Response) {
 
     // Move the skipped patient back one position and mark the entry
     // as skipped so it can be called again later.
-    //
-    // Charlie becomes #4 with status = 'skipped'.
     const updatedQueue = await sql`
       UPDATE queue_entries
       SET
@@ -258,31 +274,38 @@ export async function skipQueueEntry(req: Request, res: Response) {
     return res.status(200).json({
       message: "Queue skipped successfully and returned to the queue.",
       queue: updatedQueue[0],
-    });
+    } as skipQueueEntry.response);
   } catch (error) {
     console.error("Error in skipQueueEntry controller:", error);
 
     return res.status(500).json({
       message: "Internal Server Error",
-    });
+    } as skipQueueEntry.error);
   }
 }
 
-export async function cancelQueueEntry(req: Request, res: Response) {
+export async function cancelQueueEntry(
+  req: Request<
+    cancelQueueEntry.params,
+    cancelQueueEntry.response | cancelQueueEntry.error,
+    cancelQueueEntry.body
+  >,
+  res: Response<cancelQueueEntry.response | cancelQueueEntry.error>,
+) {
   try {
-    const { queue_id } = req.params;
-    const { reason } = req.body as { reason?: string };
+    const { queue_id } = req.params as cancelQueueEntry.params;
+    const { reason } = req.body as cancelQueueEntry.body;
 
     if (!queue_id) {
       return res.status(400).json({
         message: "Queue ID is required!",
-      });
+      } as cancelQueueEntry.error);
     }
 
     if (typeof reason !== "string" || !reason.trim()) {
       return res.status(400).json({
         message: "Cancellation reason is required!",
-      });
+      } as cancelQueueEntry.error);
     }
 
     const cancellationReason = reason.trim();
@@ -290,7 +313,7 @@ export async function cancelQueueEntry(req: Request, res: Response) {
     if (cancellationReason.length > 255) {
       return res.status(400).json({
         message: "Cancellation reason must not exceed 255 characters.",
-      });
+      } as cancelQueueEntry.error);
     }
 
     // Find the queue entry.
@@ -304,7 +327,7 @@ export async function cancelQueueEntry(req: Request, res: Response) {
     if (queue.length === 0) {
       return res.status(404).json({
         message: "Queue entry not found.",
-      });
+      } as cancelQueueEntry.error);
     }
 
     const { status } = queue[0];
@@ -315,7 +338,7 @@ export async function cancelQueueEntry(req: Request, res: Response) {
     ) {
       return res.status(409).json({
         message: `Queue entry cannot be cancelled because its status is ${status}.`,
-      });
+      } as cancelQueueEntry.error);
     }
 
     // Cancel the queue entry.
@@ -332,7 +355,7 @@ export async function cancelQueueEntry(req: Request, res: Response) {
     if (updatedQueue.length === 0) {
       return res.status(409).json({
         message: "Queue entry status changed. Please try again.",
-      });
+      } as cancelQueueEntry.error);
     }
 
     // Store the cancellation reason against the associated
@@ -351,19 +374,25 @@ export async function cancelQueueEntry(req: Request, res: Response) {
       queue: updatedQueue[0],
       reason: cancellationReason,
       laboratory_items: updatedItems,
-    });
+    } as cancelQueueEntry.response);
   } catch (error) {
     console.error("Error in cancelQueueEntry controller:", error);
 
     return res.status(500).json({
       message: "Internal Server Error",
-    });
+    } as cancelQueueEntry.error);
   }
 }
 
-
-export async function startLaboratoryAnalysis(req: Request, res: Response) {
-  const { room, lab_item_ids } = req.body ?? {};
+export async function startLaboratoryAnalysis(
+  req: Request<
+    object,
+    startLaboratoryAnalysis.response | startLaboratoryAnalysis.error,
+    startLaboratoryAnalysis.body
+  >,
+  res: Response<startLaboratoryAnalysis.response | startLaboratoryAnalysis.error>,
+) {
+  const { room, lab_item_ids } = (req.body ?? {}) as startLaboratoryAnalysis.body;
   if (
     typeof room !== "string" ||
     !room.trim() ||
@@ -377,7 +406,7 @@ export async function startLaboratoryAnalysis(req: Request, res: Response) {
       .status(400)
       .json({
         message: "A room and distinct laboratory item IDs are required.",
-      });
+      } as startLaboratoryAnalysis.error);
   }
   try {
     const items = await sql`
@@ -401,22 +430,28 @@ export async function startLaboratoryAnalysis(req: Request, res: Response) {
         .json({
           message:
             "Some tests are already completed or are not collected samples in this room. Refresh the list.",
-        });
-    return res.json({ items });
+        } as startLaboratoryAnalysis.error);
+    return res.json({ items: items as unknown as startLaboratoryAnalysis.item[] } as startLaboratoryAnalysis.response);
   } catch (error) {
     console.error("Unable to start analysis:", error);
-    return res.status(500).json({ message: "Unable to start analysis." });
+    return res.status(500).json({ message: "Unable to start analysis." } as startLaboratoryAnalysis.error);
   }
 }
 
-export async function releaseLaboratoryResult(req: Request, res: Response) {
+export async function releaseLaboratoryResult(
+  req: Request<
+    releaseLaboratoryResult.params,
+    releaseLaboratoryResult.response | releaseLaboratoryResult.error
+  >,
+  res: Response<releaseLaboratoryResult.response | releaseLaboratoryResult.error>,
+) {
   try {
-    const { result_id } = req.params;
+    const { result_id } = req.params as releaseLaboratoryResult.params;
 
     if (!result_id) {
       return res.status(400).json({
         message: "Result ID is required.",
-      });
+      } as releaseLaboratoryResult.error);
     }
 
     const [result] = await sql`
@@ -440,23 +475,23 @@ export async function releaseLaboratoryResult(req: Request, res: Response) {
       if (!existing) {
         return res.status(404).json({
           message: "Laboratory result not found.",
-        });
+        } as releaseLaboratoryResult.error);
       }
 
       return res.status(409).json({
         message: `Result cannot be released because its status is ${existing.status}.`,
-      });
+      } as releaseLaboratoryResult.error);
     }
 
     return res.status(200).json({
       message: "Laboratory result released successfully.",
       result,
-    });
+    } as releaseLaboratoryResult.response);
   } catch (error) {
     console.error("Unable to release laboratory result:", error);
 
     return res.status(500).json({
       message: "Internal Server Error",
-    });
+    } as releaseLaboratoryResult.error);
   }
 }

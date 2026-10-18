@@ -2,13 +2,22 @@ import bcrypt from "bcryptjs";
 import cloudinary from "../../config/cloudinary.js";
 import { sql } from "../../config/db.js";
 import { calculateAge } from "../../utils/calculateAge.js";
-import { json, Request, response, Response } from "express";
+import type { Request, Response } from "express";
+import type {
+  updatePatient,
+  serveQueueEntry,
+  skipQueueEntry,
+  confirmLabRequestPayment,
+} from "./dto/update.dto.js";
 
-export async function updatePatient(req: Request, res: Response) {
+export async function updatePatient(
+  req: Request<updatePatient.params, updatePatient.response | updatePatient.error, updatePatient.body>,
+  res: Response<updatePatient.response | updatePatient.error>,
+) {
   // PUT /api/fdstaff/patients/:patient_id
 
   try {
-    const { patient_id } = req.params;
+    const { patient_id } = req.params as updatePatient.params;
 
     const {
       username,
@@ -26,12 +35,12 @@ export async function updatePatient(req: Request, res: Response) {
       birthdate,
       emergency_contact_name,
       emergency_contact,
-    } = req.body;
+    } = req.body as updatePatient.body;
 
     if (!patient_id) {
       return res.status(400).json({
         message: "Patient_id is missing.",
-      });
+      } as updatePatient.error);
     }
 
     const existingPatient = await sql`
@@ -43,19 +52,8 @@ export async function updatePatient(req: Request, res: Response) {
     if (existingPatient.length === 0) {
       return res.status(404).json({
         message: "Patient not found.",
-      });
+      } as updatePatient.error);
     }
-
-    // Only replace image_url if a new file was actually uploaded;
-    // otherwise keep whatever is already on the record.
-    // let imageUrl = existingPatient[0].image_url;
-
-    // if (req.file) {
-    //   const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-    //     folder: "products",
-    //   });
-    //   imageUrl = uploadResult.secure_url;
-    // }
 
     let hashedPassword = null;
 
@@ -89,24 +87,28 @@ export async function updatePatient(req: Request, res: Response) {
 
     return res.status(200).json({
       message: "Patient updated successfully.",
-      patient: { ...updatedPatient, age },
-    });
+      patient: { ...updatedPatient, age } as unknown as updatePatient.patient,
+    } as updatePatient.response);
   } catch (error) {
     console.error(error);
 
     return res.status(500).json({
       message: "Internal server error.",
-    });
+    } as updatePatient.error);
   }
 }
-export async function serveQueueEntry(req: Request, res: Response) {
+
+export async function serveQueueEntry(
+  req: Request<serveQueueEntry.params, serveQueueEntry.response | serveQueueEntry.error>,
+  res: Response<serveQueueEntry.response | serveQueueEntry.error>,
+) {
   try {
-    const { queue_id } = req.params;
+    const { queue_id } = req.params as serveQueueEntry.params;
 
     if (!queue_id) {
       return res.status(400).json({
         message: "queue_id is required.",
-      });
+      } as serveQueueEntry.error);
     }
 
     // Get the queue entry first the queuenumvber and quee service type
@@ -119,7 +121,7 @@ export async function serveQueueEntry(req: Request, res: Response) {
     if (queue.length === 0) {
       return res.status(404).json({
         message: "Queue entry not found.",
-      });
+      } as serveQueueEntry.error);
     }
 
     const { queue_number, service_type } = queue[0];
@@ -149,20 +151,23 @@ export async function serveQueueEntry(req: Request, res: Response) {
       message: "Queue entry called successfully.",
       existingQueueEntry,
       updateQueueBehind,
-    });
+    } as serveQueueEntry.response);
   } catch (error) {
     console.error(error);
 
     return res.status(500).json({
       message: "Internal server error.",
-    });
+    } as serveQueueEntry.error);
   }
 }
 
-export async function skipQueueEntry(req: Request, res: Response) {
+export async function skipQueueEntry(
+  req: Request<skipQueueEntry.params, skipQueueEntry.response | skipQueueEntry.error>,
+  res: Response<skipQueueEntry.response | skipQueueEntry.error>,
+) {
   try {
     // Get the queue_id of the patient who wants to skip.
-    const { queue_id } = req.params;
+    const { queue_id } = req.params as skipQueueEntry.params;
 
     // Find the patient's current queue number and service type.
     // We need the service_type so we only touch the same queue,
@@ -177,23 +182,12 @@ export async function skipQueueEntry(req: Request, res: Response) {
     if (queue.length === 0) {
       return res.status(404).json({
         message: "Queue entry not found.",
-      });
+      } as skipQueueEntry.error);
     }
 
     const { queue_number: currentQueueNumber, service_type } = queue[0];
 
     // Move the patient behind forward by one position.
-    //
-    // Example:
-    // Charlie = #3
-    // David = #4
-    //
-    // David becomes #3.
-    //
-    // Scoped to the same service_type and status = 'waiting' so this
-    // doesn't accidentally shift patients in other queues (e.g. Lab)
-    // or already-served/cancelled entries that happen to share the
-    // same queue_number.
     await sql`
       UPDATE queue_entries
       SET queue_number = queue_number - 1
@@ -204,8 +198,6 @@ export async function skipQueueEntry(req: Request, res: Response) {
     `;
 
     // Move the skipped patient back by one position.
-    //
-    // Charlie becomes #4.
     const updatedQueue = await sql`
       UPDATE queue_entries
       SET queue_number = ${currentQueueNumber + 1}
@@ -216,19 +208,22 @@ export async function skipQueueEntry(req: Request, res: Response) {
     return res.status(200).json({
       message: "Queue skipped successfully.",
       queue: updatedQueue[0],
-    });
+    } as skipQueueEntry.response);
   } catch (error) {
     console.error(error);
 
     return res.status(500).json({
       message: "Error in skipQueueEntry controller.",
-    });
+    } as skipQueueEntry.error);
   }
 }
 
-export async function confirmLabRequestPayment(req: Request, res: Response) {
+export async function confirmLabRequestPayment(
+  req: Request<confirmLabRequestPayment.params, confirmLabRequestPayment.response | confirmLabRequestPayment.error>,
+  res: Response<confirmLabRequestPayment.response | confirmLabRequestPayment.error>,
+) {
   try {
-    const { request_id } = req.params;
+    const { request_id } = req.params as confirmLabRequestPayment.params;
 
     const updatedLabRequest = await sql`
     UPDATE laboratory_requests
@@ -242,18 +237,18 @@ export async function confirmLabRequestPayment(req: Request, res: Response) {
     if (updatedLabRequest.length === 0) {
       return res.status(404).json({
         message: "Laboratory request not found.",
-      });
+      } as confirmLabRequestPayment.error);
     }
 
     return res.status(200).json({
       message: "Laboratory request payment confirmed.",
       request: updatedLabRequest,
-    });
+    } as confirmLabRequestPayment.response);
   } catch (error) {
     console.error(error);
 
     return res.status(500).json({
       message: "Error in Confirming Laboratory Request Payment",
-    });
+    } as confirmLabRequestPayment.error);
   }
 }
