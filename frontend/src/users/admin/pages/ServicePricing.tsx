@@ -1,4 +1,3 @@
-import Header from "../../../components/Header";
 import AddService from "../components/ServicePricing/AddService";
 import { useEffect, useState } from "react";
 
@@ -29,10 +28,7 @@ function formatPrice(price: number): string {
 
 function ServicePricing({
   services,
-  open,
-  setOpen,
-  loadData,
-  loading,
+  loadData
 }: ServicePricingProps) {
   const [search, setSearch] = useState("");
   const [showAddService, setShowAddService] = useState(false);
@@ -52,14 +48,6 @@ function ServicePricing({
 
   return (
     <div className="flex-1 min-w-0">
-      <Header
-        page="Service Pricing"
-        loading={loading}
-        open={open}
-        setOpen={setOpen}
-        loadData={loadData}
-      />
-
       <h2 className="mb-6 text-2xl font-bold px-6">
         Total Services: {filteredService.length}
       </h2>

@@ -18,10 +18,7 @@ type UserManagementProps = {
 
 function UserManagement({
   users,
-  loadData,
-  open,
-  setOpen,
-  loading,
+  loadData
 }: UserManagementProps) {
   const [showAddUser, setShowAddUser] = useState(false);
   const [showUpdateUser, setShowUpdateUser] = useState(false);
@@ -46,13 +43,7 @@ function UserManagement({
 
   return (
     <main className="flex-1 min-w-0 ">
-      <Header
-        open={open}
-        loading={loading}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="User Management"
-      />
+
 
       {/* =========================
     SEARCH / ACTION BAR
