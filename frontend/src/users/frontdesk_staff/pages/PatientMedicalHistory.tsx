@@ -60,11 +60,7 @@ function PatientMedicalHistory({
     "overview" | "visits" | "labs" | "billing"
   >("overview");
 
-  useEffect(() => {
-    if (patientId) {
-      fetchPatientHistory();
-    }
-  }, [patientId]);
+
 
   async function fetchPatientHistory() {
     try {
@@ -118,7 +114,14 @@ function PatientMedicalHistory({
       setPageLoading(false);
     }
   }
-
+  useEffect(() => {
+    if (patientId) {
+      async function action() {
+        await fetchPatientHistory();
+      }
+      action();
+    }
+  }, [patientId]);
   function handleGoBack() {
     setSearchParams({ page: "patient-records" });
   }

@@ -1,4 +1,3 @@
-import Header from "../../../components/Header";
 import { ChevronRight } from "lucide-react";
 import PatientHeader from "../components/MedicalHistory/PatientHeader";
 import type { Patient } from "../../../interface/Patient";
@@ -35,13 +34,7 @@ function MedicalHistory({
   const patient = patients.find((p) => p.patient_id === selectedPatient);
   return (
     <main className="flex-1 min-w-0">
-      <Header
-        loading={loading}
-        open={open}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Patient Records"
-      />
+
 
       <div className="flex gap-1 items-center px-6 text-sm text-gray-400">
         <h1

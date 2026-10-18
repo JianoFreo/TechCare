@@ -1,6 +1,4 @@
 import { Users, Clock, List, Receipt } from "lucide-react";
-
-import Header from "../../../components/Header";
 import type { Patient } from "../../../interface/Patient";
 
 type Bill = {
@@ -64,13 +62,6 @@ function FrontdeskDashboard({
 
   return (
     <main className="flex-1 min-w-0">
-      <Header
-        open={open}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Frontdesk Dashboard"
-        loading={loading}
-      />
 
       <div className="space-y-6 px-6">
         {/* =========================

@@ -5,7 +5,6 @@ import { Search } from "lucide-react";
 // import api from "../../../lib/axios";
 // import { buildPatientRecordPrintHtml } from "../../../utils/patientRecordPrintTemplate";
 // import PatientCardSquare from "../components/PatientRecords/PatientCardSquare";
-import Header from "../../../components/Header";
 import EditPatientRecord from "../components/PatientRecords/EditPatientRecord";
 import PatientTable from "../components/PatientRecords/PatientTable";
 
@@ -42,13 +41,6 @@ function PatientRecords({
 
   return (
     <main className="flex-1 min-w-0">
-      <Header
-        loading={loading}
-        open={open}
-        setOpen={setOpen}
-        loadData={loadData}
-        page="Patient Records"
-      />
 
       <h1 className="text-2xl font-bold px-6 mb-5">Patient Records</h1>
       <div className="mx-6 py-5 border rounded-xl border-gray-200">
