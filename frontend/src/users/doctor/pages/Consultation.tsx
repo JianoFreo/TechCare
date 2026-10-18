@@ -1,6 +1,6 @@
 import Header from "#components/Header";
 import React from "react";
-import PrescriptionManager from "../components/Consultation/ConsultationWorkspace";
+import PrescriptionManager from "../components/laboratoryRequest/ConsultationWorkspace";
 
 type ConsultationProps = {
   loadData: () => Promise<void>;

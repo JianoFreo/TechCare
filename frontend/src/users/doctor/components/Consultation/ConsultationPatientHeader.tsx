@@ -1,4 +1,4 @@
-import calculateAge from "../../../../utils/calculateAge";
+import calculateAge from "../../../../utils/calculateAge.ts";
 import type { ConsultationPatient, WorkspaceTab } from "./types.ts";
 import { WORKSPACE_TABS } from "./types.ts";
 
