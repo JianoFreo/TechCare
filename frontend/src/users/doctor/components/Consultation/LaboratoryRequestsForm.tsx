@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, CalendarDays, CheckCircle2, Check, Loader2, RefreshCw, Search, X } from "lucide-react";
-import calculateAge from "../../../../utils/calculateAge";
+import calculateAge from "../../../../utils/calculateAge.ts";
 import {
   fetchLaboratoryServices,
   submitLaboratoryRequest,

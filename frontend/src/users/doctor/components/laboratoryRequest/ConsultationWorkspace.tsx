@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import { AlertCircle, Loader2, Search } from "lucide-react";
-import calculateAge from "../../../../utils/calculateAge";
-import PrescriptionManager from "../prescription/PrescriptionManager";
-import type { PatientInfo } from "../prescription/types";
-import ConsultationPatientHeader from "./ConsultationPatientHeader";
-import ConsultationFindingsForm from "./ConsultationFindingsForm";
-import LaboratoryRequestForm from "./LaboratoryRequestsForm";
+import calculateAge from "../../../../utils/calculateAge.ts";
+import PrescriptionManager from "../prescription/PrescriptionManager.tsx";
+import type { PatientInfo } from "../prescription/types.ts";
+import ConsultationPatientHeader from "../consultation/ConsultationPatientHeader.tsx";
+import ConsultationFindingsForm from "../consultation/ConsultationFindingsForm.tsx";
+import LaboratoryRequestForm from "../consultation/LaboratoryRequestsForm.tsx";
 import {
   fetchConsultationPatient,
   saveConsultationFindings,
   toApiFailure,
-} from "./consultationsApi";
+} from "../consultation/consultationsApi.ts";
 import type {
   ConsultationPatient,
   FieldErrors,
   FindingsFormState,
   WorkspaceTab,
-} from "./types.ts";
+} from "../consultation/types.ts";
 
 const STORAGE_PATIENT = "techcare.consultation.patient_id";
 const draftKey = (patientId: string) => `techcare.consultation.draft.${patientId}`;
@@ -248,7 +248,7 @@ export default function ConsultationWorkspace({ initialTab = "consultation" }: P
             setForm(nextForm);
             setServerErrors({});
             setSubmitError(null);
-}}
+          }}
           onSubmit={submitFindings}
           onBack={changePatient}
           saving={saving}

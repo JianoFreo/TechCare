@@ -10,9 +10,9 @@ import {
 import {
   getMedicalHistory,
   getMedicalHistoryDetails,
-  getMedicalHistoryFull,
-  getLaboratoryServices,
-  getConsultationPatient,
+  getMedicalHistoryFull
+  // getLaboratoryServices,
+  // getConsultationPatient,
 } from "../controllers/doctor/getRequests.controller.js";
 const router = Router();
 
@@ -25,8 +25,8 @@ router.post("/laboratory-requests", addLaboratoryRequest);
 router.post("/consultations", addConsultationFindings);
 router.post("/prescriptions/:consultation_record_id", addPrescriptions);
 // GET requests
-router.get("/laboratory-services", getLaboratoryServices);
-router.get("/consultation-patients/:patient_id", getConsultationPatient);
+// router.get("/laboratory-services", getLaboratoryServices);
+// router.get("/consultation-patients/:patient_id", getConsultationPatient);
 router.get("/medical-history/:patient_id", getMedicalHistory);
 router.get(
   "/medical-history/:record_type/:record_id",

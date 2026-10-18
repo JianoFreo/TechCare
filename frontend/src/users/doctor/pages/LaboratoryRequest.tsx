@@ -1,6 +1,6 @@
 import Header from "#components/Header";
 import React from "react";
-import ConsultationWorkspace from "../components/Consultation/ConsultationWorkspace";
+import ConsultationWorkspace from "../components/laboratoryRequest/ConsultationWorkspace";
 
 type LaboratoryRequestProps = {
   loadData: () => Promise<void>;

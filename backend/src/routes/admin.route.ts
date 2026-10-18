@@ -26,10 +26,10 @@ import authMiddleware from "../middlewares/auth.middleware.js";
 import adminMiddleware from "../middlewares/admin.middleware.js";
 const router = Router();
 
-// if (ENV.IS_PRODUCTION) {
-//   router.use(authMiddleware, adminMiddleware);
-//   console.log("Admin routes enabled");
-// }
+if (ENV.IS_PRODUCTION) {
+  router.use(authMiddleware, adminMiddleware);
+  console.log("Admin routes enabled");
+}
 
 router.use(authMiddleware, adminMiddleware);
 
