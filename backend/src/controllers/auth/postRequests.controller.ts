@@ -7,11 +7,7 @@ import { ENV } from "../../config/env.js";
 import type { login } from "./dto/post.dto.js";
 
 export async function login(
-  req: Request<
-    {},
-    login.response | login.error,
-    login.body
-  >,
+  req: Request,
   res: Response<login.response | login.error>,
 ) {
   try {

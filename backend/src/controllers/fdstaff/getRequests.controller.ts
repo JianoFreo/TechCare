@@ -128,14 +128,11 @@ export async function getAllPatients(
 }
 
 export async function getPrintablePatientRecord(
-  req: Request<
-    getPrintablePatientRecord.params,
-    getPrintablePatientRecord.response | getPrintablePatientRecord.error
-  >,
+  req: Request,
   res: Response<getPrintablePatientRecord.response | getPrintablePatientRecord.error>,
 ) {
   try {
-    const { patient_id } = req.params as getPrintablePatientRecord.params;
+    const { patient_id } = req.params;
 
     if (!patient_id) {
       return res.status(400).json({ message: "Patient ID is required." } as getPrintablePatientRecord.error);
@@ -264,11 +261,11 @@ export async function getAllServices(
 }
 
 export async function getLaboratoryRequest(
-  req: Request<getLaboratoryRequest.params, getLaboratoryRequest.response | getLaboratoryRequest.error>,
+  req: Request,
   res: Response<getLaboratoryRequest.response | getLaboratoryRequest.error>,
 ) {
   try {
-    const { patient_id } = req.params as getLaboratoryRequest.params;
+    const { patient_id } = req.params;
 
     const lab_reqs = await sql`
         SELECT * FROM laboratory_requests
@@ -383,16 +380,11 @@ export async function getUnpaidRequests(
 }
 
 export async function getMedicalHistory(
-  req: Request<
-    getMedicalHistory.params,
-    getMedicalHistory.response | getMedicalHistory.error,
-    object,
-    getMedicalHistory.query
-  >,
+  req: Request,
   res: Response<getMedicalHistory.response | getMedicalHistory.error>,
 ) {
   try {
-    const { patient_id } = req.params as getMedicalHistory.params;
+    const { patient_id } = req.params;
     const {
       search,
       service_category,
@@ -474,13 +466,10 @@ export async function getMedicalHistory(
 }
 
 export async function getMedicalHistoryDetails(
-  req: Request<
-    getMedicalHistoryDetails.params,
-    getMedicalHistoryDetails.response | getMedicalHistoryDetails.error
-  >,
+  req: Request,
   res: Response<getMedicalHistoryDetails.response | getMedicalHistoryDetails.error>,
 ) {
-  const { record_type, record_id } = req.params as getMedicalHistoryDetails.params;
+  const { record_type, record_id } = req.params;
   try {
     if (record_type === "laboratory") {
       const [labDetails] = await sql`
@@ -571,14 +560,11 @@ export async function getMedicalHistoryDetails(
 }
 
 export async function getMedicalHistoryFull(
-  req: Request<
-    getMedicalHistoryFull.params,
-    getMedicalHistoryFull.response | getMedicalHistoryFull.error
-  >,
+  req: Request,
   res: Response<getMedicalHistoryFull.response | getMedicalHistoryFull.error>,
 ) {
   try {
-    const { record_type, record_id } = req.params as getMedicalHistoryFull.params;
+    const { record_type, record_id } = req.params;
 
     if (record_type === "laboratory") {
       const [fullLab] = await sql`

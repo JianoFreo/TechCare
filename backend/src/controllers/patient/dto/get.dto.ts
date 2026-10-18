@@ -1,8 +1,4 @@
 export namespace getMedicalHistory {
-  export interface params {
-    patient_id?: string;
-  }
-
   export interface query {
     search?: string;
     service_category?: string;
@@ -42,11 +38,6 @@ export namespace getMedicalHistory {
 }
 
 export namespace getMedicalHistoryDetails {
-  export interface params {
-    record_type?: "laboratory" | "consultation" | string;
-    record_id?: string;
-  }
-
   export interface laboratoryResult {
     result_value: string | number | null;
     remarks: string | null;
@@ -89,11 +80,6 @@ export namespace getMedicalHistoryDetails {
 }
 
 export namespace getMedicalHistoryFull {
-  export interface params {
-    record_type?: "laboratory" | "consultation" | string;
-    record_id?: string;
-  }
-
   export interface laboratoryResponse {
     message: string;
     record_type: string;
@@ -138,10 +124,6 @@ export namespace getMedicalHistoryFull {
 }
 
 export namespace getCurrentPrescriptions {
-  export interface params {
-    patient_id?: string;
-  }
-
   export interface prescription {
     id: number;
     prescription_id: string;
@@ -164,7 +146,4 @@ export namespace getCurrentPrescriptions {
   export interface error {
     message?: string;
   }
-
-  export type errorResponse = error | string;
 }
-

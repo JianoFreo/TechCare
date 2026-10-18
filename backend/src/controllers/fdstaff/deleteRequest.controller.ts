@@ -3,11 +3,11 @@ import type { Request, Response } from "express";
 import type { deleteQueue, deletePatient } from "./dto/delete.dto.js";
 
 export async function deleteQueue(
-  req: Request<deleteQueue.params, deleteQueue.response | deleteQueue.error>,
+  req: Request,
   res: Response<deleteQueue.response | deleteQueue.error>,
 ) {
   try {
-    const { queue_id } = req.params as deleteQueue.params;
+    const { queue_id } = req.params;
 
     // Delete the queue entry.
     // RETURNING returns the deleted row so we can verify it existed.
@@ -37,11 +37,11 @@ export async function deleteQueue(
 }
 
 export async function deletePatient(
-  req: Request<deletePatient.params, deletePatient.response | deletePatient.error>,
+  req: Request,
   res: Response<deletePatient.response | deletePatient.error>,
 ) {
   try {
-    const { patient_id } = req.params as deletePatient.params;
+    const { patient_id } = req.params;
 
     // Delete the patient record.
     // RETURNING returns the deleted row so we can verify it existed.

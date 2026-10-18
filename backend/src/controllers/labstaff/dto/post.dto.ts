@@ -1,8 +1,4 @@
 export namespace saveLaboratoryResult {
-  export interface params {
-    lab_item_id?: string;
-  }
-
   export interface resultItem {
     name?: string;
     result?: string | number;
@@ -37,4 +33,3 @@ export namespace saveLaboratoryResult {
     message: string;
   }
 }
-

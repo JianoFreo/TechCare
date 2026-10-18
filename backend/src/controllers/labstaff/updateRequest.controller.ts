@@ -10,15 +10,11 @@ import type {
 } from "./dto/update.dto.js";
 
 export async function acceptQueueEntry(
-  req: Request<
-    acceptQueueEntry.params,
-    acceptQueueEntry.response | acceptQueueEntry.error,
-    acceptQueueEntry.body
-  >,
+  req: Request,
   res: Response<acceptQueueEntry.response | acceptQueueEntry.error>,
 ) {
   try {
-    const { queue_id } = req.params as acceptQueueEntry.params;
+    const { queue_id } = req.params;
     const { room } = req.body as acceptQueueEntry.body;
 
     if (!queue_id) {
@@ -75,15 +71,11 @@ export async function acceptQueueEntry(
 }
 
 export async function completeQueueEntry(
-  req: Request<
-    completeQueueEntry.params,
-    completeQueueEntry.response | completeQueueEntry.error,
-    completeQueueEntry.body
-  >,
+  req: Request,
   res: Response<completeQueueEntry.response | completeQueueEntry.error>,
 ) {
   try {
-    const { queue_id } = req.params as completeQueueEntry.params;
+    const { queue_id } = req.params;
     const { room } = (req.body ?? {}) as completeQueueEntry.body;
 
     if (!queue_id) {
@@ -205,15 +197,12 @@ export async function completeQueueEntry(
 }
 
 export async function skipQueueEntry(
-  req: Request<
-    skipQueueEntry.params,
-    skipQueueEntry.response | skipQueueEntry.error
-  >,
+  req: Request,
   res: Response<skipQueueEntry.response | skipQueueEntry.error>,
 ) {
   try {
     // Get the queue_id of the patient who wants to skip.
-    const { queue_id } = req.params as skipQueueEntry.params;
+    const { queue_id } = req.params;
 
     // Validate the queue ID.
     if (!queue_id) {
@@ -285,15 +274,11 @@ export async function skipQueueEntry(
 }
 
 export async function cancelQueueEntry(
-  req: Request<
-    cancelQueueEntry.params,
-    cancelQueueEntry.response | cancelQueueEntry.error,
-    cancelQueueEntry.body
-  >,
+  req: Request,
   res: Response<cancelQueueEntry.response | cancelQueueEntry.error>,
 ) {
   try {
-    const { queue_id } = req.params as cancelQueueEntry.params;
+    const { queue_id } = req.params;
     const { reason } = req.body as cancelQueueEntry.body;
 
     if (!queue_id) {
@@ -385,11 +370,7 @@ export async function cancelQueueEntry(
 }
 
 export async function startLaboratoryAnalysis(
-  req: Request<
-    object,
-    startLaboratoryAnalysis.response | startLaboratoryAnalysis.error,
-    startLaboratoryAnalysis.body
-  >,
+  req: Request,
   res: Response<startLaboratoryAnalysis.response | startLaboratoryAnalysis.error>,
 ) {
   const { room, lab_item_ids } = (req.body ?? {}) as startLaboratoryAnalysis.body;
@@ -439,14 +420,11 @@ export async function startLaboratoryAnalysis(
 }
 
 export async function releaseLaboratoryResult(
-  req: Request<
-    releaseLaboratoryResult.params,
-    releaseLaboratoryResult.response | releaseLaboratoryResult.error
-  >,
+  req: Request,
   res: Response<releaseLaboratoryResult.response | releaseLaboratoryResult.error>,
 ) {
   try {
-    const { result_id } = req.params as releaseLaboratoryResult.params;
+    const { result_id } = req.params;
 
     if (!result_id) {
       return res.status(400).json({

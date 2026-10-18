@@ -1,8 +1,4 @@
 export namespace getLaboratoryRequestDetails {
-  export interface params {
-    queue_id?: string;
-  }
-
   export interface query {
     room?: string;
   }
@@ -65,10 +61,6 @@ export namespace getLaboratoryRequestDetails {
 }
 
 export namespace getLaboratoryQueues {
-  export interface params {
-    room?: string;
-  }
-
   export interface queueItem {
     id?: number;
     queue_id: string;
@@ -94,10 +86,6 @@ export namespace getLaboratoryQueues {
 }
 
 export namespace getRoomSpecificServices {
-  export interface params {
-    room?: string;
-  }
-
   export interface service {
     service_id: string;
     service_name: string;
@@ -120,10 +108,6 @@ export namespace getRoomSpecificServices {
 }
 
 export namespace getLaboratoryQueueItems {
-  export interface params {
-    queue_id?: string;
-  }
-
   export interface queueItem {
     lab_item_id: string;
     request_id: string;
@@ -277,4 +261,3 @@ export namespace getReleasedLaboratoryResults {
     message: string;
   }
 }
-

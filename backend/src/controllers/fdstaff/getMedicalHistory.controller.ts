@@ -93,14 +93,11 @@ function buildFullName(parts: Array<string | null | undefined>) {
 }
 
 export async function getPatientMedicalHistory(
-  req: Request<
-    getPatientMedicalHistory.params,
-    getPatientMedicalHistory.response | getPatientMedicalHistory.error
-  >,
+  req: Request,
   res: Response<getPatientMedicalHistory.response | getPatientMedicalHistory.error>,
 ) {
   try {
-    const { patient_id } = req.params as getPatientMedicalHistory.params;
+    const { patient_id } = req.params;
 
     if (!patient_id) {
       return res.status(400).json({ message: "Patient ID is required." } as getPatientMedicalHistory.error);

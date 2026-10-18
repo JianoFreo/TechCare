@@ -3,17 +3,13 @@ import type { Request, Response } from "express";
 import type { saveLaboratoryResult } from "./dto/post.dto.js";
 
 export async function saveLaboratoryResult(
-  req: Request<
-    saveLaboratoryResult.params,
-    saveLaboratoryResult.response | saveLaboratoryResult.error,
-    saveLaboratoryResult.body
-  >,
+  req: Request,
   res: Response<
     saveLaboratoryResult.response | saveLaboratoryResult.error
   >,
 ) {
   try {
-    const { lab_item_id } = req.params as saveLaboratoryResult.params;
+    const { lab_item_id } = req.params;
     const { results, remarks, image_url, room } = req.body as saveLaboratoryResult.body;
     if (typeof room !== "string" || !room.trim()) {
       return res.status(400).json({ message: "room is required" } as saveLaboratoryResult.error);

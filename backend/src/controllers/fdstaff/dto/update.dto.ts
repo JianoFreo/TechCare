@@ -1,8 +1,4 @@
 export namespace updatePatient {
-  export interface params {
-    patient_id?: string;
-  }
-
   export interface body {
     username?: string;
     password?: string;
@@ -54,10 +50,6 @@ export namespace updatePatient {
 }
 
 export namespace serveQueueEntry {
-  export interface params {
-    queue_id?: string;
-  }
-
   export interface response {
     message: string;
     existingQueueEntry: Record<string, unknown>[];
@@ -70,10 +62,6 @@ export namespace serveQueueEntry {
 }
 
 export namespace skipQueueEntry {
-  export interface params {
-    queue_id?: string;
-  }
-
   export interface response {
     message: string;
     queue: Record<string, unknown>;
@@ -85,10 +73,6 @@ export namespace skipQueueEntry {
 }
 
 export namespace confirmLabRequestPayment {
-  export interface params {
-    request_id?: string;
-  }
-
   export interface response {
     message: string;
     request: Record<string, unknown>[];
@@ -98,4 +82,3 @@ export namespace confirmLabRequestPayment {
     message: string;
   }
 }
-

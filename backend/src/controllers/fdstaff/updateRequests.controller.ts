@@ -11,13 +11,13 @@ import type {
 } from "./dto/update.dto.js";
 
 export async function updatePatient(
-  req: Request<updatePatient.params, updatePatient.response | updatePatient.error, updatePatient.body>,
+  req: Request,
   res: Response<updatePatient.response | updatePatient.error>,
 ) {
   // PUT /api/fdstaff/patients/:patient_id
 
   try {
-    const { patient_id } = req.params as updatePatient.params;
+    const { patient_id } = req.params;
 
     const {
       username,
@@ -99,11 +99,11 @@ export async function updatePatient(
 }
 
 export async function serveQueueEntry(
-  req: Request<serveQueueEntry.params, serveQueueEntry.response | serveQueueEntry.error>,
+  req: Request,
   res: Response<serveQueueEntry.response | serveQueueEntry.error>,
 ) {
   try {
-    const { queue_id } = req.params as serveQueueEntry.params;
+    const { queue_id } = req.params;
 
     if (!queue_id) {
       return res.status(400).json({
@@ -162,12 +162,12 @@ export async function serveQueueEntry(
 }
 
 export async function skipQueueEntry(
-  req: Request<skipQueueEntry.params, skipQueueEntry.response | skipQueueEntry.error>,
+  req: Request,
   res: Response<skipQueueEntry.response | skipQueueEntry.error>,
 ) {
   try {
     // Get the queue_id of the patient who wants to skip.
-    const { queue_id } = req.params as skipQueueEntry.params;
+    const { queue_id } = req.params;
 
     // Find the patient's current queue number and service type.
     // We need the service_type so we only touch the same queue,
@@ -219,11 +219,11 @@ export async function skipQueueEntry(
 }
 
 export async function confirmLabRequestPayment(
-  req: Request<confirmLabRequestPayment.params, confirmLabRequestPayment.response | confirmLabRequestPayment.error>,
+  req: Request,
   res: Response<confirmLabRequestPayment.response | confirmLabRequestPayment.error>,
 ) {
   try {
-    const { request_id } = req.params as confirmLabRequestPayment.params;
+    const { request_id } = req.params;
 
     const updatedLabRequest = await sql`
     UPDATE laboratory_requests

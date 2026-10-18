@@ -1,8 +1,4 @@
 export namespace deleteQueue {
-  export interface params {
-    queue_id?: string;
-  }
-
   export interface response {
     message: string;
   }
@@ -14,10 +10,6 @@ export namespace deleteQueue {
 }
 
 export namespace deletePatient {
-  export interface params {
-    patient_id?: string;
-  }
-
   export interface response {
     message: string;
   }
@@ -27,4 +19,3 @@ export namespace deletePatient {
     error?: string;
   }
 }
-

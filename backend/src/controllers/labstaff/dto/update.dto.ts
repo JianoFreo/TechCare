@@ -1,8 +1,4 @@
 export namespace acceptQueueEntry {
-  export interface params {
-    queue_id?: string;
-  }
-
   export interface body {
     room?: string;
   }
@@ -18,10 +14,6 @@ export namespace acceptQueueEntry {
 }
 
 export namespace completeQueueEntry {
-  export interface params {
-    queue_id?: string;
-  }
-
   export interface body {
     room?: string;
   }
@@ -38,10 +30,6 @@ export namespace completeQueueEntry {
 }
 
 export namespace skipQueueEntry {
-  export interface params {
-    queue_id?: string;
-  }
-
   export interface response {
     message: string;
     queue: Record<string, unknown>;
@@ -53,10 +41,6 @@ export namespace skipQueueEntry {
 }
 
 export namespace cancelQueueEntry {
-  export interface params {
-    queue_id?: string;
-  }
-
   export interface body {
     reason?: string;
   }
@@ -95,10 +79,6 @@ export namespace startLaboratoryAnalysis {
 }
 
 export namespace releaseLaboratoryResult {
-  export interface params {
-    result_id?: string;
-  }
-
   export interface response {
     message: string;
     result: Record<string, unknown>;
@@ -108,4 +88,3 @@ export namespace releaseLaboratoryResult {
     message: string;
   }
 }
-

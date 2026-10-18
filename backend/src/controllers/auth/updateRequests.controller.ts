@@ -4,11 +4,7 @@ import { sql } from "../../config/db.js";
 import type { logout } from "./dto/update.dto.js";
 
 export async function logout(
-  req: Request<
-    {},
-    logout.response | logout.error,
-    logout.body
-  >,
+  req: Request,
   res: Response<logout.response | logout.error>,
 ) {
   try {

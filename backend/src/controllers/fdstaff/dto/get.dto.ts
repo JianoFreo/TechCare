@@ -34,10 +34,6 @@ export namespace getAllPatients {
 }
 
 export namespace getPrintablePatientRecord {
-  export interface params {
-    patient_id?: string;
-  }
-
   export interface summary {
     age: number | string;
     sex: string;
@@ -161,10 +157,6 @@ export namespace getAllServices {
 }
 
 export namespace getLaboratoryRequest {
-  export interface params {
-    patient_id?: string;
-  }
-
   export interface response {
     lab_reqs: Record<string, unknown>[];
     message?: string;
@@ -221,10 +213,6 @@ export namespace getUnpaidRequests {
 }
 
 export namespace getMedicalHistory {
-  export interface params {
-    patient_id?: string;
-  }
-
   export interface query {
     search?: string;
     service_category?: string;
@@ -266,11 +254,6 @@ export namespace getMedicalHistory {
 }
 
 export namespace getMedicalHistoryDetails {
-  export interface params {
-    record_type?: "laboratory" | "consultation" | string;
-    record_id?: string;
-  }
-
   export interface laboratoryResult {
     result_id?: number | string;
     results?: unknown;
@@ -331,11 +314,6 @@ export namespace getMedicalHistoryDetails {
 }
 
 export namespace getMedicalHistoryFull {
-  export interface params {
-    record_type?: "laboratory" | "consultation" | string;
-    record_id?: string;
-  }
-
   export interface laboratoryResponse {
     message: string;
     record_type: string;
@@ -381,10 +359,6 @@ export namespace getMedicalHistoryFull {
 }
 
 export namespace getPatientMedicalHistory {
-  export interface params {
-    patient_id?: string;
-  }
-
   export interface summary {
     consultations: number;
     labRequests: number;
@@ -402,4 +376,3 @@ export namespace getPatientMedicalHistory {
     message: string;
   }
 }
-

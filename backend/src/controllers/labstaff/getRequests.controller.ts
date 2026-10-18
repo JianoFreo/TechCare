@@ -13,18 +13,13 @@ import type {
 } from "./dto/get.dto.js";
 
 export async function getLaboratoryRequestDetails(
-  req: Request<
-    getLaboratoryRequestDetails.params,
-    getLaboratoryRequestDetails.response | getLaboratoryRequestDetails.error,
-    object,
-    getLaboratoryRequestDetails.query
-  >,
+  req: Request,
   res: Response<
     getLaboratoryRequestDetails.response | getLaboratoryRequestDetails.error
   >,
 ) {
   try {
-    const { queue_id } = req.params as getLaboratoryRequestDetails.params;
+    const { queue_id } = req.params;
     const room = typeof req.query.room === "string" ? req.query.room : "";
 
     if (!room) {
@@ -105,14 +100,11 @@ export async function getLaboratoryRequestDetails(
 }
 
 export async function getLaboratoryQueues(
-  req: Request<
-    getLaboratoryQueues.params,
-    getLaboratoryQueues.response | getLaboratoryQueues.error
-  >,
+  req: Request,
   res: Response<getLaboratoryQueues.response | getLaboratoryQueues.error>,
 ) {
   try {
-    const { room } = req.params as getLaboratoryQueues.params;
+    const { room } = req.params;
 
     const queues = await sql`
       SELECT
@@ -138,13 +130,10 @@ export async function getLaboratoryQueues(
 }
 
 export async function getRoomSpecificServices(
-  req: Request<
-    getRoomSpecificServices.params,
-    getRoomSpecificServices.response | getRoomSpecificServices.error
-  >,
+  req: Request,
   res: Response<getRoomSpecificServices.response | getRoomSpecificServices.error>,
 ) {
-  const { room } = req.params as getRoomSpecificServices.params;
+  const { room } = req.params;
   if (!room) {
     return res.status(400).json({
       message: "Room field is required.",
@@ -167,14 +156,11 @@ export async function getRoomSpecificServices(
 }
 
 export async function getLaboratoryQueueItems(
-  req: Request<
-    getLaboratoryQueueItems.params,
-    getLaboratoryQueueItems.response | getLaboratoryQueueItems.error
-  >,
+  req: Request,
   res: Response<getLaboratoryQueueItems.response | getLaboratoryQueueItems.error>,
 ) {
   try {
-    const { queue_id } = req.params as getLaboratoryQueueItems.params;
+    const { queue_id } = req.params;
 
     const items = await sql`
       SELECT
@@ -204,12 +190,7 @@ export async function getLaboratoryQueueItems(
 }
 
 export async function getAnalysisItems(
-  req: Request<
-    object,
-    getAnalysisItems.response | getAnalysisItems.error,
-    object,
-    getAnalysisItems.query
-  >,
+  req: Request,
   res: Response<getAnalysisItems.response | getAnalysisItems.error>,
 ) {
   const room = typeof req.query.room === "string" ? req.query.room.trim() : "";
@@ -245,12 +226,7 @@ export async function getAnalysisItems(
 }
 
 export async function getSavedLaboratoryResults(
-  req: Request<
-    object,
-    getSavedLaboratoryResults.response | getSavedLaboratoryResults.error,
-    object,
-    getSavedLaboratoryResults.query
-  >,
+  req: Request,
   res: Response<getSavedLaboratoryResults.response | getSavedLaboratoryResults.error>,
 ) {
   const room = typeof req.query.room === "string" ? req.query.room.trim() : "";

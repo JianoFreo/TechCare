@@ -7,16 +7,11 @@ import type {
 } from "./dto/get.dto.js";
 
 export async function getMedicalHistory(
-  req: Request<
-    getMedicalHistory.params,
-    getMedicalHistory.response | getMedicalHistory.error,
-    object,
-    getMedicalHistory.query
-  >,
+  req: Request,
   res: Response<getMedicalHistory.response | getMedicalHistory.error>,
 ) {
   try {
-    const { patient_id } = req.params as getMedicalHistory.params;
+    const { patient_id } = req.params;
     const {
       search,
       service_category,
@@ -103,17 +98,13 @@ export async function getMedicalHistory(
 }
 
 export async function getMedicalHistoryDetails(
-  req: Request<
-    getMedicalHistoryDetails.params,
-    getMedicalHistoryDetails.response | getMedicalHistoryDetails.error
-  >,
+  req: Request,
   res: Response<
     getMedicalHistoryDetails.response | getMedicalHistoryDetails.error
   >,
 ) {
   try {
-    const { record_type, record_id } =
-      req.params as getMedicalHistoryDetails.params;
+    const { record_type, record_id } = req.params;
 
     if (record_type === "laboratory") {
       const [labDetails] = await sql`
@@ -260,10 +251,7 @@ export async function getMedicalHistoryDetails(
 }
 
 export async function getMedicalHistoryFull(
-  req: Request<
-    getMedicalHistoryFull.params,
-    getMedicalHistoryFull.response | getMedicalHistoryFull.error
-  >,
+  req: Request,
   res: Response<getMedicalHistoryFull.response | getMedicalHistoryFull.error>,
 ) {
   try {
