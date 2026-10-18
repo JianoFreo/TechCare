@@ -109,7 +109,7 @@ export default function FormTemplate() {
   };
 
   // Updated handleEditTemplate to fetch full form details & components from GET /api/admin/form-templates/:form_id
-  const handleEditTemplate = async (template: FormTemplate) => {
+  const handleEditTemplate = async (template: FormTemplateData) => {
     try {
       const token = localStorage.getItem("token");
       const response = await api.get(
@@ -117,7 +117,7 @@ export default function FormTemplate() {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      const fullTemplate: FormTemplate = {
+      const fullTemplate: FormTemplateData = {
         ...response.data.formTemplate,
         components: (response.data.components ?? []).map(
           dbComponentToBuilderComponent,
@@ -199,5 +199,3 @@ export default function FormTemplate() {
     </main>
   );
 }
-
-export default FormTemplate;
