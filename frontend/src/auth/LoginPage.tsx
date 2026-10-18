@@ -19,7 +19,7 @@ function LoginPage() {
 
   const navigate = useNavigate();
 
-  const handleLogin = async (e?: FormEvent) => {
+  async function handleLogin(e: FormEvent) {
     if (e) e.preventDefault();
 
     if (!identifier.trim() || !password) {
@@ -61,8 +61,8 @@ function LoginPage() {
       if (axios.isAxiosError(error)) {
         setErrorMessage(
           error.response?.data?.message ||
-            error.response?.data?.error ||
-            "Failed to log in. Please check your connection or credentials."
+          error.response?.data?.error ||
+          "Failed to log in. Please check your connection or credentials."
         );
       } else {
         setErrorMessage(
