@@ -7,6 +7,7 @@ import {
   BadgeDollarSign,
   FileText,
   SquareActivity,
+  Tv,
 } from "lucide-react";
 
 import SideBar from "../../components/SideBar";
@@ -17,6 +18,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ServicePricingManagement from "./pages/ServicePricing";
 import ActivityMonitoring from "./pages/ActivityMonitoring";
 import FormTemplate from "./pages/FormTemplate";
+import QueueingMonitor from "./pages/QueueingMonitor";
 
 import api from "../../lib/axios";
 
@@ -68,6 +70,11 @@ function Admin() {
       page: "form-template",
       label: "Form Template",
       icon: <FileText size={20} />,
+    },
+    {
+      page: "queueing-monitor",
+      label: "Queueing Monitor",
+      icon: <Tv size={20} />,
     },
   ];
 
@@ -152,6 +159,15 @@ function Admin() {
 
           {page === "activity-monitoring" && (
             <ActivityMonitoring
+              loading={loading}
+              activities={activities}
+              open={open}
+              setOpen={setOpen}
+              loadData={loadData}
+            />
+          )}
+          {page === "queueing-monitor" && (
+            <QueueingMonitor
               loading={loading}
               activities={activities}
               open={open}
