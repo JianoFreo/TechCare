@@ -169,7 +169,6 @@ function Admin() {
           {page === "queueing-monitor" && (
             <QueueingMonitor
               loading={loading}
-              activities={activities}
               open={open}
               setOpen={setOpen}
               loadData={loadData}
