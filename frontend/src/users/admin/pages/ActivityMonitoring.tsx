@@ -13,7 +13,7 @@ import ActivityStats from "../components/ActivityMonitoring/ActivityStats";
 import ActivityTabs from "../components/ActivityMonitoring/ActivityTabs";
 import ActivityFilters from "../components/ActivityMonitoring/ActivityFilters";
 
-type ActivityModalProps = {
+type ActivityMonitoringModalProps = {
   activities: Activity[];
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -24,7 +24,7 @@ type ActivityModalProps = {
 function ActivityMonitoring({
   activities,
   loadData,
-}: ActivityModalProps) {
+}: ActivityMonitoringModalProps) {
   useEffect(() => {
     loadData();
   }, [loadData]);
