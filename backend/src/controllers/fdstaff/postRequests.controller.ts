@@ -19,6 +19,7 @@ import type {
   addToQueue,
   addLaboratoryRequest,
 } from "./dto/post.dto.js";
+import { publishQueueChange } from "../../services/queueStream.js";
 
 export async function addPatient(
   req: Request,
@@ -325,12 +326,11 @@ export async function addToQueue(
     }
 
     await client.query("COMMIT");
-    return res
-      .status(201)
-      .json({
-        message: "Added to queue.",
-        queue: queueRows[0] as unknown as addToQueue.queue,
-      } as addToQueue.response);
+    publishQueueChange();
+    return res.status(201).json({
+      message: "Added to queue.",
+      queue: queueRows[0] as unknown as addToQueue.queue,
+    } as addToQueue.response);
   } catch (error) {
     await client.query("ROLLBACK").catch(console.error);
     console.error("Error adding to queue:", error);
@@ -402,18 +402,14 @@ export async function addLaboratoryRequest(
     console.error(error);
     await client.query("ROLLBACK").catch(console.error);
     if (error.code === "23503") {
-      return res
-        .status(400)
-        .json({
-          message: "Invalid patient or service ID.",
-        } as addLaboratoryRequest.error);
+      return res.status(400).json({
+        message: "Invalid patient or service ID.",
+      } as addLaboratoryRequest.error);
     }
     console.error(error);
-    return res
-      .status(500)
-      .json({
-        message: "Internal server error.",
-      } as addLaboratoryRequest.error);
+    return res.status(500).json({
+      message: "Internal server error.",
+    } as addLaboratoryRequest.error);
   } finally {
     client.release();
   }

@@ -24,6 +24,8 @@ import { deleteTemplate } from "../controllers/admin/deleteRequest.controller.js
 import { upload } from "../middlewares/multer.middleware.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import adminMiddleware from "../middlewares/admin.middleware.js";
+import { getQueueStreamStats, streamQueue } from "../services/queueStream.js";
+
 const router = Router();
 
 if (ENV.IS_PRODUCTION) {
@@ -32,6 +34,11 @@ if (ENV.IS_PRODUCTION) {
 }
 
 router.use(authMiddleware, adminMiddleware);
+
+///// ----------- SSE QUEUE STREAMING ROUTES --------
+router.get("/queue/stream", streamQueue);
+router.get("/queue/stream/stats", (_req, res) => res.json(getQueueStreamStats()));
+//// -------------------------------------------------- 
 
 router.get("/services", getAllservices);
 router.get("/activity", getMyActivities);
