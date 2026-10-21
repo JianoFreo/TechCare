@@ -9,7 +9,6 @@ import {
   getAllBilling,
   getAllPatients,
   getAllQueueEntries,
-  getLaboratoryRequest,
   getMedicalHistory,
   getMedicalHistoryDetails,
   getPrintablePatientRecord,
@@ -47,7 +46,6 @@ router.get("/billing/unpaid-lab", getUnpaidRequests);
 router.get("/services", getAllservices);
 router.get("/queues", getAllQueueEntries);
 router.get("/patients/:patient_id/print", getPrintablePatientRecord);
-router.get("/patients/:patient_id/laboratory-requests", getLaboratoryRequest);
 router.get("/patients/:patient_id/medical-history", getPatientMedicalHistory);
 router.get("/queue-requests", getQueueRequests);
 
