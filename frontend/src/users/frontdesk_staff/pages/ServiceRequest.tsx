@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import ServiceTypeTabs from "../components/ServiceRequest/ServiceTypeTabs";
 import ServiceSelectionPanel from "../components/ServiceRequest/ServiceSelectionPanel";
 import ServiceList from "../components/ServiceRequest/ServiceList";
-import RequestFooter from "../components/ServiceRequest/RequestFooter";
+import PatientSelectionHeader from "../components/ServiceRequest/PatientSelectionHeader";
 import type { SortOrder, Service } from "../../../interface/Service";
 import type { Patient } from "../../../interface/Patient";
 
@@ -101,8 +101,9 @@ function ServiceRequest({
   const clearServices = () => setSelectedServices([]);
 
   return (
-    <main className="flex-1 min-w-0 pb-8">
+    <main className="flex-1 min-w-0 pb-5">
       <h1 className="text-2xl font-bold px-6">Select Service Type</h1>
+      <PatientSelectionHeader patient={patient} onSelectPatient={setPatient} />
       <ServiceTypeTabs
         activeTab={activeTab}
         setActiveTab={handleTab}
@@ -138,7 +139,6 @@ function ServiceRequest({
           />
         </div>
       </div>
-      <RequestFooter patient={patient} onSelectPatient={setPatient} />
     </main>
   );
 }
