@@ -143,7 +143,11 @@ function ServiceList({
           <p className="text-xs text-red-500">{error}</p>
         ) : initialTotalPrice > 0 ? (
           <h1 className="font-semibold">
-            Initial Total Price: ₱{initialTotalPrice}
+            Initial Total Price: ₱
+            {initialTotalPrice.toLocaleString("en-PH", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </h1>
         ) : null}
         <button
