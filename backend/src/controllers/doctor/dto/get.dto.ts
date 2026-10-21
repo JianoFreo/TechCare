@@ -1,3 +1,29 @@
+export namespace getConsultationRequests {
+  export interface queue {
+    id?: number;
+    queue_id: string;
+    patient_id?: string;
+    queue_number?: number;
+    service_id?: string;
+    is_priority?: boolean;
+    status?: string;
+    created_at?: string;
+    updated_at?: string;
+    service_name?: string;
+    service_type?: string;
+    service_category?: string;
+    room?: string;
+    [key: string]: unknown;
+  }
+
+  export type response = queue[];
+
+  export interface error {
+    message: string;
+    detail?: string;
+  }
+}
+
 export namespace getMedicalHistory {
   export interface query {
     search?: string;

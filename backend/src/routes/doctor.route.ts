@@ -5,12 +5,13 @@ import doctorMiddleware from "../middlewares/doctor.middleware.js";
 import {
   addLaboratoryRequest,
   addPrescriptions,
-  addConsultationFindings
+  addConsultationFindings,
 } from "../controllers/doctor/postRequests.controller.js";
 import {
+  getConsultationQueues,
   getMedicalHistory,
   getMedicalHistoryDetails,
-  getMedicalHistoryFull
+  getMedicalHistoryFull,
   // getLaboratoryServices,
   // getConsultationPatient,
 } from "../controllers/doctor/getRequests.controller.js";
@@ -27,6 +28,7 @@ router.post("/prescriptions/:consultation_record_id", addPrescriptions);
 // GET requests
 // router.get("/laboratory-services", getLaboratoryServices);
 // router.get("/consultation-patients/:patient_id", getConsultationPatient);
+router.get("/consultation-queues/room/:room", getConsultationQueues);
 router.get("/medical-history/:patient_id", getMedicalHistory);
 router.get(
   "/medical-history/:record_type/:record_id",
