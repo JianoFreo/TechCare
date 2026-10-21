@@ -4,7 +4,44 @@ import type {
   getMedicalHistory,
   getMedicalHistoryDetails,
   getMedicalHistoryFull,
+  getConsultationRequests,
 } from "./dto/get.dto.js";
+
+export async function getConsultationQueues(
+  req: Request,
+  res: Response<
+    getConsultationRequests.response | getConsultationRequests.error
+  >,
+) {
+  try {
+    const { room } = req.params;
+
+    const queues = await sql`
+      SELECT
+        q.*,
+        s.service_name,
+        s.service_type,
+        s.service_category,
+        s.room
+      FROM queue_entries q
+      JOIN services s ON s.service_id = q.service_id
+      WHERE q.queue_id LIKE 'CONS-%'
+        AND s.room = ${room}
+        AND q.created_at >= CURRENT_DATE
+        AND q.created_at < CURRENT_DATE + INTERVAL '1 day'
+      ORDER BY q.queue_number ASC
+    `;
+
+    return res
+      .status(200)
+      .json(queues as unknown as getConsultationRequests.response);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+    } as getConsultationRequests.error);
+  }
+}
 
 export async function getMedicalHistory(
   req: Request,

@@ -9,6 +9,7 @@ import type {
   skipQueueEntry,
   confirmLabRequestPayment,
 } from "./dto/update.dto.js";
+import { publishQueueChange } from "../../services/queueStream.js";
 
 export async function updatePatient(
   req: Request,
@@ -146,7 +147,7 @@ export async function serveQueueEntry(
         AND status = 'waiting'
       RETURNING *;
     `;
-
+    publishQueueChange();
     return res.status(200).json({
       message: "Queue entry called successfully.",
       existingQueueEntry,

@@ -10,15 +10,25 @@ export type MonitorEntry = {
   service_type: "consultation" | "laboratory" | string;
   room: string | null;
   is_priority: boolean;
-  status: "waiting" | "serving" | "skipped" | "completed" | "cancelled" | string;
+  status:
+    | "waiting"
+    | "serving"
+    | "skipped"
+    | "completed"
+    | "cancelled"
+    | string;
   display_name: string;
   updated_at: string;
 };
 
-export type StreamState = "connecting" | "live" | "reconnecting" | "unauthorized";
+export type StreamState =
+  | "connecting"
+  | "live"
+  | "reconnecting"
+  | "unauthorized";
 
 const STREAM_PATH = "/api/admin/queue/stream";
-const WATCHDOG_MS = 65_000; // server pings every 25s; 2+ missed pings => connection is dead
+const WATCHDOG_MS = 65_000;
 const MAX_BACKOFF_MS = 15_000;
 
 class FatalError extends Error {}
@@ -27,72 +37,128 @@ export function useQueueStream() {
   const [entries, setEntries] = useState<MonitorEntry[]>([]);
   const [state, setState] = useState<StreamState>("connecting");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [epoch, setEpoch] = useState(0); // bump to force a fresh connection
-  const lastMessageAt = useRef(Date.now());
+  const [epoch, setEpoch] = useState(0);
+
+  // Use a predictable initial value during render.
+  const lastMessageAt = useRef(0);
+  const reconnectingRef = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
     let attempt = 0;
-    lastMessageAt.current = Date.now();
+    let disposed = false;
 
-    // Watchdog: half-open TCP connections look "connected" forever. If the
-    // server's ping stops arriving, tear down and reconnect ourselves.
+    lastMessageAt.current = Date.now();
+    reconnectingRef.current = false;
+
     const watchdog = setInterval(() => {
-      if (Date.now() - lastMessageAt.current > WATCHDOG_MS) {
+      if (
+        !disposed &&
+        !reconnectingRef.current &&
+        Date.now() - lastMessageAt.current > WATCHDOG_MS
+      ) {
+        reconnectingRef.current = true;
         setState("reconnecting");
-        setEpoch((e) => e + 1);
+        setEpoch((current) => current + 1);
       }
     }, 10_000);
 
-    fetchEventSource(`${api.defaults.baseURL ?? ""}${STREAM_PATH}`, {
-      signal: controller.signal,
-      headers: { Authorization: `Bearer ${sessionStorage.getItem("token") ?? ""}` },
-      openWhenHidden: true, // a TV tab is often "hidden"/backgrounded; keep streaming anyway
+    fetchEventSource(
+      `${api.defaults.baseURL ?? ""}${STREAM_PATH}`,
+      {
+        signal: controller.signal,
+        headers: {
+          Authorization: `Bearer ${
+            sessionStorage.getItem("token") ?? ""
+          }`,
+        },
+        openWhenHidden: true,
 
-      async onopen(res) {
-        const isStream = res.headers.get("content-type")?.startsWith("text/event-stream");
-        if (res.ok && isStream) {
-          attempt = 0;
+        async onopen(response) {
+          const isStream = response.headers
+            .get("content-type")
+            ?.startsWith("text/event-stream");
+
+          if (response.ok && isStream) {
+            attempt = 0;
+            lastMessageAt.current = Date.now();
+            setState("live");
+            return;
+          }
+
+          if (response.status === 401 || response.status === 403) {
+            setState("unauthorized");
+            throw new FatalError("Not authorized");
+          }
+
+          throw new Error(
+            `Unexpected response ${response.status}`
+          );
+        },
+
+        onmessage(event) {
           lastMessageAt.current = Date.now();
-          setState("live");
-          return;
-        }
-        if (res.status === 401 || res.status === 403) {
-          setState("unauthorized");
-          throw new FatalError("Not authorized"); // retrying can't fix a bad token
-        }
-        throw new Error(`Unexpected response ${res.status}`); // 5xx/503: retry
-      },
 
-      onmessage(ev) {
-        lastMessageAt.current = Date.now();
-        if (ev.event === "snapshot") {
-          const data = JSON.parse(ev.data) as { queueEntries: MonitorEntry[] };
-          setEntries(data.queueEntries);
-          setLastUpdated(new Date());
-        }
-        // "ping" only refreshes the watchdog; "server-error" is non-fatal.
-      },
+          if (event.event === "snapshot") {
+            try {
+              const data = JSON.parse(event.data) as {
+                queueEntries: MonitorEntry[];
+              };
 
-      onclose() {
-        throw new Error("Stream closed by server"); // treat as retriable
-      },
+              setEntries(data.queueEntries);
+              setLastUpdated(new Date());
+            } catch (error) {
+              console.error(
+                "Failed to parse queue snapshot:",
+                error
+              );
+            }
+          }
 
-      onerror(err) {
-        if (err instanceof FatalError) throw err; // stop retrying
-        setState("reconnecting");
-        attempt += 1;
-        return Math.min(1000 * 2 ** attempt, MAX_BACKOFF_MS); // exponential backoff
-      },
-    }).catch(() => {
-      /* FatalError lands here; state already set */
+          // Ping events refresh the watchdog timestamp.
+        },
+
+        onclose() {
+          throw new Error("Stream closed by server");
+        },
+
+        onerror(error) {
+          if (error instanceof FatalError) {
+            throw error;
+          }
+
+          if (!disposed) {
+            setState("reconnecting");
+          }
+
+          attempt += 1;
+
+          return Math.min(
+            1000 * 2 ** attempt,
+            MAX_BACKOFF_MS
+          );
+        },
+      }
+    ).catch((error: unknown) => {
+      if (
+        !disposed &&
+        !(error instanceof FatalError) &&
+        !controller.signal.aborted
+      ) {
+        console.error("Queue stream stopped:", error);
+      }
     });
 
     return () => {
+      disposed = true;
       clearInterval(watchdog);
-      controller.abort(); // closes the HTTP connection => server drops the client
+      controller.abort();
     };
   }, [epoch]);
 
-  return { entries, state, lastUpdated };
+  return {
+    entries,
+    state,
+    lastUpdated,
+  };
 }

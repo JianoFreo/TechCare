@@ -8,6 +8,7 @@ import type {
   startLaboratoryAnalysis,
   releaseLaboratoryResult,
 } from "./dto/update.dto.js";
+import { publishQueueChange } from "../../services/queueStream.js";
 
 export async function acceptQueueEntry(
   req: Request,
@@ -59,7 +60,7 @@ export async function acceptQueueEntry(
         message: `Queue is ${existing.status} and can't be accepted.`,
       } as acceptQueueEntry.error);
     }
-
+    publishQueueChange();
     return res.status(200).json({
       message: "Queue entry accepted and now being served.",
       queue: updated,
@@ -182,6 +183,7 @@ export async function completeQueueEntry(
 
     const { collected_item_count, ...queue } = updated;
 
+    publishQueueChange();
     return res.status(200).json({
       message: "Queue entry completed.",
       queue,
@@ -259,7 +261,7 @@ export async function skipQueueEntry(
       WHERE queue_id = ${queue_id}
       RETURNING *;
     `;
-
+    publishQueueChange();
     return res.status(200).json({
       message: "Queue skipped successfully and returned to the queue.",
       queue: updatedQueue[0],
@@ -354,6 +356,7 @@ export async function cancelQueueEntry(
       RETURNING lab_item_id, request_id, queue_id, reason;
     `;
 
+    publishQueueChange();
     return res.status(200).json({
       message: "Queue cancelled successfully.",
       queue: updatedQueue[0],
