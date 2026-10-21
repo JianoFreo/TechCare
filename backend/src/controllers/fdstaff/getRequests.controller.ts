@@ -123,11 +123,9 @@ export async function getAllPatients(
         patients: [],
       } as getAllPatients.response);
     }
-    return res
-      .status(200)
-      .json({
-        patients: patients as unknown as getAllPatients.patient[],
-      } as getAllPatients.response);
+    return res.status(200).json({
+      patients: patients as unknown as getAllPatients.patient[],
+    } as getAllPatients.response);
   } catch (error) {
     console.error("Error fetching patients:", error);
     return res
@@ -146,11 +144,9 @@ export async function getPrintablePatientRecord(
     const { patient_id } = req.params;
 
     if (!patient_id) {
-      return res
-        .status(400)
-        .json({
-          message: "Patient ID is required.",
-        } as getPrintablePatientRecord.error);
+      return res.status(400).json({
+        message: "Patient ID is required.",
+      } as getPrintablePatientRecord.error);
     }
 
     const patientRows = await sql`
@@ -161,11 +157,9 @@ export async function getPrintablePatientRecord(
     `;
 
     if (!patientRows.length) {
-      return res
-        .status(404)
-        .json({
-          message: "Patient not found.",
-        } as getPrintablePatientRecord.error);
+      return res.status(404).json({
+        message: "Patient not found.",
+      } as getPrintablePatientRecord.error);
     }
 
     const patient = patientRows[0];
@@ -198,18 +192,14 @@ export async function getPrintablePatientRecord(
       billing,
     );
 
-    return res
-      .status(200)
-      .json({
-        patientRecord: printableRecord,
-      } as getPrintablePatientRecord.response);
+    return res.status(200).json({
+      patientRecord: printableRecord,
+    } as getPrintablePatientRecord.response);
   } catch (error) {
     console.error("Error fetching printable patient record:", error);
-    return res
-      .status(500)
-      .json({
-        error: "Error fetching printable patient record.",
-      } as getPrintablePatientRecord.error);
+    return res.status(500).json({
+      error: "Error fetching printable patient record.",
+    } as getPrintablePatientRecord.error);
   }
 }
 
@@ -226,17 +216,13 @@ export async function getAllBilling(
         billing: [],
       } as getAllBilling.response);
     }
-    return res
-      .status(200)
-      .json({
-        billing: billing as unknown as getAllBilling.bill[],
-      } as getAllBilling.response);
+    return res.status(200).json({
+      billing: billing as unknown as getAllBilling.bill[],
+    } as getAllBilling.response);
   } catch (error) {
-    return res
-      .status(500)
-      .json({
-        error: "error on fetching billing records",
-      } as getAllBilling.error);
+    return res.status(500).json({
+      error: "error on fetching billing records",
+    } as getAllBilling.error);
   }
 }
 
@@ -270,19 +256,14 @@ export async function getAllQueueEntries(
       ORDER BY qe.queue_number ASC, qe.id ASC
     `;
 
-    return res
-      .status(200)
-      .json({
-        queueEntries:
-          queueEntries as unknown as getAllQueueEntries.queueEntry[],
-      } as getAllQueueEntries.response);
+    return res.status(200).json({
+      queueEntries: queueEntries as unknown as getAllQueueEntries.queueEntry[],
+    } as getAllQueueEntries.response);
   } catch (error) {
     console.error("Error fetching queue entries:", error);
-    return res
-      .status(500)
-      .json({
-        message: "Failed to fetch queue entries",
-      } as getAllQueueEntries.error);
+    return res.status(500).json({
+      message: "Failed to fetch queue entries",
+    } as getAllQueueEntries.error);
   }
 }
 
@@ -298,45 +279,14 @@ export async function getAllServices(
       ORDER BY service_type, service_name
     `;
 
-    return res
-      .status(200)
-      .json({
-        services: services as unknown as getAllServices.service[],
-      } as getAllServices.response);
+    return res.status(200).json({
+      services: services as unknown as getAllServices.service[],
+    } as getAllServices.response);
   } catch (error) {
     console.error("Error fetching services:", error);
     return res
       .status(500)
       .json({ message: "Failed to fetch services" } as getAllServices.error);
-  }
-}
-
-export async function getLaboratoryRequest(
-  req: Request,
-  res: Response<getLaboratoryRequest.response | getLaboratoryRequest.error>,
-) {
-  try {
-    const { patient_id } = req.params;
-
-    const lab_reqs = await sql`
-        SELECT * FROM laboratory_requests
-        WHERE patient_id = ${patient_id} AND is_paid = 'FALSE'
-        AND requested_at >= CURRENT_DATE
-        AND requested_at < CURRENT_DATE + INTERVAL '1 day'
-        ORDER BY requested_at DESC;
-    `;
-    if (!lab_reqs) {
-      return res.json({
-        message: "there are no laboratory requests",
-        lab_reqs: [],
-      } as getLaboratoryRequest.response);
-    }
-    return res.status(200).json({ lab_reqs } as getLaboratoryRequest.response);
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({ error: "Internal Server Error" } as getLaboratoryRequest.error);
   }
 }
 
@@ -389,18 +339,14 @@ export async function getQueueRequests(
       ORDER BY created_at DESC
     `;
 
-    return res
-      .status(200)
-      .json({
-        requests: rows as unknown as getQueueRequests.queueRequest[],
-      } as getQueueRequests.response);
+    return res.status(200).json({
+      requests: rows as unknown as getQueueRequests.queueRequest[],
+    } as getQueueRequests.response);
   } catch (error) {
     console.error("Error fetching queue requests:", error);
-    return res
-      .status(500)
-      .json({
-        message: "Failed to fetch queue requests",
-      } as getQueueRequests.error);
+    return res.status(500).json({
+      message: "Failed to fetch queue requests",
+    } as getQueueRequests.error);
   }
 }
 
@@ -416,7 +362,8 @@ export async function getUnpaidRequests(
         lr.patient_id,
         CONCAT_WS(' ', p.first_name, p.last_name)   AS patient_name,
         lr.is_paid,
-        CONCAT_WS(' ', u.first_name, u.last_name)   AS created_by,
+        CONCAT_WS(' ', u.first_name, u.last_name)   AS requested_by,
+        u.role                                      AS requester_role,
         lr.requested_at                             AS created_at
       FROM laboratory_requests lr
       JOIN patients p   ON p.patient_id = lr.patient_id
@@ -440,11 +387,9 @@ export async function getUnpaidRequests(
     } as getUnpaidRequests.response);
   } catch (error) {
     console.error("Error fetching unpaid requests:", error);
-    return res
-      .status(500)
-      .json({
-        message: "Failed to fetch unpaid requests",
-      } as getUnpaidRequests.error);
+    return res.status(500).json({
+      message: "Failed to fetch unpaid requests",
+    } as getUnpaidRequests.error);
   }
 }
 
@@ -465,11 +410,9 @@ export async function getMedicalHistory(
     } = req.query as getMedicalHistory.query;
 
     if (!patient_id) {
-      return res
-        .status(400)
-        .json({
-          message: "Patient ID is required.",
-        } as getMedicalHistory.error);
+      return res.status(400).json({
+        message: "Patient ID is required.",
+      } as getMedicalHistory.error);
     }
 
     const pageNum = Math.max(parseInt(page as string) || 1, 1);
@@ -566,11 +509,9 @@ export async function getMedicalHistoryDetails(
       `;
 
       if (!labDetails)
-        return res
-          .status(404)
-          .json({
-            message: "Laboratory record not found.",
-          } as getMedicalHistoryDetails.error);
+        return res.status(404).json({
+          message: "Laboratory record not found.",
+        } as getMedicalHistoryDetails.error);
 
       const results = await sql`
         SELECT result_id, results, remarks,
@@ -602,11 +543,9 @@ export async function getMedicalHistoryDetails(
       `;
 
       if (!consDetails)
-        return res
-          .status(404)
-          .json({
-            message: "Consultation record not found.",
-          } as getMedicalHistoryDetails.error);
+        return res.status(404).json({
+          message: "Consultation record not found.",
+        } as getMedicalHistoryDetails.error);
 
       const prescription = await sql`
         SELECT 
@@ -626,26 +565,20 @@ export async function getMedicalHistoryDetails(
       } as getMedicalHistoryDetails.consultationResponse);
     }
 
-    return res
-      .status(400)
-      .json({
-        message: "Invalid record type.",
-      } as getMedicalHistoryDetails.error);
+    return res.status(400).json({
+      message: "Invalid record type.",
+    } as getMedicalHistoryDetails.error);
   } catch (error) {
     if (record_type === "consultation") {
       console.error("Error fetching prescriptions:", error);
-      return res
-        .status(500)
-        .json({
-          message: "Failed to fetch prescriptions",
-        } as getMedicalHistoryDetails.error);
+      return res.status(500).json({
+        message: "Failed to fetch prescriptions",
+      } as getMedicalHistoryDetails.error);
     } else {
       console.error("Error fetching laboratory results:", error);
-      return res
-        .status(500)
-        .json({
-          message: "Failed to fetch laboratory results",
-        } as getMedicalHistoryDetails.error);
+      return res.status(500).json({
+        message: "Failed to fetch laboratory results",
+      } as getMedicalHistoryDetails.error);
     }
   }
 }
@@ -677,11 +610,9 @@ export async function getMedicalHistoryFull(
       `;
 
       if (!fullLab)
-        return res
-          .status(404)
-          .json({
-            message: "Laboratory record not found",
-          } as getMedicalHistoryFull.error);
+        return res.status(404).json({
+          message: "Laboratory record not found",
+        } as getMedicalHistoryFull.error);
 
       return res.status(200).json({
         message: "Full laboratory details successfully fetched",
@@ -703,11 +634,9 @@ export async function getMedicalHistoryFull(
       `;
 
       if (!consDetails)
-        return res
-          .status(404)
-          .json({
-            message: "Consultation record not found.",
-          } as getMedicalHistoryFull.error);
+        return res.status(404).json({
+          message: "Consultation record not found.",
+        } as getMedicalHistoryFull.error);
 
       const prescription = await sql`
         SELECT 
@@ -732,10 +661,8 @@ export async function getMedicalHistoryFull(
       .json({ message: "Invalid record type." } as getMedicalHistoryFull.error);
   } catch (error) {
     console.error("Error fetching full medical history:", error);
-    return res
-      .status(500)
-      .json({
-        message: "Failed to fetch full medical history",
-      } as getMedicalHistoryFull.error);
+    return res.status(500).json({
+      message: "Failed to fetch full medical history",
+    } as getMedicalHistoryFull.error);
   }
 }

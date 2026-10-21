@@ -7,6 +7,7 @@ export interface UnpaidRequests {
   service_id: string;
   service_name: string;
   is_paid: boolean;
-  created_by: string;
+  requested_by: string;
+  requester_role: string;
   created_at: string;
 }
