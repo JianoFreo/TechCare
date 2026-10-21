@@ -30,7 +30,7 @@ function Admin() {
   const [users, setUsers] = useState<User[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
-  
+
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(true);
 
@@ -108,7 +108,7 @@ function Admin() {
 
   // Fetch the admin data when this component mounts.
   useEffect(() => {
-    async function action(){
+    async function action() {
       await loadData();
     };
     action()
@@ -124,13 +124,19 @@ function Admin() {
       />
 
       <div className="flex-1 min-w-0">
-        <Header
+        {page !== "queueing-monitor" && <Header
           page={currentPage}
           loading={loading}
           open={open}
           setOpen={setOpen}
           loadData={loadData}
-        />
+        />}
+        {page === "queueing-monitor" && <button
+          onClick={() => setOpen(!open)}
+          className="text-2xl"
+        >
+          ☰
+        </button>}
 
         <div className="pb-6">
           {page === "dashboard" && (
