@@ -261,3 +261,28 @@ export namespace getReleasedLaboratoryResults {
     message: string;
   }
 }
+
+export namespace getReleasedLaboratoryResult {
+  export interface result extends getReleasedLaboratoryResults.releasedResult {
+    status: "Released";
+    request_id: string;
+    patient_id: string;
+    patient_name: string;
+    birthdate: string;
+    sex: string;
+    service_id: string;
+    service_name: string;
+    room: string;
+    requested_at: string;
+    verified_by_name: string | null;
+  }
+
+  export interface response {
+    message: string;
+    result: result;
+  }
+
+  export interface error {
+    message: string;
+  }
+}

@@ -231,6 +231,7 @@ const TABLES: {
       service_id              VARCHAR(255) NOT NULL REFERENCES services(service_id),
       queue_id                VARCHAR(255) REFERENCES queue_entries(queue_id),
       status                  VARCHAR(255) NOT NULL DEFAULT 'Created',
+      cancellation_reason     VARCHAR(255),
       consultation_type       VARCHAR(255) NOT NULL DEFAULT 'Initial',
       diagnosis               JSONB,
       presenting_complaint    JSONB,
@@ -247,6 +248,7 @@ const TABLES: {
       service_id: "VARCHAR(255) NOT NULL REFERENCES services(service_id)",
       queue_id: "VARCHAR(255) REFERENCES queue_entries(queue_id)",
       status: "VARCHAR(255) NOT NULL DEFAULT 'Created'",
+      cancellation_reason: "VARCHAR(255)",
       consultation_type: " VARCHAR(255) NOT NULL DEFAULT 'Initial'",
       diagnosis: "JSONB",
       presenting_complaint: " JSONB",
@@ -548,7 +550,7 @@ const TABLES: {
 // -----------------------------------------------------------------------
 // CONNECT TO DATABASE
 //
-// Creates missing tables and applies the additive laboratory-result repair.
+// Creates missing tables and applies additive column repairs.
 // Does not remove existing tables, columns, or records.
 //
 // Use syncSchema() when you want the database to exactly match TABLES.
@@ -571,6 +573,10 @@ export async function connectNeon(): Promise<void> {
     }
 
     await ensureLaboratoryResultStatus();
+    await sql`
+      ALTER TABLE consultation_records
+      ADD COLUMN IF NOT EXISTS cancellation_reason VARCHAR(255)
+    `;
 
     console.log("Database initialized successfully");
   } catch (error) {

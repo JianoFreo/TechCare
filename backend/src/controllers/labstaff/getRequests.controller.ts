@@ -10,7 +10,53 @@ import type {
   getAnalysisReadyRequests,
   getAvailableFormTemplates,
   getReleasedLaboratoryResults,
+  getReleasedLaboratoryResult,
 } from "./dto/get.dto.js";
+
+// Return one released report, including its saved template snapshot in results.
+// The client can use this payload to render or print the original report.
+export async function getReleasedLaboratoryResult(
+  req: Request,
+  res: Response<getReleasedLaboratoryResult.response | getReleasedLaboratoryResult.error>,
+) {
+  const resultId = req.params.result_id;
+  if (typeof resultId !== "string" || !resultId.trim() || resultId.length > 255) {
+    return res.status(400).json({ message: "A valid result ID is required." });
+  }
+
+  try {
+    // Only patient routes set this trusted value through patientMiddleware.
+    const patientId: string | null = res.locals.patientId ?? null;
+    const [result] = await sql`
+      SELECT r.result_id, r.lab_item_id, r.results, r.status,
+             r.remarks, r.image_url, r.verified_by, r.verified_at,
+             r.created_at, r.updated_at,
+             lr.request_id, lr.patient_id, lr.requested_at,
+             CONCAT_WS(' ', p.first_name, p.middle_name, p.last_name, p.suffix) AS patient_name,
+             p.birthdate, p.sex, s.service_id, s.service_name, s.room,
+             NULLIF(CONCAT_WS(' ', verifier.first_name, verifier.last_name), '') AS verified_by_name
+      FROM laboratory_results r
+      JOIN laboratory_request_items ri ON ri.lab_item_id = r.lab_item_id
+      JOIN laboratory_requests lr ON lr.request_id = ri.request_id
+      JOIN patients p ON p.patient_id = lr.patient_id
+      JOIN services s ON s.service_id = ri.service_id
+      LEFT JOIN users verifier ON verifier.user_id = r.verified_by
+      WHERE r.result_id = ${resultId.trim()} AND r.status = 'Released'
+        AND (${patientId}::text IS NULL OR lr.patient_id = ${patientId})
+    `;
+    if (!result) {
+      return res.status(404).json({ message: "Released laboratory result not found." });
+    }
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(200).json({
+      message: "Laboratory result fetched successfully.",
+      result: result as getReleasedLaboratoryResult.result,
+    });
+  } catch (error) {
+    console.error("Unable to fetch laboratory result:", error);
+    return res.status(500).json({ message: "Unable to fetch laboratory result." });
+  }
+}
 
 export async function getLaboratoryRequestDetails(
   req: Request,
