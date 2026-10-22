@@ -220,7 +220,9 @@ export async function skipQueueEntry(
 
 export async function confirmLabRequestPayment(
   req: Request,
-  res: Response<confirmLabRequestPayment.response | confirmLabRequestPayment.error>,
+  res: Response<
+    confirmLabRequestPayment.response | confirmLabRequestPayment.error
+  >,
 ) {
   try {
     const { request_id } = req.params;
@@ -243,7 +245,7 @@ export async function confirmLabRequestPayment(
     return res.status(200).json({
       message: "Laboratory request payment confirmed.",
       request: updatedLabRequest,
-    } as confirmLabRequestPayment.response);
+    } as any as confirmLabRequestPayment.response);
   } catch (error) {
     console.error(error);
 

@@ -12,12 +12,14 @@ import {
   generateQueueNumberConsultation,
   generateQueueNumberLaboratory,
   generateLaboratoryItemID,
+  generateConsultationRecordId,
 } from "../../utils/generateId.js";
 import type {
   addPatient,
   addBills,
   addToQueue,
   addLaboratoryRequest,
+  addConsultationRecord,
 } from "./dto/post.dto.js";
 
 export async function addPatient(
@@ -232,120 +234,118 @@ export async function addBills(
   }
 }
 
-export async function addToQueue(
-  req: Request,
-  res: Response<addToQueue.response | addToQueue.error>,
-) {
-  const { record_type, record_id, is_priority } = req.body as addToQueue.body;
+// export async function addToQueue(
+//   req: Request,
+//   res: Response<addToQueue.response | addToQueue.error>,
+// ) {
+//   const { record_type, record_id, is_priority } = req.body as addToQueue.body;
 
-  if (
-    (record_type !== "laboratory" && record_type !== "consultation") ||
-    !record_id ||
-    typeof is_priority !== "boolean"
-  ) {
-    return res.status(400).json({
-      message: "record_type, record_id and is_priority are required.",
-    } as addToQueue.error);
-  }
+//   if (
+//     (record_type !== "laboratory" && record_type !== "consultation") ||
+//     !record_id ||
+//     typeof is_priority !== "boolean"
+//   ) {
+//     return res.status(400).json({
+//       message: "record_type, record_id and is_priority are required.",
+//     } as addToQueue.error);
+//   }
 
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await client.query("SELECT pg_advisory_xact_lock(hashtext('queue_ids'))");
+//   const client = await pool.connect();
+//   try {
+//     await client.query("BEGIN");
+//     await client.query("SELECT pg_advisory_xact_lock(hashtext('queue_ids'))");
 
-    // 1. load the source record (patient, service, current queue_id)
-    const { rows } =
-      record_type === "laboratory"
-        ? await client.query(
-            `SELECT lr.patient_id, lri.service_id, lri.queue_id
-             FROM laboratory_request_items lri
-             JOIN laboratory_requests lr ON lr.request_id = lri.request_id
-             WHERE lri.lab_item_id = $1
-             FOR UPDATE OF lri`,
-            [record_id],
-          )
-        : await client.query(
-            `SELECT patient_id, service_id, queue_id
-             FROM consultation_records
-             WHERE consultation_record_id = $1
-             FOR UPDATE`,
-            [record_id],
-          );
+//     // 1. load the source record (patient, service, current queue_id)
+//     const { rows } =
+//       record_type === "laboratory"
+//         ? await client.query(
+//             `SELECT lr.patient_id, lri.service_id, lri.queue_id
+//              FROM laboratory_request_items lri
+//              JOIN laboratory_requests lr ON lr.request_id = lri.request_id
+//              WHERE lri.lab_item_id = $1
+//              FOR UPDATE OF lri`,
+//             [record_id],
+//           )
+//         : await client.query(
+//             `SELECT patient_id, service_id, queue_id
+//              FROM consultation_records
+//              WHERE consultation_record_id = $1
+//              FOR UPDATE`,
+//             [record_id],
+//           );
 
-    if (rows.length === 0) {
-      await client.query("ROLLBACK");
-      return res
-        .status(404)
-        .json({ message: "Record not found." } as addToQueue.error);
-    }
-    if (rows[0].queue_id) {
-      await client.query("ROLLBACK");
-      return res
-        .status(409)
-        .json({ message: "Already added to the queue." } as addToQueue.error);
-    }
+//     if (rows.length === 0) {
+//       await client.query("ROLLBACK");
+//       return res
+//         .status(404)
+//         .json({ message: "Record not found." } as addToQueue.error);
+//     }
+//     if (rows[0].queue_id) {
+//       await client.query("ROLLBACK");
+//       return res
+//         .status(409)
+//         .json({ message: "Already added to the queue." } as addToQueue.error);
+//     }
 
-    const { patient_id, service_id } = rows[0];
+//     const { patient_id, service_id } = rows[0];
 
-    // 2. generate the queue ID and number (same transaction, after the lock)
-    const isLab = record_type === "laboratory";
+//     // 2. generate the queue ID and number (same transaction, after the lock)
+//     const isLab = record_type === "laboratory";
 
-    const queue_id = isLab
-      ? await generateLaboratoryQueueId()
-      : await generateConsultationQueueId();
+//     const queue_id = isLab
+//       ? await generateLaboratoryQueueId()
+//       : await generateConsultationQueueId();
 
-    const queue_number = isLab
-      ? await generateQueueNumberLaboratory()
-      : await generateQueueNumberConsultation();
+//     const queue_number = isLab
+//       ? await generateQueueNumberLaboratory()
+//       : await generateQueueNumberConsultation();
 
-    // 3. create the queue entry
-    const { rows: queueRows } = await client.query(
-      `INSERT INTO queue_entries
-         (queue_id, patient_id, service_id, queue_number, is_priority, status)
-       VALUES ($1, $2, $3, $4, $5, 'Waiting')
-       RETURNING *`,
-      [queue_id, patient_id, service_id, queue_number, is_priority],
-    );
+//     // 3. create the queue entry
+//     const { rows: queueRows } = await client.query(
+//       `INSERT INTO queue_entries
+//          (queue_id, patient_id, service_id, queue_number, is_priority, status)
+//        VALUES ($1, $2, $3, $4, $5, 'Waiting')
+//        RETURNING *`,
+//       [queue_id, patient_id, service_id, queue_number, is_priority],
+//     );
 
-    // 4. link it back to the source record
-    if (isLab) {
-      await client.query(
-        `UPDATE laboratory_request_items
-         SET queue_id = $1, updated_at = NOW(), status = 'Waiting'
-         WHERE lab_item_id = $2`,
-        [queue_id, record_id],
-      );
-    } else {
-      await client.query(
-        `UPDATE consultation_records
-         SET queue_id = $1, status = 'Waiting'
-         WHERE consultation_record_id = $2`,
-        [queue_id, record_id],
-      );
-    }
+//     // 4. link it back to the source record
+//     if (isLab) {
+//       await client.query(
+//         `UPDATE laboratory_request_items
+//          SET queue_id = $1, updated_at = NOW(), status = 'Waiting'
+//          WHERE lab_item_id = $2`,
+//         [queue_id, record_id],
+//       );
+//     } else {
+//       await client.query(
+//         `UPDATE consultation_records
+//          SET queue_id = $1, status = 'Waiting'
+//          WHERE consultation_record_id = $2`,
+//         [queue_id, record_id],
+//       );
+//     }
 
-    await client.query("COMMIT");
-    return res
-      .status(201)
-      .json({
-        message: "Added to queue.",
-        queue: queueRows[0] as unknown as addToQueue.queue,
-      } as addToQueue.response);
-  } catch (error) {
-    await client.query("ROLLBACK").catch(console.error);
-    console.error("Error adding to queue:", error);
-    if ((error as { code?: string }).code === "23503") {
-      return res
-        .status(400)
-        .json({ message: "Invalid patient or service." } as addToQueue.error);
-    }
-    return res
-      .status(500)
-      .json({ message: "Internal server error." } as addToQueue.error);
-  } finally {
-    client.release();
-  }
-}
+//     await client.query("COMMIT");
+//     return res.status(201).json({
+//       message: "Added to queue.",
+//       queue: queueRows[0] as unknown as addToQueue.queue,
+//     } as addToQueue.response);
+//   } catch (error) {
+//     await client.query("ROLLBACK").catch(console.error);
+//     console.error("Error adding to queue:", error);
+//     if ((error as { code?: string }).code === "23503") {
+//       return res
+//         .status(400)
+//         .json({ message: "Invalid patient or service." } as addToQueue.error);
+//     }
+//     return res
+//       .status(500)
+//       .json({ message: "Internal server error." } as addToQueue.error);
+//   } finally {
+//     client.release();
+//   }
+// }
 
 export async function addLaboratoryRequest(
   req: Request,
@@ -402,18 +402,86 @@ export async function addLaboratoryRequest(
     console.error(error);
     await client.query("ROLLBACK").catch(console.error);
     if (error.code === "23503") {
-      return res
-        .status(400)
-        .json({
-          message: "Invalid patient or service ID.",
-        } as addLaboratoryRequest.error);
+      return res.status(400).json({
+        message: "Invalid patient or service ID.",
+      } as addLaboratoryRequest.error);
     }
     console.error(error);
-    return res
-      .status(500)
-      .json({
-        message: "Internal server error.",
-      } as addLaboratoryRequest.error);
+    return res.status(500).json({
+      message: "Internal server error.",
+    } as addLaboratoryRequest.error);
+  } finally {
+    client.release();
+  }
+}
+
+export async function addConsultationRecord(
+  req: Request,
+  res: Response<addConsultationRecord.response | addConsultationRecord.error>,
+) {
+  const {
+    patient_id,
+    service_id,
+    is_priority = false,
+  } = req.body as addConsultationRecord.body;
+  const user_id = "U-26-1001-0004"; // TODO: take from the authenticated user
+
+  if (!patient_id || !user_id || !service_id) {
+    return res.status(400).json({
+      message: "Patient ID and service ID are required.",
+    } as addConsultationRecord.error);
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      "SELECT pg_advisory_xact_lock(hashtext('consultation_ids'))",
+    );
+
+    const consultation_record_id = await generateConsultationRecordId(client);
+    const queue_id = await generateConsultationQueueId(client);
+    const queue_number = await generateQueueNumberConsultation(client);
+
+    const {
+      rows: [queue_result],
+    } = await client.query(
+      `INSERT INTO queue_entries (queue_id, patient_id, queue_number, is_priority)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [queue_id, patient_id, queue_number, is_priority],
+    );
+
+    const {
+      rows: [consultation_record_result],
+    } = await client.query(
+      `INSERT INTO consultation_records
+         (consultation_record_id, patient_id, service_id, requested_by, queue_id, status)
+       VALUES ($1, $2, $3, $4, $5, 'In Queue')
+       RETURNING *`,
+      [consultation_record_id, patient_id, service_id, user_id, queue_id],
+    );
+
+    await client.query("COMMIT");
+
+    return res.status(201).json({
+      message: "Laboratory request added successfully.",
+      consultation_record: consultation_record_result,
+      queue: queue_result,
+    } as addConsultationRecord.response);
+  } catch (error: any) {
+    await client.query("ROLLBACK").catch(console.error);
+    console.error(error);
+
+    if (error.code === "23503") {
+      return res.status(400).json({
+        message: "Invalid patient or service ID.",
+      } as addConsultationRecord.error);
+    }
+
+    return res.status(500).json({
+      message: "Internal server error.",
+    } as addConsultationRecord.error);
   } finally {
     client.release();
   }
