@@ -2,7 +2,7 @@ import app from "./app.js";
 import { connectNeon, syncSchema } from "./config/db.js";
 import { ENV } from "./config/env.js";
 // import { initializeWebSocket } from "./websocket.js";
-import { closeAllQueueStreams } from "./services/queueStream.js";
+import { closeAllQueueStreams } from "./utils/queueStream.js";
 
 // IMPORTANT: Render needs process.env.PORT
 
@@ -24,8 +24,9 @@ async function initializeServer() {
     });
     // initializeWebSocket(server);
 
-    // Deploys send SIGTERM. Close SSE streams first, otherwise server.close()
-    // waits forever on connections that never end on their own.
+    // When Render deploys (or you press Ctrl+C) the server is told to stop.
+    // The Queue Monitor connections never end by themselves, so we close them
+    // first. If we don't, server.close() waits on them forever.
     const shutdown = (signal: string) => {
       console.log(`${signal} received, closing queue streams...`);
       closeAllQueueStreams();
