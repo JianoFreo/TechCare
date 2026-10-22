@@ -19,8 +19,7 @@ import type {
   addToQueue,
   addLaboratoryRequest,
 } from "./dto/post.dto.js";
-import { publishQueueChange } from "../../services/queueStream.js";
-
+import { publishQueueChange } from "../../utils/queueStream.js";
 export async function addPatient(
   req: Request,
   res: Response<addPatient.response | addPatient.error>,
@@ -326,11 +325,15 @@ export async function addToQueue(
     }
 
     await client.query("COMMIT");
+    // SSE: a new patient entered the queue, so every Queue Monitor needs it.
+    // This is after COMMIT on purpose: we never announce data that could roll back.
     publishQueueChange();
-    return res.status(201).json({
-      message: "Added to queue.",
-      queue: queueRows[0] as unknown as addToQueue.queue,
-    } as addToQueue.response);
+    return res
+      .status(201)
+      .json({
+        message: "Added to queue.",
+        queue: queueRows[0] as unknown as addToQueue.queue,
+      } as addToQueue.response);
   } catch (error) {
     await client.query("ROLLBACK").catch(console.error);
     console.error("Error adding to queue:", error);
