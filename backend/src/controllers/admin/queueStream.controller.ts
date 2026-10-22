@@ -3,7 +3,7 @@ import {
   getConnectedScreens,
   openQueueStream,
   sendQueueSnapshot,
-} from "../../utils/queueStream.js";
+} from "../../services/sse/queueStream.js";
 
 // GET /api/admin/queue/stream
 // Called by the Queue Monitor page (admin). Unlike our other GET controllers,

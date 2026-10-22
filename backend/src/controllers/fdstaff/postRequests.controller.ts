@@ -19,7 +19,7 @@ import type {
   addToQueue,
   addLaboratoryRequest,
 } from "./dto/post.dto.js";
-import { publishQueueChange } from "../../utils/queueStream.js";
+import { publishQueueChange } from "../../services/sse/queueStream.js";
 export async function addPatient(
   req: Request,
   res: Response<addPatient.response | addPatient.error>,
