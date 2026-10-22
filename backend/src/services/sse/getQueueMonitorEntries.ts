@@ -1,4 +1,4 @@
-import { sql } from "../config/db.js";
+import { sql } from "../../config/db.js";
 
 // What ONE row on the Queue Monitor screen looks like.
 // IMPORTANT: Everything we send through SSE can be seen in the browser's
