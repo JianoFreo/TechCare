@@ -1,7 +1,7 @@
 import { sql } from "../../config/db.js";
 import type { Request, Response } from "express";
 import type { deleteQueue, deletePatient } from "./dto/delete.dto.js";
-import { publishQueueChange } from "../../utils/queueStream.js";
+import { publishQueueChange } from "../../services/sse/queueStream.js";
 export async function deleteQueue(
   req: Request,
   res: Response<deleteQueue.response | deleteQueue.error>,
