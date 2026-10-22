@@ -36,3 +36,56 @@ export async function getQueueStreamStats(req: Request, res: Response) {
     screens,
   });
 }
+
+// // 1. Tell the browser this is an SSE connection.
+// res.setHeader("Content-Type", "text/event-stream");
+
+// // 2. Keep the HTTP connection open.
+// res.flushHeaders();
+
+// // 3. Send an event whenever something changes.
+// res.write("event: queue-updated\ndata: {}\n\n");
+
+
+//// ------------- REST API example payload and fetching---------------------
+// json payload
+// app.get("/api/queue", (req, res) => {
+//   res.json([
+//     { queue_number: "LAB-001", status: "waiting" },
+//     { queue_number: "LAB-002", status: "serving" }
+//   ]);
+// });
+// THE response looks like this
+// [
+//   { "queue_number": "LAB-001", "status": "waiting" },
+//   { "queue_number": "LAB-002", "status": "serving" }
+// ]
+// CLIENT ACCESING THE JSON API
+// const response = await fetch("/api/queue");
+// const data = await response.json();
+
+// console.log(data);
+// console.log(data[0].queue_number); // LAB-001
+// console.log(data[0].status);       // waiting
+
+///// ---------------- SSE example payload and fetching ---------------------
+
+// SSE (Server-Sent Events) payload
+// app.get("/events", (req, res) => {
+//   res.setHeader("Content-Type", "text/event-stream");
+
+//   res.write("event: queue-updated\n");
+//   res.write("data: {}\n\n");
+// });
+// event: queue-updated
+// data: {}
+
+// CLIENT ACCESING THE SSE STREAM
+// const source = new EventSource("/api/queue/stream");
+
+// source.addEventListener("queue-updated", (event) => {
+//   const data = JSON.parse(event.data);
+
+//   console.log(data.queue_number); // LAB-001
+//   console.log(data.status);       // waiting
+// });
