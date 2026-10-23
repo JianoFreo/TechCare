@@ -325,24 +325,19 @@ export async function generateConsultationQueueId(client: PoolClient) {
   return `CONS-${String(nextNumber).padStart(4, "0")}`;
 }
 
-export async function generateLaboratoryQueueId() {
-  const queue = await sql`
-    SELECT queue_id
-    FROM queue_entries
-    WHERE queue_id LIKE 'LAB-%'
-    ORDER BY queue_id DESC
-    LIMIT 1
-  `;
+export async function generateLaboratoryQueueId(client: PoolClient) {
+  const { rows } = await client.query(
+    `SELECT queue_id
+     FROM queue_entries
+     WHERE queue_id LIKE 'LAB-%'
+     ORDER BY SPLIT_PART(queue_id, '-', 2)::int DESC
+     LIMIT 1`,
+  );
 
-  let nextNumber = 1;
-  const last = queue[0]?.queue_id;
+  const last = rows[0]?.queue_id;
+  const nextNumber = last ? Number(last.split("-")[1]) + 1 : 1;
 
-  if (last) {
-    nextNumber = Number(last.split("-")[1]) + 1;
-  }
-
-  const sequence = String(nextNumber).padStart(4, "0");
-  return `LAB-${sequence}`;
+  return `LAB-${String(nextNumber).padStart(4, "0")}`;
 }
 
 export async function generateQueueNumberConsultation(client: PoolClient) {
@@ -357,14 +352,25 @@ export async function generateQueueNumberConsultation(client: PoolClient) {
   return Number(rows[0].next);
 }
 
-export async function generateQueueNumberLaboratory() {
-  const queue = await sql`
-    SELECT COALESCE(MAX(queue_number), 0) + 1 AS next
-    FROM queue_entries
-    WHERE queue_id LIKE 'LAB-%'
-      AND (created_at AT TIME ZONE 'Asia/Manila')::date =
-          (NOW() AT TIME ZONE 'Asia/Manila')::date
-  `;
+export async function generateQueueNumberLaboratory(
+  client: PoolClient,
+  room: string,
+) {
+  const { rows } = await client.query(
+    `SELECT COALESCE(MAX(qe.queue_number), 0) + 1 AS next
+     FROM queue_entries qe
+     WHERE qe.queue_id LIKE 'LAB-%'
+       AND (qe.created_at AT TIME ZONE 'Asia/Manila')::date =
+           (NOW() AT TIME ZONE 'Asia/Manila')::date
+       AND EXISTS (
+         SELECT 1
+         FROM laboratory_request_items lri
+         JOIN services s ON s.service_id = lri.service_id
+         WHERE lri.queue_id = qe.queue_id
+           AND s.room::text = $1
+       )`,
+    [room],
+  );
 
-  return Number(queue[0].next);
+  return Number(rows[0].next);
 }
