@@ -50,21 +50,6 @@ export type QueueStatistics = {
 export type QueueTab = "all" | "laboratory" | "consultation";
 export type PriorityFilter = "all" | "yes" | "none";
 
-// One row on the Queue Monitor screen.
-// It is a smaller version of QueueEntry on purpose: the backend sends only
-// what a screen needs (the name is masked, example: "Juan D.").
-export interface QueueMonitorEntry {
-  queue_id: string;
-  queue_number: number;
-  service_name: string;
-  service_type: string; // "consultation" or "laboratory"
-  room: string | null;
-  is_priority: boolean;
-  status: string; // lowercase: waiting, serving, skipped, completed, cancelled
-  display_name: string;
-  updated_at: string;
-}
-
 // The state of the live connection to the backend.
 // connecting = first try, live = receiving updates,
 // reconnecting = lost connection and trying again, unauthorized = token is invalid/expired
