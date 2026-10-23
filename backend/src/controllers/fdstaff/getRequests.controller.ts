@@ -232,30 +232,37 @@ export async function getAllQueueEntries(
 ) {
   try {
     const queueEntries = await sql`
-      SELECT
-        qe.id,
-        qe.queue_id,
-        qe.patient_id,
-        CONCAT_WS(' ', p.first_name, p.middle_name, p.last_name) AS patient_name,
-        to_char(p.birthdate, 'YYYY-MM-DD')                       AS birthdate,
-        qe.queue_number,
-        qe.service_id,
-        s.service_name,
-        s.service_type,
-        s.service_category,
-        s.room,
-        qe.is_priority,
-        qe.status,
-        qe.created_at,
-        qe.updated_at
-      FROM queue_entries qe
-      JOIN patients p ON p.patient_id = qe.patient_id
-      JOIN services s ON s.service_id = qe.service_id
-      WHERE qe.created_at >= CURRENT_DATE
-        AND qe.created_at <  CURRENT_DATE + INTERVAL '1 day'
-      ORDER BY qe.queue_number ASC, qe.id ASC
-    `;
+        SELECT
+          qe.id,
+          qe.queue_id,
+          qe.patient_id,
+          CONCAT_WS(' ', p.first_name, p.middle_name, p.last_name) AS patient_name,
+          to_char(p.birthdate, 'YYYY-MM-DD')                       AS birthdate,
+          qe.queue_number,
+          COALESCE(cs.service_type, lab.service_type)              AS service_type,
+          COALESCE(cs.room::text,   lab.room)                      AS room,
+          qe.is_priority,
+          qe.status,
+          qe.created_at,
+          qe.updated_at
+        FROM queue_entries qe
+        JOIN patients p ON p.patient_id = qe.patient_id
+        LEFT JOIN consultation_records cr ON cr.queue_id = qe.queue_id
+        LEFT JOIN services cs             ON cs.service_id = cr.service_id
+        LEFT JOIN LATERAL (
+          SELECT ls.service_type, ls.room::text AS room
+          FROM laboratory_request_items lri
+          JOIN services ls ON ls.service_id = lri.service_id
+          WHERE lri.queue_id = qe.queue_id
+          ORDER BY lri.lab_item_id
+          LIMIT 1
+        ) lab ON TRUE
+        WHERE qe.created_at >= CURRENT_DATE
+          AND qe.created_at <  CURRENT_DATE + INTERVAL '1 day'
+        ORDER BY qe.queue_number ASC, qe.id ASC
+      `;
 
+    console.log(queueEntries);
     return res.status(200).json({
       queueEntries: queueEntries as unknown as getAllQueueEntries.queueEntry[],
     } as getAllQueueEntries.response);
@@ -330,7 +337,7 @@ export async function getQueueRequests(
         FROM consultation_records cr
         JOIN patients p   ON p.patient_id = cr.patient_id
         JOIN services s   ON s.service_id = cr.service_id
-        LEFT JOIN users u ON u.user_id = cr.doctor_id
+        LEFT JOIN users u ON u.user_id = cr.consulted_by
         WHERE cr.status = 'Created'
           AND cr.queue_id IS NULL
           AND cr.consulted_at >= CURRENT_DATE

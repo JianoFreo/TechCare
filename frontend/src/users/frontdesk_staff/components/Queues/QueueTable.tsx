@@ -34,18 +34,18 @@ function QueueTable({ queues }: QueueTableProps) {
     <div className="max-h-105 overflow-auto rounded-xl border border-gray-200 bg-white">
       <table className="w-full text-sm">
         <colgroup>
-          <col className="w-1/30" />
-          <col className="w-9/30" />
-          <col className="w-5/30" />
-          <col className="w-5/30" />
-          <col className="w-5/30" />
+          <col className="w-4/30" />
+          <col className="w-7/30" />
+          <col className="w-6/30" />
+          <col className="w-4/30" />
+          <col className="w-4/30" />
           <col className="w-3/30" />
         </colgroup>
         <thead className="sticky top-0 z-10 bg-gray-100 text-gray-500">
           <tr className="border-b border-gray-200">
             <th className="px-4 py-3 text-left font-medium">No.</th>
             <th className="px-4 py-3 text-left font-medium">Patient</th>
-            <th className="px-4 py-3 text-left font-medium">Service</th>
+            <th className="px-4 py-3 text-left font-medium">Room</th>
             <th className="px-4 py-3 text-left font-medium">Priority</th>
             <th className="px-4 py-3 text-left font-medium">Status</th>
             <th className="px-4 py-3 text-left font-medium">Action</th>
@@ -65,8 +65,8 @@ function QueueTable({ queues }: QueueTableProps) {
                   key={entry.id}
                   className="border-b border-gray-200 transition-colors hover:bg-gray-50"
                 >
-                  <td className="px-4 py-3 align-top font-bold text-gray-800">
-                    {entry.queue_number}
+                  <td className="text-xs px-4 py-3 align-top text-gray-800">
+                    {entry.queue_id}
                   </td>
 
                   <td className="px-4 py-3 align-top">
@@ -84,12 +84,7 @@ function QueueTable({ queues }: QueueTableProps) {
                   </td>
 
                   <td className="px-4 py-3 align-top">
-                    <div className="font-medium text-gray-700">
-                      {entry.service_name}
-                    </div>
-                    <div className="text-[11px] text-gray-400">
-                      {entry.service_category}
-                    </div>
+                    <div className="text-gray-700">{entry.room}</div>
                   </td>
 
                   <td className="px-4 py-3 align-top">

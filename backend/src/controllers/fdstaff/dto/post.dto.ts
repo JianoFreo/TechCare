@@ -137,3 +137,20 @@ export namespace addLaboratoryRequest {
   }
 }
 
+export namespace addConsultationRecord {
+  export interface body {
+    patient_id: string;
+    service_id: string;
+    is_priority: boolean;
+  }
+
+  export interface response {
+    message: string;
+    consultation_record: Record<string, unknown>[];
+    queue: Record<string, unknown>[];
+  }
+
+  export interface error {
+    message: string;
+  }
+}
