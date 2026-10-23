@@ -2,7 +2,7 @@ import app from "./app.js";
 import { connectNeon, syncSchema } from "./config/db.js";
 import { ENV } from "./config/env.js";
 // import { initializeWebSocket } from "./websocket.js";
-import { closeAllQueueStreams } from "./services/sse/queueStream.js";
+import { closeAllQueueStreams } from "./services/queue-sse/index.js";
 
 // IMPORTANT: Render needs process.env.PORT
 

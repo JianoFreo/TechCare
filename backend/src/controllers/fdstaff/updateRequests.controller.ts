@@ -9,7 +9,7 @@ import type {
   skipQueueEntry,
   confirmLabRequestPayment,
 } from "./dto/update.dto.js";
-import { publishQueueChange } from "../../services/sse/queueStream.js";
+import { publishQueueChange } from "../../services/queue-sse/index.js";
 export async function updatePatient(
   req: Request,
   res: Response<updatePatient.response | updatePatient.error>,

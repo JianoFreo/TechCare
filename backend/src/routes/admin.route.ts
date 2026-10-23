@@ -25,10 +25,8 @@ import { upload } from "../middlewares/multer.middleware.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import adminMiddleware from "../middlewares/admin.middleware.js";
 import { getAllQueueEntries } from "../controllers/fdstaff/getRequests.controller.js";
-import {
-  streamQueue,
-  getQueueStreamStats,
-} from "../controllers/admin/queueStream.controller.js";
+import { streamQueue, getQueueStreamStats } from "../services/queue-sse/index.js";
+
 const router = Router();
 
 if (ENV.IS_PRODUCTION) {
