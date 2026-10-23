@@ -463,7 +463,7 @@ export async function addConsultationRecord(
     );
 
     await client.query("COMMIT");
-
+    publishQueueChange();
     return res.status(201).json({
       message: "Laboratory request added successfully.",
       consultation_record: consultation_record_result,

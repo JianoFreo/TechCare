@@ -317,7 +317,7 @@ export async function confirmLabRequestPayment(
     }
 
     await client.query("COMMIT");
-
+    publishQueueChange();
     return res.status(200).json({
       message: "Laboratory request payment confirmed and patient queued.",
       request: updated_lab_request,
