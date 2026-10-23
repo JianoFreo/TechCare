@@ -666,3 +666,29 @@ export async function getMedicalHistoryFull(
     } as getMedicalHistoryFull.error);
   }
 }
+
+
+export async function getLaboratoryRequest(
+  req: Request,
+  res: Response<getLaboratoryRequest.response | getLaboratoryRequest.error>,
+) {
+  try {
+    const { patient_id } = req.params;
+
+    const lab_reqs = await sql`
+        SELECT * FROM laboratory_requests
+        WHERE patient_id = ${patient_id} AND is_paid = 'FALSE'
+        AND requested_at >= CURRENT_DATE
+        AND requested_at < CURRENT_DATE + INTERVAL '1 day'
+        ORDER BY requested_at DESC;
+    `;
+    if (!lab_reqs) {
+      return res.json({ message: "there are no laboratory requests", lab_reqs: [] } as getLaboratoryRequest.response);
+    }
+    return res.status(200).json({ lab_reqs } as getLaboratoryRequest.response);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal Server Error" } as getLaboratoryRequest.error);
+  }
+}
+

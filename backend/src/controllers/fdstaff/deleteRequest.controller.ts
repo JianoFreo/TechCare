@@ -1,7 +1,8 @@
 import { sql } from "../../config/db.js";
 import type { Request, Response } from "express";
 import type { deleteQueue, deletePatient } from "./dto/delete.dto.js";
-import { publishQueueChange } from "../../services/sse/queueStream.js";
+import { publishQueueChange } from "../../services/queue-sse/index.js";
+
 export async function deleteQueue(
   req: Request,
   res: Response<deleteQueue.response | deleteQueue.error>,
@@ -24,6 +25,7 @@ export async function deleteQueue(
       } as deleteQueue.error);
     }
 
+    // SSE: this entry is gone from the queue, so every Queue Monitor must remove it.
     publishQueueChange();
     return res.status(200).json({
       message: "Queue deleted successfully",
@@ -59,6 +61,9 @@ export async function deletePatient(
         error: "Patient not found",
       } as deletePatient.error);
     }
+
+    // SSE: deleting a patient can also remove their queue entries,
+    // so every Queue Monitor needs the new queue.
     publishQueueChange();
     return res.status(200).json({
       message: "Patient deleted successfully",

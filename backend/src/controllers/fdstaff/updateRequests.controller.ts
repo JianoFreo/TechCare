@@ -9,7 +9,8 @@ import type {
   skipQueueEntry,
   confirmLabRequestPayment,
 } from "./dto/update.dto.js";
-import { publishQueueChange } from "../../services/sse/queueStream.js";
+import { publishQueueChange } from "../../services/queue-sse/index.js";
+
 export async function updatePatient(
   req: Request,
   res: Response<updatePatient.response | updatePatient.error>,
@@ -146,6 +147,9 @@ export async function serveQueueEntry(
         AND status = 'waiting'
       RETURNING *;
     `;
+
+    // SSE: a patient was called (status -> serving and the queue numbers behind
+    // them moved up), so every Queue Monitor needs the new queue.
     publishQueueChange();
     return res.status(200).json({
       message: "Queue entry called successfully.",
@@ -205,6 +209,9 @@ export async function skipQueueEntry(
       RETURNING *;
     `;
 
+    // SSE: the skipped patient swapped places with the next patient,
+    // so every Queue Monitor needs the new order.
+    publishQueueChange();
     return res.status(200).json({
       message: "Queue skipped successfully.",
       queue: updatedQueue[0],
