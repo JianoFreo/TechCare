@@ -262,7 +262,6 @@ export async function getAllQueueEntries(
         ORDER BY qe.queue_number ASC, qe.id ASC
       `;
 
-    console.log(queueEntries);
     return res.status(200).json({
       queueEntries: queueEntries as unknown as getAllQueueEntries.queueEntry[],
     } as getAllQueueEntries.response);
