@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import cloudinary from "../../config/cloudinary.js";
-import { sql } from "../../config/db.js";
+import { sql, pool } from "../../config/db.js";
 import { calculateAge } from "../../utils/calculateAge.js";
 import type { Request, Response } from "express";
 import type {
@@ -9,6 +9,10 @@ import type {
   skipQueueEntry,
   confirmLabRequestPayment,
 } from "./dto/update.dto.js";
+import {
+  generateLaboratoryQueueId,
+  generateQueueNumberLaboratory,
+} from "../../utils/generateId.js";
 
 export async function updatePatient(
   req: Request,
@@ -224,33 +228,109 @@ export async function confirmLabRequestPayment(
     confirmLabRequestPayment.response | confirmLabRequestPayment.error
   >,
 ) {
+  const { request_id } = req.params;
+  const { is_priority = false } = (req.body ?? {}) as { is_priority?: boolean };
+
+  const client = await pool.connect();
   try {
-    const { request_id } = req.params;
+    await client.query("BEGIN");
+    await client.query(
+      "SELECT pg_advisory_xact_lock(hashtext('lab_queue_ids'))",
+    );
 
-    const updatedLabRequest = await sql`
-    UPDATE laboratory_requests
-    SET is_paid = true,
-        status = 'Paid'
-    WHERE request_id = ${request_id}
-        AND is_paid = FALSE
-    RETURNING *;
-    `;
+    const {
+      rows: [updated_lab_request],
+    } = await client.query(
+      `UPDATE laboratory_requests
+       SET is_paid = TRUE,
+           status = 'Paid'
+       WHERE request_id = $1
+         AND is_paid = FALSE
+       RETURNING *`,
+      [request_id],
+    );
 
-    if (updatedLabRequest.length === 0) {
-      return res.status(404).json({
-        message: "Laboratory request not found.",
+    if (!updated_lab_request) {
+      await client.query("ROLLBACK");
+
+      const { rows } = await client.query(
+        "SELECT is_paid FROM laboratory_requests WHERE request_id = $1",
+        [request_id],
+      );
+
+      if (rows.length === 0) {
+        return res.status(404).json({
+          message: "Laboratory request not found.",
+        } as confirmLabRequestPayment.error);
+      }
+      return res.status(409).json({
+        message: "Laboratory request is already paid.",
       } as confirmLabRequestPayment.error);
     }
 
+    const { rows: pendingItems } = await client.query(
+      `SELECT lri.lab_item_id, s.room
+       FROM laboratory_request_items lri
+       JOIN services s ON s.service_id = lri.service_id
+       WHERE lri.request_id = $1
+         AND lri.queue_id IS NULL
+       ORDER BY s.room, lri.lab_item_id`,
+      [request_id],
+    );
+
+    const itemIdsByRoom = new Map<string, string[]>();
+    for (const item of pendingItems) {
+      const room = String(item.room ?? "Unassigned");
+      itemIdsByRoom.set(room, [
+        ...(itemIdsByRoom.get(room) ?? []),
+        item.lab_item_id,
+      ]);
+    }
+
+    const queues: Record<string, unknown>[] = [];
+    const items: Record<string, unknown>[] = [];
+
+    for (const [room, itemIds] of itemIdsByRoom) {
+      const queue_id = await generateLaboratoryQueueId(client);
+      const queue_number = await generateQueueNumberLaboratory(client, room);
+
+      const {
+        rows: [queue],
+      } = await client.query(
+        `INSERT INTO queue_entries (queue_id, queue_number, patient_id, is_priority)
+         VALUES ($1, $2, $3, $4)
+         RETURNING *`,
+        [queue_id, queue_number, updated_lab_request.patient_id, is_priority],
+      );
+
+      const { rows: updatedItems } = await client.query(
+        `UPDATE laboratory_request_items
+         SET queue_id = $1
+         WHERE lab_item_id = ANY($2::text[])
+         RETURNING *`,
+        [queue_id, itemIds],
+      );
+
+      queues.push({ ...queue, room });
+      items.push(...updatedItems);
+    }
+
+    await client.query("COMMIT");
+
     return res.status(200).json({
-      message: "Laboratory request payment confirmed.",
-      request: updatedLabRequest,
-    } as any as confirmLabRequestPayment.response);
+      message: "Laboratory request payment confirmed and patient queued.",
+      request: updated_lab_request,
+      queues,
+      items,
+    } as confirmLabRequestPayment.response);
   } catch (error) {
+    await client.query("ROLLBACK").catch(console.error);
     console.error(error);
 
     return res.status(500).json({
-      message: "Error in Confirming Laboratory Request Payment",
+      message: "Error in confirming laboratory request payment.",
     } as confirmLabRequestPayment.error);
+  } finally {
+    client.release();
   }
 }
