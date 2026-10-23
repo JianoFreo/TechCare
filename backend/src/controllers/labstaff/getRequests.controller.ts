@@ -56,17 +56,21 @@ export async function getLaboratoryQueues(
     const queues = await sql`
       SELECT
         q.*,
-        s.service_name,
-        s.service_type,
-        s.service_category,
-        s.room
+        CONCAT_WS(' ', p.first_name, p.middle_name, p.last_name) AS patient_name,
+        ${room}::text AS room
       FROM queue_entries q
-      JOIN services s ON s.service_id = q.service_id
+      JOIN patients p ON p.patient_id = q.patient_id
       WHERE q.queue_id LIKE 'LAB-%'
-        AND s.room = ${room}
+        AND EXISTS (
+          SELECT 1
+          FROM laboratory_request_items lri
+          JOIN services s ON s.service_id = lri.service_id
+          WHERE lri.queue_id = q.queue_id
+            AND s.room::text = ${room}
+        )
         AND q.created_at >= CURRENT_DATE
-        AND q.created_at < CURRENT_DATE + INTERVAL '1 day'
-      ORDER BY q.queue_number ASC
+        AND q.created_at <  CURRENT_DATE + INTERVAL '1 day'
+      ORDER BY q.queue_number ASC, q.id ASC
     `;
 
     return res
