@@ -5,7 +5,7 @@ import Admin from "./users/admin/Admin";
 import Doctor from "./users/doctor/Doctor";
 import FrontdeskStaff from "./users/frontdesk_staff/FrontdeskStaff";
 import PatientInformation from "./users/patient/PatientInformation";
-import QueueTracking from "./queue/QueueTracking";
+// import QueueTracking from "./queue/QueueTracking";
 import LaboratoryStaff from "./users/laboratory_staff/LaboratoryStaff";
 import ProtectedRoute from "./lib/ProtectedRoute";
 function App() {
@@ -56,8 +56,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Public-facing display, intentionally not gated */}
-        <Route path="/queue-tracking" element={<QueueTracking />} />
+        {/* Public-facing display, intentionally not gated
+        <Route path="/queue-tracking" element={<QueueTracking />} /> */}
       </Routes>
     </div>
   );

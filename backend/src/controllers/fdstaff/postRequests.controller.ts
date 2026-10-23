@@ -21,7 +21,7 @@ import type {
   addLaboratoryRequest,
   addConsultationRecord,
 } from "./dto/post.dto.js";
-
+import { publishQueueChange } from "../../utils/queueStream.js";
 export async function addPatient(
   req: Request,
   res: Response<addPatient.response | addPatient.error>,

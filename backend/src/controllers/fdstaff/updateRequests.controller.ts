@@ -14,6 +14,7 @@ import {
   generateQueueNumberLaboratory,
 } from "../../utils/generateId.js";
 
+import { publishQueueChange } from "../../utils/queueStream.js";
 export async function updatePatient(
   req: Request,
   res: Response<updatePatient.response | updatePatient.error>,
@@ -150,7 +151,7 @@ export async function serveQueueEntry(
         AND status = 'waiting'
       RETURNING *;
     `;
-
+    publishQueueChange();
     return res.status(200).json({
       message: "Queue entry called successfully.",
       existingQueueEntry,

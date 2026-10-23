@@ -24,6 +24,10 @@ import { deleteTemplate } from "../controllers/admin/deleteRequest.controller.js
 import { upload } from "../middlewares/multer.middleware.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import adminMiddleware from "../middlewares/admin.middleware.js";
+import {
+  streamQueue,
+  getQueueStreamStats,
+} from "../controllers/admin/queueStream.controller.js";
 const router = Router();
 
 if (ENV.IS_PRODUCTION) {
@@ -32,6 +36,13 @@ if (ENV.IS_PRODUCTION) {
 }
 
 router.use(authMiddleware, adminMiddleware);
+
+// SSE ROUTES (live Queue Monitor)
+// IMPORTANT: this route does NOT trigger an update. It is where the Queue Monitor
+// page CONNECTS and listens. The updates are triggered by the fdstaff and
+// labstaff routes that change the queue (look for "SSE TRIGGER" in those files).
+router.get("/queue/stream", streamQueue);
+router.get("/queue/stream/stats", getQueueStreamStats); // how many screens are connected
 
 router.get("/services", getAllservices);
 router.get("/activity", getMyActivities);

@@ -1,7 +1,7 @@
 import { sql } from "../../config/db.js";
 import type { Request, Response } from "express";
 import type { deleteQueue, deletePatient } from "./dto/delete.dto.js";
-
+import { publishQueueChange } from "../../utils/queueStream.js";
 export async function deleteQueue(
   req: Request,
   res: Response<deleteQueue.response | deleteQueue.error>,
@@ -24,6 +24,7 @@ export async function deleteQueue(
       } as deleteQueue.error);
     }
 
+    publishQueueChange();
     return res.status(200).json({
       message: "Queue deleted successfully",
     } as deleteQueue.response);
@@ -58,7 +59,7 @@ export async function deletePatient(
         error: "Patient not found",
       } as deletePatient.error);
     }
-
+    publishQueueChange();
     return res.status(200).json({
       message: "Patient deleted successfully",
     } as deletePatient.response);
