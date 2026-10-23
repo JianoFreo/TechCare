@@ -30,13 +30,8 @@ function ServiceList({
     count: number;
   } | null>(null);
 
-  const servicesList = selectedServices
-    .map((id) => services.find((service) => service.service_id === id))
-    .filter((service): service is Service => service !== undefined);
-
-  const initialTotalPrice = servicesList.reduce(
-    (total, service) => total + Number(service.price),
-    0,
+  const servicesList = services.filter((service) =>
+    selectedServices.includes(service.service_id),
   );
 
   const canSubmit = !!patientId && selectedServices.length > 0 && !submitting;
@@ -74,7 +69,7 @@ function ServiceList({
 
   return (
     <>
-      <div className="flex flex-col flex-1 min-h-0">
+      <div>
         <div className="flex items-center justify-between mb-5 pb-5 border-b border-gray-200">
           <h1 className="font-bold text-lg">
             {activeTab === "laboratory"
@@ -93,7 +88,7 @@ function ServiceList({
           )}
         </div>
 
-        <div className="flex flex-col gap-2 h-96 overflow-y-auto">
+        <div className="flex flex-col gap-2 max-h-85 overflow-y-scroll">
           {servicesList.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-96 gap-1">
               <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 mb-2">
@@ -115,11 +110,8 @@ function ServiceList({
                     <Syringe size={20} />
                   </div>
                   <div className="text-xs">
-                    <h1 className="font-bold">{service.service_name}</h1>
-                    <div className="flex gap-2">
-                      <h2>{service.service_category}</h2>
-                      <h2>₱{service.price}</h2>
-                    </div>
+                    <h2 className="font-bold">{service.service_name}</h2>
+                    <p>{service.service_category}</p>
                   </div>
                 </div>
                 <button
@@ -136,20 +128,8 @@ function ServiceList({
         </div>
       </div>
 
-      <div
-        className={`border-t mt-5 border-gray-200 py-3 flex items-center ${servicesList.length > 0 ? "justify-between" : "justify-end"}`}
-      >
-        {error ? (
-          <p className="text-xs text-red-500">{error}</p>
-        ) : initialTotalPrice > 0 ? (
-          <h1 className="font-semibold">
-            Initial Total Price: ₱
-            {initialTotalPrice.toLocaleString("en-PH", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </h1>
-        ) : null}
+      <div className="border-t mt-5 border-gray-200 py-5 flex items-center justify-end gap-4">
+        {error && <p className="text-xs text-red-500">{error}</p>}
         <button
           type="button"
           onClick={handleSubmit}

@@ -1,8 +1,8 @@
-import type { QueueMonitorEntry } from "../../../../interface/Queue";
+import type { QueueEntry } from "../../../../interface/Queue";
 
 type QueueColumnProps = {
   title: string; // "Consultation" or "Laboratory"
-  entries: QueueMonitorEntry[]; // only the entries of THIS service type
+  entries: QueueEntry[]; // only the entries of THIS service type
 };
 
 // How many waiting patients we show before writing "+3 more".
@@ -10,12 +10,16 @@ const NEXT_IN_LINE_LIMIT = 8;
 
 function QueueColumn({ title, entries }: QueueColumnProps) {
   // Split the entries by status. The backend already sends them in queue order.
-  const serving = entries.filter((entry) => entry.status === "serving");
+  // IMPORTANT: the database has both "Waiting" and "waiting", so we compare
+  // the lowercase version of the status.
+  const statusOf = (entry: QueueEntry) => entry.status.toLowerCase();
+
+  const serving = entries.filter((entry) => statusOf(entry) === "serving");
   const waiting = entries.filter(
-    (entry) => entry.status === "waiting" || entry.status === "skipped",
+    (entry) => statusOf(entry) === "waiting" || statusOf(entry) === "skipped",
   );
   const completedCount = entries.filter(
-    (entry) => entry.status === "completed",
+    (entry) => statusOf(entry) === "completed",
   ).length;
 
   return (
@@ -48,7 +52,7 @@ function QueueColumn({ title, entries }: QueueColumnProps) {
                 <p className="text-4xl font-black tabular-nums">
                   {entry.queue_id}
                 </p>
-                <p className="text-slate-300">{entry.display_name}</p>
+                <p className="text-slate-300">{entry.patient_name}</p>
               </div>
               {entry.room && (
                 <p className="text-lg text-emerald-200">{entry.room}</p>
@@ -76,7 +80,7 @@ function QueueColumn({ title, entries }: QueueColumnProps) {
                 {entry.queue_id}
               </span>
               <span className="flex items-center gap-3 text-slate-300">
-                {entry.status === "skipped" && (
+                {statusOf(entry) === "skipped" && (
                   <span className="text-xs text-amber-300">skipped</span>
                 )}
                 {entry.is_priority && (
@@ -84,7 +88,7 @@ function QueueColumn({ title, entries }: QueueColumnProps) {
                     PRIORITY
                   </span>
                 )}
-                {entry.display_name}
+                {entry.patient_name}
               </span>
             </li>
           ))}

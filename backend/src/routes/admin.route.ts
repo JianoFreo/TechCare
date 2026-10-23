@@ -24,10 +24,8 @@ import { deleteTemplate } from "../controllers/admin/deleteRequest.controller.js
 import { upload } from "../middlewares/multer.middleware.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import adminMiddleware from "../middlewares/admin.middleware.js";
-import {
-  streamQueue,
-  getQueueStreamStats,
-} from "../controllers/admin/queueStream.controller.js";
+import { streamQueue } from "../services/queue-sse/index.js";
+import { getAllQueueEntries } from "../controllers/fdstaff/getRequests.controller.js";
 const router = Router();
 
 if (ENV.IS_PRODUCTION) {
@@ -37,12 +35,17 @@ if (ENV.IS_PRODUCTION) {
 
 router.use(authMiddleware, adminMiddleware);
 
-// SSE ROUTES (live Queue Monitor)
+// SSE ROUTE (live Queue Monitor)
 // IMPORTANT: this route does NOT trigger an update. It is where the Queue Monitor
 // page CONNECTS and listens. The updates are triggered by the fdstaff and
 // labstaff routes that change the queue (look for "SSE TRIGGER" in those files).
 router.get("/queue/stream", streamQueue);
-router.get("/queue/stream/stats", getQueueStreamStats); // how many screens are connected
+
+// The Queue Monitor reloads the queue from this route every time SSE says
+// "queue-changed". It reuses the same controller the front desk uses
+// (getAllQueueEntries), because the fdstaff route is only allowed for the
+// frontdesk-staff role, so an admin could not call it.
+router.get("/queues", getAllQueueEntries);
 
 router.get("/services", getAllservices);
 router.get("/activity", getMyActivities);

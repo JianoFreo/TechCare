@@ -4,15 +4,12 @@ import type { Patient } from "../../../../interface/Patient";
 import calculateAge from "../../../../utils/calculateAge";
 import PatientSearchModal from "./RequestFooter/PatientSearchModal";
 
-type PatientSelectionHeaderProps = {
+type RequestFooterProps = {
   patient: Patient | null;
   onSelectPatient: (patient: Patient) => void;
 };
 
-function PatientSelectionHeader({
-  patient,
-  onSelectPatient,
-}: PatientSelectionHeaderProps) {
+function RequestFooter({ patient, onSelectPatient }: RequestFooterProps) {
   const [modalOpen, setModalOpen] = useState(false);
 
   const closeModal = useCallback(() => setModalOpen(false), []);
@@ -38,7 +35,7 @@ function PatientSelectionHeader({
 
   return (
     <>
-      <div className="flex justify-between border mx-8 mt-5 px-5 py-3 border-gray-200 rounded-xl shadow-lg">
+      <div className="flex justify-between border mx-8 mt-5 px-5 py-3 border-gray-200 rounded-xl shadow-xl">
         {patient ? (
           <div className="flex items-center gap-4">
             <div className="relative h-20 w-20 overflow-hidden rounded-full bg-gray-100">
@@ -120,4 +117,4 @@ function PatientSelectionHeader({
   );
 }
 
-export default PatientSelectionHeader;
+export default RequestFooter;

@@ -9,6 +9,7 @@ import {
   getAllBilling,
   getAllPatients,
   getAllQueueEntries,
+  getLaboratoryRequest,
   getMedicalHistory,
   getMedicalHistoryDetails,
   getPrintablePatientRecord,
@@ -46,6 +47,7 @@ router.get("/billing/unpaid-lab", getUnpaidRequests);
 router.get("/services", getAllservices);
 router.get("/queues", getAllQueueEntries);
 router.get("/patients/:patient_id/print", getPrintablePatientRecord);
+router.get("/patients/:patient_id/laboratory-requests", getLaboratoryRequest);
 router.get("/patients/:patient_id/medical-history", getPatientMedicalHistory);
 router.get("/queue-requests", getQueueRequests);
 
@@ -64,14 +66,19 @@ router.post("/patients", upload.single("image"), addPatient);
 //   addPatient,
 // );
 router.post("/billing", addBills);
+// SSE TRIGGER: adds a new patient to the queue -> addToQueue calls publishQueueChange()
 router.post("/queues", addToQueue);
 router.post("/laboratory-requests", addLaboratoryRequest);
 //UPDATE requests
+// SSE TRIGGER: calls a patient (status -> serving) -> serveQueueEntry calls publishQueueChange()
 router.put("/queues/:queue_id", serveQueueEntry);
+// SSE TRIGGER: skips a patient -> skipQueueEntry calls publishQueueChange()
 router.patch("/queues/:queue_id", skipQueueEntry);
 router.put("/patients/:patient_id", upload.single("image"), updatePatient);
 router.patch("/laboratory-requests/:request_id", confirmLabRequestPayment);
 // DELETE requests
+// SSE TRIGGER: removes an entry from the queue -> deleteQueue calls publishQueueChange()
 router.delete("/queues/:queue_id", deleteQueue);
+// SSE TRIGGER: deleting a patient can remove their queue entries -> deletePatient calls publishQueueChange()
 router.delete("/patients/:patient_id", deletePatient);
 export default router;

@@ -89,10 +89,7 @@ function ServiceSelectionPanel({
                   </div>
                   <div className="text-xs">
                     <h1 className="font-bold">{service.service_name}</h1>
-                    <div className="flex gap-2">
-                      <h2>{service.service_category}</h2>
-                      <h2>₱{service.price}</h2>
-                    </div>
+                    <h2>{service.service_category}</h2>
                   </div>
                 </div>
 

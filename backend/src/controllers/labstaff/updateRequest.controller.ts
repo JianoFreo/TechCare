@@ -8,7 +8,8 @@ import type {
   startLaboratoryAnalysis,
   releaseLaboratoryResult,
 } from "./dto/update.dto.js";
-import { publishQueueChange } from "../../services/sse/queueStream.js";
+import { publishQueueChange } from "../../services/queue-sse/index.js";
+
 export async function acceptQueueEntry(
   req: Request,
   res: Response<acceptQueueEntry.response | acceptQueueEntry.error>,
@@ -59,6 +60,8 @@ export async function acceptQueueEntry(
         message: `Queue is ${existing.status} and can't be accepted.`,
       } as acceptQueueEntry.error);
     }
+
+    // SSE: lab staff accepted the patient (status -> serving).
     publishQueueChange();
     return res.status(200).json({
       message: "Queue entry accepted and now being served.",
@@ -182,6 +185,7 @@ export async function completeQueueEntry(
 
     const { collected_item_count, ...queue } = updated;
 
+    // SSE: lab staff finished the patient (status -> completed).
     publishQueueChange();
     return res.status(200).json({
       message: "Queue entry completed.",
@@ -260,6 +264,8 @@ export async function skipQueueEntry(
       WHERE queue_id = ${queue_id}
       RETURNING *;
     `;
+
+    // SSE: the patient was skipped and moved back in the queue.
     publishQueueChange();
     return res.status(200).json({
       message: "Queue skipped successfully and returned to the queue.",
@@ -355,6 +361,7 @@ export async function cancelQueueEntry(
       RETURNING lab_item_id, request_id, queue_id, reason;
     `;
 
+    // SSE: the queue entry was cancelled.
     publishQueueChange();
     return res.status(200).json({
       message: "Queue cancelled successfully.",

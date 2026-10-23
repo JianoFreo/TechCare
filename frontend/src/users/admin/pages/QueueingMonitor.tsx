@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState } from "react";
-import { connectQueueStream } from "../../../services/queue-sse/connectQueueStream";
+import { useCallback, useEffect, useRef, useState } from "react";
+import api from "../../../lib/axios";
+import {
+  connectQueueStream,
+  type QueueStreamStatus,
+} from "../../../services/queue-sse/connectQueueStream";
 import QueueColumn from "../components/QueueMonitor/QueueColumn";
-import type {
-  QueueMonitorEntry,
-  QueueStreamStatus,
-} from "../../../interface/Queue";
+import type { QueueEntry } from "../../../interface/Queue";
 
-// Admin.tsx still passes these props, but this page no longer needs them:
-// the data now comes from the live connection (SSE), not from loadData().
+// Admin.tsx still passes these props, but this page does not use them:
+// Admin's loadData() loads users, services and activities (not the queue), so
+// this page loads the queue by itself with loadQueue() below.
 type QueueingMonitorProps = {
   open?: boolean;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -28,7 +30,7 @@ const STATUS_BADGE: Record<QueueStreamStatus, { label: string; style: string }> 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function QueueingMonitor(_props: QueueingMonitorProps) {
-  const [queueEntries, setQueueEntries] = useState<QueueMonitorEntry[]>([]);
+  const [queueEntries, setQueueEntries] = useState<QueueEntry[]>([]);
   const [status, setStatus] = useState<QueueStreamStatus>("connecting");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -36,27 +38,47 @@ function QueueingMonitor(_props: QueueingMonitorProps) {
   // Used for the Fullscreen button.
   const screenRef = useRef<HTMLDivElement>(null);
 
+  // Counts how many times we asked for the queue (explained in loadQueue).
+  const latestRequest = useRef(0);
+
   // Live clock in the header.
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // Loads today's queue from the REST API.
+  // SSE tells us WHEN to call this, the data itself comes from here.
+  const loadQueue = useCallback(async () => {
+    // If the queue changes twice quickly, two requests are sent. If the first
+    // one answers LAST, it would replace newer data with older data.
+    // So we number each request and ignore any answer that is not the latest.
+    latestRequest.current += 1;
+    const thisRequest = latestRequest.current;
+
+    try {
+      const res = await api.get("/api/admin/queues");
+      if (thisRequest !== latestRequest.current) return; // an older answer, ignore it
+
+      setQueueEntries(res.data.queueEntries);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error("Error loading queue entries:", error);
+    }
+  }, []);
+
   // THE LIVE CONNECTION
   // All the SSE work is in services/queue-sse/connectQueueStream.ts.
-  // This page only says what to do with the data it receives.
+  // This page only says what to do when the queue changed: reload it.
   useEffect(() => {
     const closeQueueStream = connectQueueStream({
-      onSnapshot: (entries) => {
-        setQueueEntries(entries);
-        setLastUpdated(new Date());
-      },
+      onQueueChanged: loadQueue,
       onStatusChange: setStatus,
     });
 
     // Cleanup: close the connection when leaving the page.
     return closeQueueStream;
-  }, []);
+  }, [loadQueue]);
 
   function handleFullscreen() {
     if (document.fullscreenElement) {

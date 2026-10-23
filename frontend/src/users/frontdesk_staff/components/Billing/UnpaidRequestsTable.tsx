@@ -64,7 +64,7 @@ function UnpaidRequestsTable({
                 </td>
 
                 <td className="px-4 py-3 align-top text-gray-700">
-                  {request.requested_by || "-"}
+                  {request.created_by || "-"}
                 </td>
                 <td className="px-4 py-3 align-top">
                   <button

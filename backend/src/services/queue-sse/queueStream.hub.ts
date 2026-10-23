@@ -1,16 +1,19 @@
 import type { Request, Response } from "express";
-import { getQueueMonitorEntries } from "./queueMonitor.query.js";
 
 // ============================================================================
-// THE "HUB": keeps track of every connected Queue Monitor and sends them data.
+// THE "HUB": keeps track of every connected Queue Monitor and tells them
+// when the queue changed.
+//
+// IMPORTANT: SSE does NOT send the queue data. It only sends a tiny message:
+// "the queue changed". The Queue Monitor then reloads the data by itself using
+// the normal REST API (GET /api/admin/queues).
 //
 //   1. A Queue Monitor page opens ONE long-lived connection to the backend.
 //      We keep that connection (the "res") in the `screens` list below.
 //   2. Whenever a controller changes queue_entries, it calls
 //      publishQueueChange().
-//   3. publishQueueChange() reads today's queue ONCE from the database and
-//      writes the result to every connected screen.
-//   4. The screen replaces its data. No page refresh, no polling.
+//   3. publishQueueChange() sends a "queue-changed" message to every screen.
+//   4. Each screen reloads the queue from the REST API. No page refresh.
 //
 // NOTE: `screens` lives in this server's memory, so this only works while
 // there is ONE backend instance running.
@@ -24,7 +27,8 @@ const MAX_SCREENS = 50;
 const PING_EVERY_MS = 25_000;
 
 // If many changes happen almost at once (serving a patient runs several
-// UPDATEs), we wait this long and send ONE update instead of many.
+// UPDATEs), we wait this long and send ONE "queue-changed" instead of many.
+// That way the screens reload the queue once, not many times.
 const WAIT_BEFORE_SENDING_MS = 150;
 
 // One connected Queue Monitor = one open response.
@@ -42,7 +46,7 @@ let pingTimer: NodeJS.Timeout | null = null;
 
 // Turns an event name + data into the text format SSE requires:
 //   id: 1
-//   event: snapshot
+//   event: queue-changed
 //   data: {...}
 //   (blank line = end of message)
 function buildMessage(eventName: string, data: unknown) {
@@ -53,7 +57,12 @@ function buildMessage(eventName: string, data: unknown) {
 // Writes one message to every connected screen.
 function sendToAllScreens(message: string) {
   for (const screen of screens) {
-    screen.res.write(message);
+    try {
+      screen.res.write(message);
+    } catch (error) {
+      // One broken connection must not stop the others from getting the message.
+      console.error(`[queue-sse] could not write to screen #${screen.id}:`, error);
+    }
   }
 }
 
@@ -123,63 +132,24 @@ export function openQueueStream(req: Request, res: Response): QueueScreen | null
 }
 
 // ----------------------------------------------------------------------------
-// Sends today's queue to ONE screen. Used right after it connects, so a screen
-// never starts empty (and never stays wrong after a reconnect).
-// ----------------------------------------------------------------------------
-export async function sendQueueSnapshot(screen: QueueScreen) {
-  try {
-    const queueEntries = await getQueueMonitorEntries();
-    screen.res.write(buildMessage("snapshot", { queueEntries }));
-  } catch (error) {
-    console.error("[queue-sse] could not load the first snapshot:", error);
-    screen.res.write(buildMessage("server-error", { message: "Could not load queue." }));
-  }
-}
-
-// ----------------------------------------------------------------------------
 // *** THIS IS THE FUNCTION CONTROLLERS CALL. ***
 // Call it AFTER a change to queue_entries has succeeded (after COMMIT if you
 // use a transaction), so we never announce something that got rolled back.
-// It never throws and it does not slow down the HTTP response.
+// It does not read the database and it does not slow down the HTTP response.
 // ----------------------------------------------------------------------------
 export function publishQueueChange() {
-  // A send is already scheduled, it will include this change too.
+  // A message is already scheduled, it covers this change too.
   if (waitTimer) return;
 
-  waitTimer = setTimeout(async () => {
+  waitTimer = setTimeout(() => {
     waitTimer = null;
 
-    // Nobody is watching, so skip the database query completely.
+    // Nobody is watching, nothing to send.
     if (screens.size === 0) return;
 
-    try {
-      // 1. read today's queue ONCE
-      const queueEntries = await getQueueMonitorEntries();
-
-      // 2. send the same data to every screen
-      sendToAllScreens(buildMessage("snapshot", { queueEntries }));
-    } catch (error) {
-      console.error("[queue-sse] could not send the update:", error);
-    }
+    // Only a signal, no queue data. Each screen reloads the queue by itself.
+    sendToAllScreens(
+      buildMessage("queue-changed", { changedAt: new Date().toISOString() }),
+    );
   }, WAIT_BEFORE_SENDING_MS);
-}
-
-// Info for the /queue/stream/stats route (how many screens are connected).
-export function getConnectedScreens() {
-  return [...screens].map((screen) => ({
-    id: screen.id,
-    connectedForSeconds: Math.round((Date.now() - screen.connectedAt) / 1000),
-  }));
-}
-
-// Called from server.ts when the server shuts down (example: a Render deploy).
-// Without this, the shutdown would wait forever on connections that never end.
-export function closeAllQueueStreams() {
-  if (waitTimer) clearTimeout(waitTimer);
-  if (pingTimer) clearInterval(pingTimer);
-
-  for (const screen of screens) {
-    screen.res.end();
-  }
-  screens.clear();
 }

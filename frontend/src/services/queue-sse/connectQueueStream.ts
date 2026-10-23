@@ -1,19 +1,27 @@
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import api from "../../lib/axios";
-import type {
-  QueueMonitorEntry,
-  QueueStreamStatus,
-} from "../../interface/Queue";
 
 // ============================================================================
 // FRONTEND SIDE OF THE QUEUE MONITOR (SSE)
 //
-// This file opens the live connection to the backend and keeps it alive.
-// It is plain TypeScript (no React), so pages only have to say:
-//   "call me when there is new data" and "call me when the status changes".
+// SSE does NOT bring the queue data. It only tells us "the queue changed".
+// When that happens we call onQueueChanged(), and the page reloads the queue
+// from the normal REST API (GET /api/admin/queues).
+//
+// This file is plain TypeScript (no React). It opens the live connection and
+// keeps it alive.
 //
 // The backend side of this lives in backend/src/services/queue-sse/
 // ============================================================================
+
+// The state of the live connection to the backend.
+// connecting = first try, live = receiving messages,
+// reconnecting = lost connection and trying again, unauthorized = token is invalid/expired
+export type QueueStreamStatus =
+  | "connecting"
+  | "live"
+  | "reconnecting"
+  | "unauthorized";
 
 // The backend route that keeps the connection open (admin.route.ts).
 const STREAM_URL = "/api/admin/queue/stream";
@@ -32,21 +40,24 @@ const MAX_RETRY_WAIT_MS = 15_000;
 class StopRetryingError extends Error {}
 
 type ConnectQueueStreamOptions = {
-  // Called every time the backend sends the full queue.
-  onSnapshot: (queueEntries: QueueMonitorEntry[]) => void;
+  // Called when the page should reload the queue. That is:
+  //   1. every time the backend says "queue-changed"
+  //   2. every time we (re)connect, because we may have missed changes
+  //      while we were disconnected
+  onQueueChanged: () => void;
   // Called when the connection status changes (live, reconnecting...).
   onStatusChange: (status: QueueStreamStatus) => void;
 };
 
 // Opens the live connection. Returns a function that closes it:
-//   const close = connectQueueStream({ onSnapshot, onStatusChange });
+//   const close = connectQueueStream({ onQueueChanged, onStatusChange });
 //   close(); // when leaving the page
 export function connectQueueStream({
-  onSnapshot,
+  onQueueChanged,
   onStatusChange,
 }: ConnectQueueStreamOptions) {
   let controller: AbortController | null = null; // used to close the connection
-  let lastHeardAt = Date.now(); // last time we heard ANYTHING (update or ping)
+  let lastHeardAt = Date.now(); // last time we heard ANYTHING (message or ping)
   let isClosed = false; // true after the page called close()
   let gaveUp = false; // true if the token is invalid (don't keep retrying)
 
@@ -65,7 +76,7 @@ export function connectQueueStream({
         Authorization: `Bearer ${sessionStorage.getItem("token") ?? ""}`,
       },
 
-      // IMPORTANT: keep receiving updates even if this browser tab is in the
+      // IMPORTANT: keep receiving messages even if this browser tab is in the
       // background (a monitor/TV tab is often not the active tab).
       openWhenHidden: true,
 
@@ -80,6 +91,10 @@ export function connectQueueStream({
           failedAttempts = 0;
           lastHeardAt = Date.now();
           onStatusChange("live");
+
+          // Load the queue now. This is also how the page gets its FIRST data,
+          // and how it catches up after a reconnect.
+          onQueueChanged();
           return;
         }
 
@@ -98,13 +113,10 @@ export function connectQueueStream({
       onmessage(message) {
         lastHeardAt = Date.now();
 
-        // "snapshot" = the full queue for today, replace what we have.
+        // "queue-changed" = something changed, reload the queue.
         // ("ping" only proves the connection is alive, nothing to do.)
-        if (message.event === "snapshot") {
-          const data = JSON.parse(message.data) as {
-            queueEntries: QueueMonitorEntry[];
-          };
-          onSnapshot(data.queueEntries);
+        if (message.event === "queue-changed") {
+          onQueueChanged();
         }
       },
 

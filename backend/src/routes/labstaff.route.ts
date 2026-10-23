@@ -52,12 +52,14 @@ router.post("/laboratory-results/:lab_item_id", saveLaboratoryResult);
 
 // PATCH ROUTES
 router.patch("/laboratory-requests/analysis/start", startLaboratoryAnalysis);
-// SSE TRIGGER ROUTES: these 4 change queue_entries, so each controller calls
-// publishQueueChange() and every Queue Monitor updates instantly.
-router.patch("/laboratory-queues/:queue_id/accept", acceptQueueEntry); // status -> serving
-router.patch("/laboratory-queues/:queue_id/skip", skipQueueEntry); // moved back in the queue
-router.patch("/laboratory-queues/:queue_id/cancel", cancelQueueEntry); // status -> cancelled
-router.patch("/laboratory-queues/:queue_id/complete", completeQueueEntry); // status -> completed
+// SSE TRIGGER ROUTES: the next 4 routes change queue_entries, so each controller
+// calls publishQueueChange() and every Queue Monitor updates instantly.
+// accept -> status becomes serving | skip -> moved back in the queue
+// cancel -> status becomes cancelled | complete -> status becomes completed
+router.patch("/laboratory-queues/:queue_id/accept", acceptQueueEntry);
+router.patch("/laboratory-queues/:queue_id/skip", skipQueueEntry);
+router.patch("/laboratory-queues/:queue_id/cancel", cancelQueueEntry);
+router.patch("/laboratory-queues/:queue_id/complete", completeQueueEntry);
 router.patch("/laboratory-results/:result_id/release", releaseLaboratoryResult);
 
 export default router;
