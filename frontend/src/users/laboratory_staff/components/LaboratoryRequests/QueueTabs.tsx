@@ -4,7 +4,7 @@ export type MainFilter =
   | "all"
   | "waiting"
   | "serving"
-  | "collected"
+  | "completed"
   | "skipped";
 
 type MainFilterValue = {

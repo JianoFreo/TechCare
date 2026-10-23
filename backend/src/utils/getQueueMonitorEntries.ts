@@ -23,21 +23,29 @@ export async function getQueueMonitorEntries(): Promise<QueueMonitorEntry[]> {
     SELECT
       qe.queue_id,
       qe.queue_number,
-      s.service_name,
-      LOWER(s.service_type)                                AS service_type,
-      s.room,
+      COALESCE(cs.service_name, lab.service_name)               AS service_name,
+      LOWER(COALESCE(cs.service_type, lab.service_type))        AS service_type,
+      COALESCE(cs.room::text, lab.room)                         AS room,
       qe.is_priority,
-      LOWER(qe.status)                                     AS status,
-      CONCAT(p.first_name, ' ', LEFT(p.last_name, 1), '.') AS display_name,
+      LOWER(qe.status)                                          AS status,
+      CONCAT(p.first_name, ' ', LEFT(p.last_name, 1), '.')      AS display_name,
       qe.updated_at
     FROM queue_entries qe
     JOIN patients p ON p.patient_id = qe.patient_id
-    JOIN services s ON s.service_id = qe.service_id
+    LEFT JOIN consultation_records cr ON cr.queue_id = qe.queue_id
+    LEFT JOIN services cs             ON cs.service_id = cr.service_id
+    LEFT JOIN LATERAL (
+      SELECT ls.service_name, ls.service_type, ls.room::text AS room
+      FROM laboratory_request_items lri
+      JOIN services ls ON ls.service_id = lri.service_id
+      WHERE lri.queue_id = qe.queue_id
+      ORDER BY lri.lab_item_id
+      LIMIT 1
+    ) lab ON TRUE
     WHERE qe.created_at >= CURRENT_DATE
       AND qe.created_at <  CURRENT_DATE + INTERVAL '1 day'
     ORDER BY qe.queue_number ASC, qe.id ASC
   `;
-  // LOWER(qe.status) is used because the database has both 'Waiting' and 'waiting'.
 
   return queueEntries as unknown as QueueMonitorEntry[];
 }
