@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
-import { getQueueMonitorEntries } from "./getQueueMonitorEntries.js";
+import { getQueueMonitorEntries } from "./queueMonitor.query.js";
 
 // ============================================================================
-// HOW THE QUEUE MONITOR (SSE) WORKS
+// THE "HUB": keeps track of every connected Queue Monitor and sends them data.
 //
 //   1. A Queue Monitor page opens ONE long-lived connection to the backend.
 //      We keep that connection (the "res") in the `screens` list below.
@@ -28,7 +28,7 @@ const PING_EVERY_MS = 25_000;
 const WAIT_BEFORE_SENDING_MS = 150;
 
 // One connected Queue Monitor = one open response.
-type QueueScreen = {
+export type QueueScreen = {
   id: number;
   res: Response;
   connectedAt: number;
@@ -79,7 +79,7 @@ function stopPingingIfNoScreens() {
 }
 
 // ----------------------------------------------------------------------------
-// Used by streamQueue (the controller) when a Queue Monitor connects.
+// Used by the streamQueue handler when a Queue Monitor connects.
 // Returns the new screen, or null if there are already too many connected.
 // ----------------------------------------------------------------------------
 export function openQueueStream(req: Request, res: Response): QueueScreen | null {
