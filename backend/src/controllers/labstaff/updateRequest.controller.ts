@@ -8,7 +8,7 @@ import type {
   startLaboratoryAnalysis,
   releaseLaboratoryResult,
 } from "./dto/update.dto.js";
-import { publishQueueChange } from "../../services/sse/queueStream.js";
+import { publishQueueChange } from "../../services/queue-sse/index.js";
 export async function acceptQueueEntry(
   req: Request,
   res: Response<acceptQueueEntry.response | acceptQueueEntry.error>,
