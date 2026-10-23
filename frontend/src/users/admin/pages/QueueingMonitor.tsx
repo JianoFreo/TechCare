@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchEventSource } from "@microsoft/fetch-event-source";
-import api from "../../../lib/axios";
+import { connectQueueStream } from "../../../services/queue-sse/connectQueueStream";
 import QueueColumn from "../components/QueueMonitor/QueueColumn";
 import type {
   QueueMonitorEntry,
@@ -16,16 +15,6 @@ type QueueingMonitorProps = {
   loading?: boolean;
 };
 
-// The backend route that keeps the connection open (admin.route.ts).
-const STREAM_URL = "/api/admin/queue/stream";
-
-// The backend sends a "ping" every 25 seconds. If we hear NOTHING for this
-// long (in milliseconds), the connection is probably dead, so we reconnect.
-const SILENCE_LIMIT_MS = 65_000;
-
-// The longest we wait before trying to reconnect (in milliseconds).
-const MAX_RETRY_WAIT_MS = 15_000;
-
 // Label + color of the badge for each connection status.
 const STATUS_BADGE: Record<QueueStreamStatus, { label: string; style: string }> = {
   connecting: { label: "Connecting…", style: "bg-amber-500/20 text-amber-300" },
@@ -37,23 +26,12 @@ const STATUS_BADGE: Record<QueueStreamStatus, { label: string; style: string }> 
   },
 };
 
-// Used to stop retrying when retrying can't help (example: bad token).
-class StopRetryingError extends Error {}
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function QueueingMonitor(_props: QueueingMonitorProps) {
   const [queueEntries, setQueueEntries] = useState<QueueMonitorEntry[]>([]);
   const [status, setStatus] = useState<QueueStreamStatus>("connecting");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
-
-  // Changing this number makes the useEffect below run again,
-  // which closes the old connection and opens a new one.
-  const [connectionNumber, setConnectionNumber] = useState(0);
-
-  // The last time we heard ANYTHING from the backend (update or ping).
-  // Starts at 0; the connection useEffect below sets the real time when it opens.
-  const lastHeardAt = useRef(0);
 
   // Used for the Fullscreen button.
   const screenRef = useRef<HTMLDivElement>(null);
@@ -65,100 +43,20 @@ function QueueingMonitor(_props: QueueingMonitorProps) {
   }, []);
 
   // THE LIVE CONNECTION
-  // Opens when the page opens, closes when the page closes.
+  // All the SSE work is in services/queue-sse/connectQueueStream.ts.
+  // This page only says what to do with the data it receives.
   useEffect(() => {
-    const controller = new AbortController(); // used to close the connection
-    let failedAttempts = 0;
-    lastHeardAt.current = Date.now();
-
-    // Safety check every 10 seconds: a connection can look open but be dead.
-    // If we haven't heard anything for too long, start a new connection.
-    const silenceChecker = setInterval(() => {
-      if (Date.now() - lastHeardAt.current > SILENCE_LIMIT_MS) {
-        setStatus("reconnecting");
-        setConnectionNumber((number) => number + 1);
-      }
-    }, 10_000);
-
-    // We use fetchEventSource instead of the browser's EventSource because
-    // EventSource can't send the Authorization header, and our backend
-    // needs the token (authMiddleware + adminMiddleware).
-    fetchEventSource(`${api.defaults.baseURL ?? ""}${STREAM_URL}`, {
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${sessionStorage.getItem("token") ?? ""}`,
+    const closeQueueStream = connectQueueStream({
+      onSnapshot: (entries) => {
+        setQueueEntries(entries);
+        setLastUpdated(new Date());
       },
-
-      // IMPORTANT: keep receiving updates even if this browser tab is in the
-      // background (a monitor/TV tab is often not the active tab).
-      openWhenHidden: true,
-
-      // The backend answered. Is it really the live stream?
-      async onopen(response) {
-        const isStream = response.headers
-          .get("content-type")
-          ?.startsWith("text/event-stream");
-
-        // 1. all good
-        if (response.ok && isStream) {
-          failedAttempts = 0;
-          lastHeardAt.current = Date.now();
-          setStatus("live");
-          return;
-        }
-
-        // 2. wrong/expired token: retrying will not fix it, so stop
-        if (response.status === 401 || response.status === 403) {
-          setStatus("unauthorized");
-          throw new StopRetryingError("Not authorized");
-        }
-
-        // 3. anything else (500, 503...): throw a normal error so it retries
-        throw new Error(`Unexpected response: ${response.status}`);
-      },
-
-      // The backend sent a message.
-      onmessage(message) {
-        lastHeardAt.current = Date.now();
-
-        // "snapshot" = the full queue for today, replace what we have.
-        // ("ping" only proves the connection is alive, nothing to do.)
-        if (message.event === "snapshot") {
-          const data = JSON.parse(message.data) as {
-            queueEntries: QueueMonitorEntry[];
-          };
-          setQueueEntries(data.queueEntries);
-          setLastUpdated(new Date());
-        }
-      },
-
-      // The backend closed the connection (example: it restarted).
-      // Throwing here makes fetchEventSource reconnect.
-      onclose() {
-        throw new Error("Connection closed by the backend");
-      },
-
-      // Something failed. Whatever we RETURN is how many milliseconds
-      // to wait before trying again.
-      onerror(error) {
-        if (error instanceof StopRetryingError) throw error; // stop for good
-
-        setStatus("reconnecting");
-        failedAttempts++;
-
-        // wait 2s, 4s, 8s, 15s, 15s... (doubles each time, with a limit)
-        return Math.min(1000 * 2 ** failedAttempts, MAX_RETRY_WAIT_MS);
-      },
-    }).catch(() => {
-      // StopRetryingError ends up here. The status badge is already updated.
+      onStatusChange: setStatus,
     });
 
     // Cleanup: close the connection when leaving the page.
-    return () => {
-      clearInterval(silenceChecker);
-      controller.abort();
-    };
-  }, [connectionNumber]);
+    return closeQueueStream;
+  }, []);
 
   function handleFullscreen() {
     if (document.fullscreenElement) {
