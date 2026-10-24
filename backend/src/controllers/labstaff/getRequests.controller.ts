@@ -1,4 +1,4 @@
-import { sql } from "../../config/db.js";
+﻿import { sql } from "../../config/db.js";
 import type { Request, Response } from "express";
 import type {
   getLaboratoryRequestDetails,
@@ -57,7 +57,40 @@ export async function getLaboratoryQueues(
       SELECT
         q.*,
         CONCAT_WS(' ', p.first_name, p.middle_name, p.last_name) AS patient_name,
-        ${room}::text AS room
+        ${room}::text AS room,
+        COALESCE(
+          (
+            SELECT s.service_name
+            FROM laboratory_request_items lri
+            JOIN services s ON s.service_id = lri.service_id
+            WHERE lri.queue_id = q.queue_id
+              AND s.room::text = ${room}
+            ORDER BY lri.lab_item_id
+            LIMIT 1
+          ), ''
+        ) AS service_name,
+        COALESCE(
+          (
+            SELECT s.service_type
+            FROM laboratory_request_items lri
+            JOIN services s ON s.service_id = lri.service_id
+            WHERE lri.queue_id = q.queue_id
+              AND s.room::text = ${room}
+            ORDER BY lri.lab_item_id
+            LIMIT 1
+          ), ''
+        ) AS service_type,
+        COALESCE(
+          (
+            SELECT s.service_category
+            FROM laboratory_request_items lri
+            JOIN services s ON s.service_id = lri.service_id
+            WHERE lri.queue_id = q.queue_id
+              AND s.room::text = ${room}
+            ORDER BY lri.lab_item_id
+            LIMIT 1
+          ), ''
+        ) AS service_category
       FROM queue_entries q
       JOIN patients p ON p.patient_id = q.patient_id
       WHERE q.queue_id LIKE 'LAB-%'
