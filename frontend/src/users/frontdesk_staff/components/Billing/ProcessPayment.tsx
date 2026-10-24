@@ -34,8 +34,8 @@ export default function ProcessPayment({ entry, onBack, onConfirm, submitting, e
           <div className="billing-patient-details">
             <div className="billing-patient-name"><span className="billing-avatar"><UserRound size={28} /></span><div><strong>{entry.patientName}</strong><span className="billing-muted">{entry.patientId}</span>{entry.age !== null && entry.age >= 60 && <span className="billing-status billing-status-pending">Senior citizen</span>}</div></div>
             <div><span className="billing-label">Age / sex</span><p>{entry.age === null ? "Age not recorded" : `${entry.age} years old`}</p><p>{entry.sex}</p></div>
-            <div><span className="billing-label">{entry.request ? "Request ID" : "Bill ID"}</span><p className="billing-break">{entry.id}</p></div>
-            <div><span className="billing-label">Date & time</span><p>{billingDate(entry.createdAt)}</p><p>{billingDate(entry.createdAt, true)}</p></div>
+            <div><span className="billing-label">{entry.referenceLabel || (entry.request ? "Request ID" : "Bill ID")}</span><p className="billing-break">{entry.reference || entry.id}</p></div>
+            <div><span className="billing-label">{entry.dateLabel || "Date & time"}</span><p>{billingDate(entry.createdAt)}</p><p>{billingDate(entry.createdAt, true)}</p></div>
           </div>
         </section>
         <section className="billing-card"><h2>Selected services</h2><ServicesTable entry={entry} /></section>

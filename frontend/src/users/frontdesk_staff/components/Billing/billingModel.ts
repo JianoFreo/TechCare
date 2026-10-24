@@ -97,13 +97,17 @@ export function paidRequestsAwaitingLab(rows: QueueRequests[], patients: Patient
 }
 
 export function recordEntry(record: BillingRecord, patients: Patient[], services: Service[]): BillingEntry {
+  const confirmation = record.record_type === "laboratory_confirmation";
   return {
     ...patientDetails(record.patient_id, patients),
     id: String(record.bill_id),
+    reference: record.request_id || String(record.bill_id),
+    referenceLabel: confirmation ? "Request ID" : "Bill ID",
+    dateLabel: confirmation ? "Request date" : "Payment date",
     patientId: record.patient_id,
     createdAt: record.billed_at || record.created_at || "",
     requester: "Not recorded",
-    type: "Payment",
+    type: confirmation ? "Laboratory" : "Payment",
     status: record.status?.toLowerCase() === "paid" ? "Paid" : record.status?.toLowerCase() === "cancelled" ? "Cancelled" : "Pending",
     method: record.payment_method || "Not recorded",
     lines: lines(Array.isArray(record.items) ? record.items : [], services, true),

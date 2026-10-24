@@ -27,14 +27,16 @@ export interface BillingRecord {
   bill_id: string | number;
   patient_id: string;
   items?: BillingItem[];
-  total_amount: number | string;
-  discount_pct?: number | string;
-  payment_method?: string;
+  total_amount: number | string | null;
+  discount_pct?: number | string | null;
+  payment_method?: string | null;
+  record_type?: "bill" | "laboratory_confirmation";
+  request_id?: string;
   status: string;
   receipt_id?: string | null;
   receipt_issued_at?: string | null;
   created_at?: string;
-  billed_at?: string;
+  billed_at?: string | null;
 }
 
 export interface BillingLine {
@@ -62,4 +64,7 @@ export interface BillingEntry {
   receiptId: string;
   request?: UnpaidRequests;
   needsLabQueue?: boolean;
+  reference?: string;
+  referenceLabel?: "Request ID" | "Bill ID";
+  dateLabel?: "Request date" | "Payment date";
 }

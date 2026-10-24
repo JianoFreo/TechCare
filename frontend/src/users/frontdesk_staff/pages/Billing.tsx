@@ -71,8 +71,8 @@ export default function Billing({ unpaidRequests, queueRequests = [], patients =
     const confirmedIds = new Set(confirmed.map((entry) => entry.id));
     const waiting = paidRequestsAwaitingLab(queueRequests, patients, services);
     const paidIds = new Set(waiting.map((entry) => entry.id));
-    return [...unpaidRequests.filter((request) => !confirmedIds.has(request.request_id) && !paidIds.has(request.request_id)).map((request) => requestEntry(request, patients, services)),
-      ...waiting.filter((entry) => !confirmedIds.has(entry.id)), ...confirmed];
+    return [...unpaidRequests.filter((request) => request.is_paid !== true && !confirmedIds.has(request.request_id) && !paidIds.has(request.request_id)).map((request) => requestEntry(request, patients, services)),
+      ...waiting.filter((entry) => !confirmedIds.has(entry.id)), ...confirmed.filter((entry) => entry.needsLabQueue === true)];
   }, [unpaidRequests, queueRequests, patients, services, confirmed]);
   const records = useMemo(() => history.map((record) => recordEntry(record, patients, services)), [history, patients, services]);
   const entries = tab === "queue" ? requests : records;
@@ -92,6 +92,7 @@ export default function Billing({ unpaidRequests, queueRequests = [], patients =
 
   function changeTab(next: "queue" | "history") {
     setTab(next); setPage(1); setExpandedId(""); setServiceType("all"); setMethod("all"); setStatus("all");
+    if (next === "history") refreshHistory();
   }
   function openPayment(entry: BillingEntry) { setSelected(entry); setError(""); }
   function backToQueue() {
@@ -124,7 +125,10 @@ export default function Billing({ unpaidRequests, queueRequests = [], patients =
       const rooms = [...new Set(queues.map((queue) => queue.room))].join(", ");
       setSuccess(`Payment confirmed. ${selected.patientName} was sent to ${rooms}.`);
       requestAnimationFrame(() => headingRef.current?.focus());
-      try { await loadData(); } catch { setSuccess("Payment was confirmed and the request was sent to the laboratory. Refresh to load the latest requests."); }
+      setHistoryLoading(true);
+      setHistoryError("");
+      const refreshes = await Promise.allSettled([loadData(), loadHistory()]);
+      if (refreshes[0].status === "rejected") setSuccess("Payment was confirmed and the request was sent to the laboratory. Refresh to load the latest requests.");
     } catch (cause) {
       setError(message(cause, "Unable to confirm payment. Please try again."));
     } finally { pending.current = false; setSubmitting(false); }
@@ -137,7 +141,7 @@ export default function Billing({ unpaidRequests, queueRequests = [], patients =
         {[
           { label: "Total requests", value: requests.length, detail: "Requests in this billing queue", icon: ListFilter, color: "blue" },
           { label: "Pending payment", value: requests.filter((entry) => entry.status === "Pending").length, detail: "Awaiting payment confirmation", icon: Clock3, color: "amber" },
-          { label: "Paid payments", value: historyError || historyLoading ? "—" : records.filter((entry) => entry.status === "Paid").length, detail: "Saved payment records", icon: CheckCircle2, color: "green" },
+          { label: "Paid records", value: historyError || historyLoading ? "—" : records.filter((entry) => entry.status === "Paid").length, detail: "Bills and confirmed laboratory requests", icon: CheckCircle2, color: "green" },
           { label: "Cancelled", value: historyError || historyLoading ? "—" : records.filter((entry) => entry.status === "Cancelled").length, detail: "Cancelled payment records", icon: XCircle, color: "rose" },
         ].map(({ label, value, detail, icon: Icon, color }) => <section className={`billing-stat billing-stat-${color}`} key={label}><div><span>{label}</span><Icon size={22} /></div><strong>{value}</strong><p>{detail}</p></section>)}
       </div>
