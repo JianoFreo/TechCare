@@ -3,10 +3,11 @@ import { ENV } from "../config/env.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import doctorMiddleware from "../middlewares/doctor.middleware.js";
 import {
-  acceptConsultationQueue,
-  cancelConsultationQueue,
+  skipConsultationQueueEntry
+  // acceptConsultationQueue,
+  // cancelConsultationQueue,
 } from "../controllers/doctor/updateRequests.controller.js";
-import { getReleasedLaboratoryResult } from "../controllers/labstaff/getRequests.controller.js";
+import { getReleasedLaboratoryResults } from "../controllers/labstaff/getRequests.controller.js";
 import {
   addLaboratoryRequest,
   addPrescriptions,
@@ -31,7 +32,7 @@ router.post("/laboratory-requests", addLaboratoryRequest);
 router.post("/consultations", addConsultationFindings);
 router.post("/prescriptions/:consultation_record_id", addPrescriptions);
 // GET requests
-router.get("/laboratory-results/:result_id", getReleasedLaboratoryResult);
+router.get("/laboratory-results/:result_id", getReleasedLaboratoryResults);
 // router.get("/laboratory-services", getLaboratoryServices);
 // router.get("/consultation-patients/:patient_id", getConsultationPatient);
 router.get("/consultation-queues/room/:room", getConsultationQueues);
@@ -45,7 +46,7 @@ router.get(
   getMedicalHistoryFull,
 );
 
-router.patch("/consultation-queues/:queue_id/accept", acceptConsultationQueue);
-router.patch("/consultation-queues/:queue_id/cancel", cancelConsultationQueue);
-
+    // router.patch("/consultation-queues/:queue_id/accept", acceptConsultationQueue);
+    // router.patch("/consultation-queues/:queue_id/cancel", cancelConsultationQueue);
+router.patch("/consultation-queues/:queue_id/skip", skipConsultationQueueEntry);
 export default router;
