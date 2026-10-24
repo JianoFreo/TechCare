@@ -541,10 +541,10 @@ export async function getMedicalHistoryDetails(
           cr.consultation_record_id,  cr.consultation_type, cr.diagnosis, cr.notes,
           cr.consulted_at,
           s.service_name, s.room,
-          CONCAT_WS(' ', u.first_name, u.last_name)                                AS consulted_by
+          CONCAT_WS(' ', u.first_name, u.last_name)                                 AS consulted_by
           FROM consultation_records cr
           JOIN services s                                                           ON s.service_id = cr.service_id
-          LEFT JOIN users u                                                         ON u.user_id = cr.doctor_id
+          LEFT JOIN users u                                                         ON u.user_id = cr.consulted_by
           WHERE cr.consultation_record_id = ${record_id}
       `;
 
@@ -635,7 +635,7 @@ export async function getMedicalHistoryFull(
           CONCAT_WS(' ', u.first_name, u.last_name)                                         AS consulted_by
           FROM consultation_records cr
           JOIN services s                                                                   ON s.service_id = cr.service_id
-          LEFT JOIN users u                                                                 ON u.user_id = cr.doctor_id
+          LEFT JOIN users u                                                                 ON u.user_id = cr.consulted_by
           WHERE cr.consultation_record_id = ${record_id}
       `;
 
