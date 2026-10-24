@@ -1,7 +1,9 @@
+
 export interface Queue {
   id: number;
   queue_id: string;
   patient_id: string;
+  patient_name?: string;
   queue_number: number;
   service_id: string;
   is_priority: boolean;
@@ -29,6 +31,10 @@ export interface QueueEntry {
 }
 
 export interface QueueRequests {
+  request_id?: string;
+  is_paid?: boolean;
+  request_status?: string;
+  room?: string;
   record_type: "laboratory" | "consultation";
   record_id: string;
   patient_id: string;
@@ -51,8 +57,6 @@ export type QueueTab = "all" | "laboratory" | "consultation";
 export type PriorityFilter = "all" | "yes" | "none";
 
 // The state of the live connection to the backend.
-// connecting = first try, live = receiving updates,
-// reconnecting = lost connection and trying again, unauthorized = token is invalid/expired
 export type QueueStreamStatus =
   | "connecting"
   | "live"

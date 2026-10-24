@@ -1,4 +1,4 @@
-import { sql } from "../../config/db.js";
+﻿import { sql } from "../../config/db.js";
 import type { Request, Response } from "express";
 import type {
   getLaboratoryRequestDetails,
@@ -57,7 +57,40 @@ export async function getLaboratoryQueues(
       SELECT
         q.*,
         CONCAT_WS(' ', p.first_name, p.middle_name, p.last_name) AS patient_name,
-        ${room}::text AS room
+        ${room}::text AS room,
+        COALESCE(
+          (
+            SELECT s.service_name
+            FROM laboratory_request_items lri
+            JOIN services s ON s.service_id = lri.service_id
+            WHERE lri.queue_id = q.queue_id
+              AND s.room::text = ${room}
+            ORDER BY lri.lab_item_id
+            LIMIT 1
+          ), ''
+        ) AS service_name,
+        COALESCE(
+          (
+            SELECT s.service_type
+            FROM laboratory_request_items lri
+            JOIN services s ON s.service_id = lri.service_id
+            WHERE lri.queue_id = q.queue_id
+              AND s.room::text = ${room}
+            ORDER BY lri.lab_item_id
+            LIMIT 1
+          ), ''
+        ) AS service_type,
+        COALESCE(
+          (
+            SELECT s.service_category
+            FROM laboratory_request_items lri
+            JOIN services s ON s.service_id = lri.service_id
+            WHERE lri.queue_id = q.queue_id
+              AND s.room::text = ${room}
+            ORDER BY lri.lab_item_id
+            LIMIT 1
+          ), ''
+        ) AS service_category
       FROM queue_entries q
       JOIN patients p ON p.patient_id = q.patient_id
       WHERE q.queue_id LIKE 'LAB-%'
@@ -75,7 +108,7 @@ export async function getLaboratoryQueues(
 
     return res
       .status(200)
-      .json(queues as unknown as getLaboratoryQueues.response);
+      .json(queues as getLaboratoryQueues.response);
   } catch (error) {
     console.error(error);
     return res
@@ -210,7 +243,7 @@ export async function getLaboratoryQueueItems(
 
     return res
       .status(200)
-      .json(items as unknown as getLaboratoryQueueItems.response);
+      .json(items as getLaboratoryQueueItems.response);
   } catch (error) {
     console.error(error);
     return res.status(500).json({
@@ -246,7 +279,7 @@ export async function getAnalysisReadyRequests(
     return res
       .status(200)
       .json(
-        analysisReadyRequests as unknown as getAnalysisReadyRequests.response,
+        analysisReadyRequests as getAnalysisReadyRequests.response,
       );
   } catch (error) {
     console.error(error);
@@ -288,7 +321,7 @@ export async function getAnalysisItems(
         AND ri.status IN ('Specimen Collected', 'In Progress', 'Completed', 'Released')
       ORDER BY ri.created_at ASC
     `;
-    return res.json(items as unknown as getAnalysisItems.response);
+    return res.json(items as getAnalysisItems.response);
   } catch (error) {
     console.error("Unable to load analysis items:", error);
     return res.status(500).json({
@@ -317,7 +350,7 @@ export async function getSavedLaboratoryResults(
       ORDER BY r.updated_at DESC
     `;
     return res.json({
-      results: results as unknown as getSavedLaboratoryResults.resultItem[],
+      results: results as getSavedLaboratoryResults.resultItem[],
     } as getSavedLaboratoryResults.response);
   } catch (error) {
     console.error("Unable to load saved results:", error);
@@ -359,7 +392,7 @@ export async function getAvailableFormTemplates(
 
     return res
       .status(200)
-      .json(templates as unknown as getAvailableFormTemplates.response);
+      .json(templates as getAvailableFormTemplates.response);
   } catch (error) {
     console.error(error);
     return res.status(500).json({
@@ -395,7 +428,7 @@ export async function getReleasedLaboratoryResults(
     return res.status(200).json({
       message: "Released laboratory results fetched successfully.",
       results:
-        results as unknown as getReleasedLaboratoryResults.releasedResult[],
+        results as getReleasedLaboratoryResults.releasedResult[],
     } as getReleasedLaboratoryResults.response);
   } catch (error) {
     console.error("Unable to fetch released laboratory results:", error);

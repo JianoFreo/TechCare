@@ -26,7 +26,14 @@ A full-stack clinic management system: patient records, front-desk queueing, lab
 
 Same shape in all 4 deployment scenarios below — only `CORS_ORIGIN` needs to change per scenario.
 
-## you can seed data and test database, you just have to run npm run seed -- --force to the backend root
+# Seeding data
+- npm run seed -- --force	 -> Inserts the base seed data without wiping existing data.
+
+- npm run seed:reset -- --force ->	Deletes existing seeded tables' data, then inserts the base data.
+
+- npm run seed:bulk -- --force 	->	Generates additional bulk data.
+
+- npm run seed:all	->	Runs the reset seed, then the bulk seed, with the --force flag passed to both. (reconmended for first-time setup or inital seeding)
 
 ```
 PORT=5000
