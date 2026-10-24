@@ -94,29 +94,29 @@ INSERT INTO actions (action_name, action_description, module, is_sensitive) VALU
 ON CONFLICT DO NOTHING;
 
 -- queue_entries  (status strings match what the controllers write: Waiting / Serving / Completed / skipped)
-INSERT INTO queue_entries (queue_id, patient_id, queue_number, service_id, is_priority, status, created_at, updated_at) VALUES
-  ('CONS-0001', 'P-26-1003-0001', 1, 'S-26-10-001', FALSE, 'Completed', '2026-10-05 01:05:00', '2026-10-05 01:30:00'),
-  ('CONS-0002', 'P-26-1003-0002', 2, 'S-26-10-001', FALSE, 'Completed', '2026-10-05 02:20:00', '2026-10-05 02:50:00'),
-  ('CONS-0003', 'P-26-1005-0002', 1, 'S-26-10-001', TRUE, 'Completed', '2026-10-07 01:35:00', '2026-10-07 02:05:00'),
-  ('LAB-0001', 'P-26-1005-0002', 1, 'S-26-10-008', TRUE, 'Completed', '2026-10-07 02:30:00', '2026-10-07 02:40:00'),
-  ('LAB-0002', 'P-26-1005-0002', 2, 'S-26-10-009', TRUE, 'Completed', '2026-10-07 02:32:00', '2026-10-07 02:45:00'),
-  ('CONS-0004', 'P-26-1005-0001', 1, 'S-26-10-001', FALSE, 'Completed', '2026-10-09 06:00:00', '2026-10-09 06:30:00'),
-  ('LAB-0003', 'P-26-1005-0001', 1, 'S-26-10-004', FALSE, 'Completed', '2026-10-09 06:40:00', '2026-10-09 06:55:00'),
-  ('LAB-0004', 'P-26-1005-0001', 2, 'S-26-10-006', FALSE, 'Completed', '2026-10-09 06:42:00', '2026-10-09 07:00:00'),
-  ('CONS-0005', 'P-26-1003-0002', 1, 'S-26-10-002', FALSE, 'Completed', '2026-10-12 02:55:00', '2026-10-12 03:20:00'),
-  ('CONS-0006', 'P-26-1012-0001', 1, 'S-26-10-001', TRUE, 'Completed', '2026-10-14 00:45:00', '2026-10-14 01:15:00'),
-  ('LAB-0005', 'P-26-1012-0001', 1, 'S-26-10-012', TRUE, 'Completed', '2026-10-14 01:30:00', '2026-10-14 01:50:00'),
-  ('CONS-0007', 'P-26-1008-0002', 1, 'S-26-10-001', FALSE, 'Completed', (CURRENT_DATE + INTERVAL '5 minutes'), (CURRENT_DATE + INTERVAL '25 minutes')),
-  ('CONS-0008', 'P-26-1003-0002', 2, 'S-26-10-002', FALSE, 'Serving', (CURRENT_DATE + INTERVAL '12 minutes'), (CURRENT_DATE + INTERVAL '30 minutes')),
-  ('CONS-0009', 'P-26-1005-0002', 3, 'S-26-10-001', TRUE, 'Waiting', (CURRENT_DATE + INTERVAL '20 minutes'), (CURRENT_DATE + INTERVAL '20 minutes')),
-  ('CONS-0010', 'P-26-1008-0001', 4, 'S-26-10-001', FALSE, 'Waiting', (CURRENT_DATE + INTERVAL '28 minutes'), (CURRENT_DATE + INTERVAL '28 minutes')),
-  ('LAB-0006', 'P-26-1003-0002', 1, 'S-26-10-008', FALSE, 'Completed', (CURRENT_DATE + INTERVAL '15 minutes'), (CURRENT_DATE + INTERVAL '32 minutes')),
-  ('LAB-0007', 'P-26-1003-0001', 2, 'S-26-10-004', FALSE, 'Serving', (CURRENT_DATE + INTERVAL '22 minutes'), (CURRENT_DATE + INTERVAL '38 minutes')),
-  ('LAB-0008', 'P-26-1008-0002', 3, 'S-26-10-008', FALSE, 'Completed', (CURRENT_DATE + INTERVAL '30 minutes'), (CURRENT_DATE + INTERVAL '40 minutes')),
-  ('LAB-0009', 'P-26-1003-0002', 4, 'S-26-10-009', FALSE, 'Completed', (CURRENT_DATE + INTERVAL '31 minutes'), (CURRENT_DATE + INTERVAL '41 minutes')),
-  ('LAB-0010', 'P-26-1005-0002', 5, 'S-26-10-010', TRUE, 'Waiting', (CURRENT_DATE + INTERVAL '38 minutes'), (CURRENT_DATE + INTERVAL '38 minutes')),
-  ('LAB-0011', 'P-26-1008-0001', 6, 'S-26-10-006', FALSE, 'skipped', (CURRENT_DATE + INTERVAL '42 minutes'), (CURRENT_DATE + INTERVAL '46 minutes')),
-  ('LAB-0012', 'P-26-1003-0001', 7, 'S-26-10-005', FALSE, 'Waiting', (CURRENT_DATE + INTERVAL '44 minutes'), (CURRENT_DATE + INTERVAL '44 minutes'))
+INSERT INTO queue_entries (queue_id, patient_id, queue_number, is_priority, status, created_at, updated_at) VALUES
+  ('CONS-0001', 'P-26-1003-0001', 1, FALSE, 'Completed', '2026-10-05 01:05:00', '2026-10-05 01:30:00'),
+  ('CONS-0002', 'P-26-1003-0002', 2, FALSE, 'Completed', '2026-10-05 02:20:00', '2026-10-05 02:50:00'),
+  ('CONS-0003', 'P-26-1005-0002', 1, TRUE, 'Completed', '2026-10-07 01:35:00', '2026-10-07 02:05:00'),
+  ('LAB-0001', 'P-26-1005-0002', 1, TRUE, 'Completed', '2026-10-07 02:30:00', '2026-10-07 02:40:00'),
+  ('LAB-0002', 'P-26-1005-0002', 2, TRUE, 'Completed', '2026-10-07 02:32:00', '2026-10-07 02:45:00'),
+  ('CONS-0004', 'P-26-1005-0001', 1, FALSE, 'Completed', '2026-10-09 06:00:00', '2026-10-09 06:30:00'),
+  ('LAB-0003', 'P-26-1005-0001', 1, FALSE, 'Completed', '2026-10-09 06:40:00', '2026-10-09 06:55:00'),
+  ('LAB-0004', 'P-26-1005-0001', 2, FALSE, 'Completed', '2026-10-09 06:42:00', '2026-10-09 07:00:00'),
+  ('CONS-0005', 'P-26-1003-0002', 1, FALSE, 'Completed', '2026-10-12 02:55:00', '2026-10-12 03:20:00'),
+  ('CONS-0006', 'P-26-1012-0001', 1, TRUE, 'Completed', '2026-10-14 00:45:00', '2026-10-14 01:15:00'),
+  ('LAB-0005', 'P-26-1012-0001', 1, TRUE, 'Completed', '2026-10-14 01:30:00', '2026-10-14 01:50:00'),
+  ('CONS-0007', 'P-26-1008-0002', 1, FALSE, 'Completed', (CURRENT_DATE + INTERVAL '5 minutes'), (CURRENT_DATE + INTERVAL '25 minutes')),
+  ('CONS-0008', 'P-26-1003-0002', 2, FALSE, 'Serving', (CURRENT_DATE + INTERVAL '12 minutes'), (CURRENT_DATE + INTERVAL '30 minutes')),
+  ('CONS-0009', 'P-26-1005-0002', 3, TRUE, 'Waiting', (CURRENT_DATE + INTERVAL '20 minutes'), (CURRENT_DATE + INTERVAL '20 minutes')),
+  ('CONS-0010', 'P-26-1008-0001', 4, FALSE, 'Waiting', (CURRENT_DATE + INTERVAL '28 minutes'), (CURRENT_DATE + INTERVAL '28 minutes')),
+  ('LAB-0006', 'P-26-1003-0002', 1, FALSE, 'Completed', (CURRENT_DATE + INTERVAL '15 minutes'), (CURRENT_DATE + INTERVAL '32 minutes')),
+  ('LAB-0007', 'P-26-1003-0001', 2, FALSE, 'Serving', (CURRENT_DATE + INTERVAL '22 minutes'), (CURRENT_DATE + INTERVAL '38 minutes')),
+  ('LAB-0008', 'P-26-1008-0002', 3, FALSE, 'Completed', (CURRENT_DATE + INTERVAL '30 minutes'), (CURRENT_DATE + INTERVAL '40 minutes')),
+  ('LAB-0009', 'P-26-1003-0002', 4, FALSE, 'Completed', (CURRENT_DATE + INTERVAL '31 minutes'), (CURRENT_DATE + INTERVAL '41 minutes')),
+  ('LAB-0010', 'P-26-1005-0002', 5, TRUE, 'Waiting', (CURRENT_DATE + INTERVAL '38 minutes'), (CURRENT_DATE + INTERVAL '38 minutes')),
+  ('LAB-0011', 'P-26-1008-0001', 6, FALSE, 'skipped', (CURRENT_DATE + INTERVAL '42 minutes'), (CURRENT_DATE + INTERVAL '46 minutes')),
+  ('LAB-0012', 'P-26-1003-0001', 7, FALSE, 'Waiting', (CURRENT_DATE + INTERVAL '44 minutes'), (CURRENT_DATE + INTERVAL '44 minutes'))
 ON CONFLICT DO NOTHING;
 
 -- consultation_records  (diagnosis / presenting_complaint / physical_examination follow consultationValidation.ts; vital_signs is not written by the current backend, seeded here so the UI has something to show)
