@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import axios from "axios";
@@ -73,6 +73,18 @@ function LoginPage() {
       setLoading(false);
     }
   };
+  /// This is just to wake up the backend since we are using free tier hosting that sleeps on inactivity.
+  useEffect(() => {
+    async function wakeUpBackend() {
+      try {
+        await api.get("/api/auth/ping");
+        console.log("Backend is awake and responding.");
+      } catch (error) {
+        console.error("Backend wake-up error:", error);
+      }
+    }
+    wakeUpBackend();
+  }, []);
 
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] flex items-center justify-center p-4 sm:p-6 lg:p-10 font-sans">
