@@ -311,16 +311,20 @@ export async function getQueueRequests(
           s.service_id,
           s.service_name,
           CONCAT_WS(' ', u.first_name, u.last_name)   AS created_by,
-          lr.requested_at                             AS created_at
+          lr.requested_at                             AS created_at,
+          lr.request_id,
+          lr.is_paid,
+          lr.status AS request_status,
+          s.room
         FROM laboratory_request_items lri
         JOIN laboratory_requests lr ON lr.request_id = lri.request_id
         JOIN patients p             ON p.patient_id = lr.patient_id
         JOIN services s             ON s.service_id = lri.service_id
         LEFT JOIN users u           ON u.user_id = lr.requested_by
         WHERE lr.is_paid = TRUE
+          AND lr.status = 'Paid'
+          AND lri.status = 'Requested'
           AND lri.queue_id IS NULL
-          AND lr.requested_at >= CURRENT_DATE
-          AND lr.requested_at <  CURRENT_DATE + INTERVAL '1 day'
 
         UNION ALL
 
@@ -332,7 +336,11 @@ export async function getQueueRequests(
           s.service_id,
           s.service_name,
           CONCAT_WS(' ', u.first_name, u.last_name),
-          cr.consulted_at
+          cr.consulted_at,
+          NULL::text,
+          cr.is_paid,
+          cr.status,
+          s.room
         FROM consultation_records cr
         JOIN patients p   ON p.patient_id = cr.patient_id
         JOIN services s   ON s.service_id = cr.service_id

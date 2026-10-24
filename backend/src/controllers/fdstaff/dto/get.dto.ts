@@ -170,6 +170,10 @@ export namespace getLaboratoryRequest {
 
 export namespace getQueueRequests {
   export interface queueRequest {
+    request_id: string | null;
+    is_paid: boolean;
+    request_status: string;
+    room: string;
     record_type: "laboratory" | "consultation" | string;
     record_id: string;
     patient_id: string;
