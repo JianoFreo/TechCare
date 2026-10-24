@@ -1,4 +1,4 @@
-export namespace updatePatient {
+﻿export namespace updatePatient {
   export interface body {
     username?: string;
     password?: string;
@@ -75,9 +75,7 @@ export namespace skipQueueEntry {
 export namespace confirmLabRequestPayment {
   export interface response {
     message: string;
-    request: Record<string, unknown>;
-    queues: Record<string, unknown>[];
-    items: Record<string, unknown>[];
+    request: Record<string, unknown>[];
   }
 
   export interface error {
