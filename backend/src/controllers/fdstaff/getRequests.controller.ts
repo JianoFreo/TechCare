@@ -118,24 +118,35 @@ export async function getAllPatients(
   try {
     const patients = await sql`SELECT * FROM patients`;
     if (!patients) {
-      return res.json({ message: "there are no patients", patients: [] } as getAllPatients.response);
+      return res.json({
+        message: "there are no patients",
+        patients: [],
+      } as getAllPatients.response);
     }
-    return res.status(200).json({ patients: patients as unknown as getAllPatients.patient[] } as getAllPatients.response);
+    return res.status(200).json({
+      patients: patients as unknown as getAllPatients.patient[],
+    } as getAllPatients.response);
   } catch (error) {
     console.error("Error fetching patients:", error);
-    return res.status(500).json({ error: "error on fetching patients" } as getAllPatients.error);
+    return res
+      .status(500)
+      .json({ error: "error on fetching patients" } as getAllPatients.error);
   }
 }
 
 export async function getPrintablePatientRecord(
   req: Request,
-  res: Response<getPrintablePatientRecord.response | getPrintablePatientRecord.error>,
+  res: Response<
+    getPrintablePatientRecord.response | getPrintablePatientRecord.error
+  >,
 ) {
   try {
     const { patient_id } = req.params;
 
     if (!patient_id) {
-      return res.status(400).json({ message: "Patient ID is required." } as getPrintablePatientRecord.error);
+      return res.status(400).json({
+        message: "Patient ID is required.",
+      } as getPrintablePatientRecord.error);
     }
 
     const patientRows = await sql`
@@ -146,7 +157,9 @@ export async function getPrintablePatientRecord(
     `;
 
     if (!patientRows.length) {
-      return res.status(404).json({ message: "Patient not found." } as getPrintablePatientRecord.error);
+      return res.status(404).json({
+        message: "Patient not found.",
+      } as getPrintablePatientRecord.error);
     }
 
     const patient = patientRows[0];
@@ -179,12 +192,14 @@ export async function getPrintablePatientRecord(
       billing,
     );
 
-    return res.status(200).json({ patientRecord: printableRecord } as getPrintablePatientRecord.response);
+    return res.status(200).json({
+      patientRecord: printableRecord,
+    } as getPrintablePatientRecord.response);
   } catch (error) {
     console.error("Error fetching printable patient record:", error);
-    return res
-      .status(500)
-      .json({ error: "Error fetching printable patient record." } as getPrintablePatientRecord.error);
+    return res.status(500).json({
+      error: "Error fetching printable patient record.",
+    } as getPrintablePatientRecord.error);
   }
 }
 
@@ -194,13 +209,59 @@ export async function getAllBilling(
 ) {
   // get /api/fdstaff/billing
   try {
-    const billing = await sql`SELECT * FROM billing`;
-    if (!billing) {
-      return res.json({ message: "there are no billing records", billing: [] } as getAllBilling.response);
-    }
-    return res.status(200).json({ billing: billing as unknown as getAllBilling.bill[] } as getAllBilling.response);
+    // Confirming a lab payment persists is_paid on the request, even when no
+    // separate bill was issued. Include that saved fact without inventing an
+    // amount, payment method, receipt, or historical service price.
+    const history = await sql`
+      WITH payment_history AS (
+        SELECT to_jsonb(b) || jsonb_build_object('record_type', 'bill') AS record,
+          COALESCE(b.billed_at, b.created_at) AS sort_date
+        FROM bills b
+        UNION ALL
+        SELECT jsonb_build_object(
+          'bill_id', 'LAB-CONFIRM:' || lr.request_id,
+          'record_type', 'laboratory_confirmation',
+          'request_id', lr.request_id,
+          'patient_id', lr.patient_id,
+          'status', 'Paid',
+          'items', COALESCE((
+            SELECT jsonb_agg(jsonb_build_object(
+              'service_id', ri.service_id,
+              'service_name', s.service_name,
+              'service_category', s.service_category,
+              'quantity', 1
+            ) ORDER BY ri.lab_item_id)
+            FROM laboratory_request_items ri
+            JOIN services s ON s.service_id = ri.service_id
+            WHERE ri.request_id = lr.request_id
+          ), '[]'::jsonb),
+          'total_amount', NULL,
+          'discount_pct', NULL,
+          'payment_method', NULL,
+          'receipt_id', NULL,
+          'created_at', lr.requested_at,
+          'billed_at', NULL
+        ) AS record, lr.updated_at AS sort_date
+        FROM laboratory_requests lr
+        WHERE lr.is_paid = TRUE
+          AND NOT EXISTS (
+            SELECT 1 FROM bills b
+            WHERE LOWER(b.status) = 'paid'
+              AND b.patient_id = lr.patient_id
+              AND b.items @> jsonb_build_array(jsonb_build_object('request_id', lr.request_id))
+          )
+      )
+      SELECT record FROM payment_history
+      ORDER BY sort_date DESC NULLS LAST, record->>'bill_id' DESC
+    `;
+    return res.status(200).json({
+      billing: history.map((row) => row.record) as getAllBilling.bill[],
+    } as getAllBilling.response);
   } catch (error) {
-    return res.status(500).json({ error: "error on fetching billing records" } as getAllBilling.error);
+    console.error("Error fetching billing records:", error);
+    return res.status(500).json({
+      error: "error on fetching billing records",
+    } as getAllBilling.error);
   }
 }
 
@@ -210,34 +271,44 @@ export async function getAllQueueEntries(
 ) {
   try {
     const queueEntries = await sql`
-      SELECT
-        qe.id,
-        qe.queue_id,
-        qe.patient_id,
-        CONCAT_WS(' ', p.first_name, p.middle_name, p.last_name) AS patient_name,
-        to_char(p.birthdate, 'YYYY-MM-DD')                       AS birthdate,
-        qe.queue_number,
-        qe.service_id,
-        s.service_name,
-        s.service_type,
-        s.service_category,
-        s.room,
-        qe.is_priority,
-        qe.status,
-        qe.created_at,
-        qe.updated_at
-      FROM queue_entries qe
-      JOIN patients p ON p.patient_id = qe.patient_id
-      JOIN services s ON s.service_id = qe.service_id
-      WHERE qe.created_at >= CURRENT_DATE
-        AND qe.created_at <  CURRENT_DATE + INTERVAL '1 day'
-      ORDER BY qe.queue_number ASC, qe.id ASC
-    `;
+        SELECT
+          qe.id,
+          qe.queue_id,
+          qe.patient_id,
+          CONCAT_WS(' ', p.first_name, p.middle_name, p.last_name) AS patient_name,
+          to_char(p.birthdate, 'YYYY-MM-DD')                       AS birthdate,
+          qe.queue_number,
+          COALESCE(cs.service_type, lab.service_type)              AS service_type,
+          COALESCE(cs.room::text,   lab.room)                      AS room,
+          qe.is_priority,
+          qe.status,
+          qe.created_at,
+          qe.updated_at
+        FROM queue_entries qe
+        JOIN patients p ON p.patient_id = qe.patient_id
+        LEFT JOIN consultation_records cr ON cr.queue_id = qe.queue_id
+        LEFT JOIN services cs             ON cs.service_id = cr.service_id
+        LEFT JOIN LATERAL (
+          SELECT ls.service_type, ls.room::text AS room
+          FROM laboratory_request_items lri
+          JOIN services ls ON ls.service_id = lri.service_id
+          WHERE lri.queue_id = qe.queue_id
+          ORDER BY lri.lab_item_id
+          LIMIT 1
+        ) lab ON TRUE
+        WHERE qe.created_at >= CURRENT_DATE
+          AND qe.created_at <  CURRENT_DATE + INTERVAL '1 day'
+        ORDER BY qe.queue_number ASC, qe.id ASC
+      `;
 
-    return res.status(200).json({ queueEntries: queueEntries as unknown as getAllQueueEntries.queueEntry[] } as getAllQueueEntries.response);
+    return res.status(200).json({
+      queueEntries: queueEntries as unknown as getAllQueueEntries.queueEntry[],
+    } as getAllQueueEntries.response);
   } catch (error) {
     console.error("Error fetching queue entries:", error);
-    return res.status(500).json({ message: "Failed to fetch queue entries" } as getAllQueueEntries.error);
+    return res.status(500).json({
+      message: "Failed to fetch queue entries",
+    } as getAllQueueEntries.error);
   }
 }
 
@@ -253,34 +324,14 @@ export async function getAllServices(
       ORDER BY service_type, service_name
     `;
 
-    return res.status(200).json({ services: services as unknown as getAllServices.service[] } as getAllServices.response);
+    return res.status(200).json({
+      services: services as unknown as getAllServices.service[],
+    } as getAllServices.response);
   } catch (error) {
     console.error("Error fetching services:", error);
-    return res.status(500).json({ message: "Failed to fetch services" } as getAllServices.error);
-  }
-}
-
-export async function getLaboratoryRequest(
-  req: Request,
-  res: Response<getLaboratoryRequest.response | getLaboratoryRequest.error>,
-) {
-  try {
-    const { patient_id } = req.params;
-
-    const lab_reqs = await sql`
-        SELECT * FROM laboratory_requests
-        WHERE patient_id = ${patient_id} AND is_paid = 'FALSE'
-        AND requested_at >= CURRENT_DATE
-        AND requested_at < CURRENT_DATE + INTERVAL '1 day'
-        ORDER BY requested_at DESC;
-    `;
-    if (!lab_reqs) {
-      return res.json({ message: "there are no laboratory requests", lab_reqs: [] } as getLaboratoryRequest.response);
-    }
-    return res.status(200).json({ lab_reqs } as getLaboratoryRequest.response);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Internal Server Error" } as getLaboratoryRequest.error);
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch services" } as getAllServices.error);
   }
 }
 
@@ -299,16 +350,20 @@ export async function getQueueRequests(
           s.service_id,
           s.service_name,
           CONCAT_WS(' ', u.first_name, u.last_name)   AS created_by,
-          lr.requested_at                             AS created_at
+          lr.requested_at                             AS created_at,
+          lr.request_id,
+          lr.is_paid,
+          lr.status AS request_status,
+          s.room
         FROM laboratory_request_items lri
         JOIN laboratory_requests lr ON lr.request_id = lri.request_id
         JOIN patients p             ON p.patient_id = lr.patient_id
         JOIN services s             ON s.service_id = lri.service_id
         LEFT JOIN users u           ON u.user_id = lr.requested_by
         WHERE lr.is_paid = TRUE
+          AND lr.status = 'Paid'
+          AND lri.status = 'Requested'
           AND lri.queue_id IS NULL
-          AND lr.requested_at >= CURRENT_DATE
-          AND lr.requested_at <  CURRENT_DATE + INTERVAL '1 day'
 
         UNION ALL
 
@@ -320,11 +375,15 @@ export async function getQueueRequests(
           s.service_id,
           s.service_name,
           CONCAT_WS(' ', u.first_name, u.last_name),
-          cr.consulted_at
+          cr.consulted_at,
+          NULL::text,
+          cr.is_paid,
+          cr.status,
+          s.room
         FROM consultation_records cr
         JOIN patients p   ON p.patient_id = cr.patient_id
         JOIN services s   ON s.service_id = cr.service_id
-        LEFT JOIN users u ON u.user_id = cr.doctor_id
+        LEFT JOIN users u ON u.user_id = cr.consulted_by
         WHERE cr.status = 'Created'
           AND cr.queue_id IS NULL
           AND cr.consulted_at >= CURRENT_DATE
@@ -333,10 +392,14 @@ export async function getQueueRequests(
       ORDER BY created_at DESC
     `;
 
-    return res.status(200).json({ requests: rows as unknown as getQueueRequests.queueRequest[] } as getQueueRequests.response);
+    return res.status(200).json({
+      requests: rows as unknown as getQueueRequests.queueRequest[],
+    } as getQueueRequests.response);
   } catch (error) {
     console.error("Error fetching queue requests:", error);
-    return res.status(500).json({ message: "Failed to fetch queue requests" } as getQueueRequests.error);
+    return res.status(500).json({
+      message: "Failed to fetch queue requests",
+    } as getQueueRequests.error);
   }
 }
 
@@ -352,7 +415,8 @@ export async function getUnpaidRequests(
         lr.patient_id,
         CONCAT_WS(' ', p.first_name, p.last_name)   AS patient_name,
         lr.is_paid,
-        CONCAT_WS(' ', u.first_name, u.last_name)   AS created_by,
+        CONCAT_WS(' ', u.first_name, u.last_name)   AS requested_by,
+        u.role                                      AS requester_role,
         lr.requested_at                             AS created_at
       FROM laboratory_requests lr
       JOIN patients p   ON p.patient_id = lr.patient_id
@@ -371,11 +435,14 @@ export async function getUnpaidRequests(
 
     return res.status(200).json({
       message: "Successfully fetched unpaid laboratory requests.",
-      unpaidLabRequests: unpaidLabRequests as unknown as getUnpaidRequests.unpaidLabRequest[],
+      unpaidLabRequests:
+        unpaidLabRequests as unknown as getUnpaidRequests.unpaidLabRequest[],
     } as getUnpaidRequests.response);
   } catch (error) {
     console.error("Error fetching unpaid requests:", error);
-    return res.status(500).json({ message: "Failed to fetch unpaid requests" } as getUnpaidRequests.error);
+    return res.status(500).json({
+      message: "Failed to fetch unpaid requests",
+    } as getUnpaidRequests.error);
   }
 }
 
@@ -396,7 +463,9 @@ export async function getMedicalHistory(
     } = req.query as getMedicalHistory.query;
 
     if (!patient_id) {
-      return res.status(400).json({ message: "Patient ID is required." } as getMedicalHistory.error);
+      return res.status(400).json({
+        message: "Patient ID is required.",
+      } as getMedicalHistory.error);
     }
 
     const pageNum = Math.max(parseInt(page as string) || 1, 1);
@@ -448,7 +517,9 @@ export async function getMedicalHistory(
 
     return res.status(200).json({
       message: "Medical history successfully fetched.",
-      records: rows.map(({ total_count, ...r }) => r as getMedicalHistory.record),
+      records: rows.map(
+        ({ total_count, ...r }) => r as getMedicalHistory.record,
+      ),
       pagination: {
         page: pageNum,
         limit: limitNum,
@@ -467,7 +538,9 @@ export async function getMedicalHistory(
 
 export async function getMedicalHistoryDetails(
   req: Request,
-  res: Response<getMedicalHistoryDetails.response | getMedicalHistoryDetails.error>,
+  res: Response<
+    getMedicalHistoryDetails.response | getMedicalHistoryDetails.error
+  >,
 ) {
   const { record_type, record_id } = req.params;
   try {
@@ -489,9 +562,9 @@ export async function getMedicalHistoryDetails(
       `;
 
       if (!labDetails)
-        return res
-          .status(404)
-          .json({ message: "Laboratory record not found." } as getMedicalHistoryDetails.error);
+        return res.status(404).json({
+          message: "Laboratory record not found.",
+        } as getMedicalHistoryDetails.error);
 
       const results = await sql`
         SELECT result_id, results, remarks,
@@ -515,17 +588,17 @@ export async function getMedicalHistoryDetails(
           cr.consultation_record_id,  cr.consultation_type, cr.diagnosis, cr.notes,
           cr.consulted_at,
           s.service_name, s.room,
-          CONCAT_WS(' ', u.first_name, u.last_name)                                AS consulted_by
+          CONCAT_WS(' ', u.first_name, u.last_name)                                 AS consulted_by
           FROM consultation_records cr
           JOIN services s                                                           ON s.service_id = cr.service_id
-          LEFT JOIN users u                                                         ON u.user_id = cr.doctor_id
+          LEFT JOIN users u                                                         ON u.user_id = cr.consulted_by
           WHERE cr.consultation_record_id = ${record_id}
       `;
 
       if (!consDetails)
-        return res
-          .status(404)
-          .json({ message: "Consultation record not found." } as getMedicalHistoryDetails.error);
+        return res.status(404).json({
+          message: "Consultation record not found.",
+        } as getMedicalHistoryDetails.error);
 
       const prescription = await sql`
         SELECT 
@@ -545,16 +618,20 @@ export async function getMedicalHistoryDetails(
       } as getMedicalHistoryDetails.consultationResponse);
     }
 
-    return res.status(400).json({ message: "Invalid record type." } as getMedicalHistoryDetails.error);
+    return res.status(400).json({
+      message: "Invalid record type.",
+    } as getMedicalHistoryDetails.error);
   } catch (error) {
     if (record_type === "consultation") {
       console.error("Error fetching prescriptions:", error);
-      return res.status(500).json({ message: "Failed to fetch prescriptions" } as getMedicalHistoryDetails.error);
+      return res.status(500).json({
+        message: "Failed to fetch prescriptions",
+      } as getMedicalHistoryDetails.error);
     } else {
       console.error("Error fetching laboratory results:", error);
-      return res
-        .status(500)
-        .json({ message: "Failed to fetch laboratory results" } as getMedicalHistoryDetails.error);
+      return res.status(500).json({
+        message: "Failed to fetch laboratory results",
+      } as getMedicalHistoryDetails.error);
     }
   }
 }
@@ -586,7 +663,9 @@ export async function getMedicalHistoryFull(
       `;
 
       if (!fullLab)
-        return res.status(404).json({ message: "Laboratory record not found" } as getMedicalHistoryFull.error);
+        return res.status(404).json({
+          message: "Laboratory record not found",
+        } as getMedicalHistoryFull.error);
 
       return res.status(200).json({
         message: "Full laboratory details successfully fetched",
@@ -603,14 +682,14 @@ export async function getMedicalHistoryFull(
           CONCAT_WS(' ', u.first_name, u.last_name)                                         AS consulted_by
           FROM consultation_records cr
           JOIN services s                                                                   ON s.service_id = cr.service_id
-          LEFT JOIN users u                                                                 ON u.user_id = cr.doctor_id
+          LEFT JOIN users u                                                                 ON u.user_id = cr.consulted_by
           WHERE cr.consultation_record_id = ${record_id}
       `;
 
       if (!consDetails)
-        return res
-          .status(404)
-          .json({ message: "Consultation record not found." } as getMedicalHistoryFull.error);
+        return res.status(404).json({
+          message: "Consultation record not found.",
+        } as getMedicalHistoryFull.error);
 
       const prescription = await sql`
         SELECT 
@@ -630,11 +709,13 @@ export async function getMedicalHistoryFull(
       } as getMedicalHistoryFull.consultationResponse);
     }
 
-    return res.status(400).json({ message: "Invalid record type." } as getMedicalHistoryFull.error);
+    return res
+      .status(400)
+      .json({ message: "Invalid record type." } as getMedicalHistoryFull.error);
   } catch (error) {
     console.error("Error fetching full medical history:", error);
-    return res
-      .status(500)
-      .json({ message: "Failed to fetch full medical history" } as getMedicalHistoryFull.error);
+    return res.status(500).json({
+      message: "Failed to fetch full medical history",
+    } as getMedicalHistoryFull.error);
   }
 }

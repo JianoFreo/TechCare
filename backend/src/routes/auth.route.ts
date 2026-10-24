@@ -9,5 +9,7 @@ const router = Router();
 
 router.post('/login', login);
 router.patch('/logout',authMiddleware, logout);
-
+router.get("/ping", (req, res) => {
+  res.status(200).json({ message: "Service is awake and responding." });
+});
 export default router;

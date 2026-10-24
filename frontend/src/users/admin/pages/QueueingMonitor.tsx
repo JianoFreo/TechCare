@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useQueueStream, type MonitorEntry, type StreamState } from "../../../hooks/useQueueStream";
+import { useCallback, useEffect, useRef, useState } from "react";
+import api from "../../../lib/axios";
+import { connectQueueStream } from "../../../services/queue-sse/connectQueueStream";
+import QueueColumn from "../components/QueueMonitor/QueueColumn";
+import type { QueueEntry, QueueStreamStatus } from "../../../interface/Queue";
 
-// Props kept so Admin.tsx doesn't need to change. The monitor does its own
-// data fetching via SSE, so none of them are required.
+// Admin.tsx still passes these props, but this page does not use them:
+// Admin's loadData() loads users, services and activities (not the queue), so
+// this page loads the queue by itself with loadQueue() below.
 type QueueingMonitorProps = {
   open?: boolean;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -10,64 +14,105 @@ type QueueingMonitorProps = {
   loading?: boolean;
 };
 
-const SERVICE_COLUMNS = [
-  { type: "consultation", title: "Consultation", prefix: "CONS" },
-  { type: "laboratory", title: "Laboratory", prefix: "LAB" },
-] as const;
-
-const NEXT_IN_LINE = 8;
-
-const STATE_BADGE: Record<StreamState, { label: string; cls: string }> = {
-  connecting: { label: "Connecting…", cls: "bg-amber-500/20 text-amber-300" },
-  live: { label: "Live", cls: "bg-emerald-500/20 text-emerald-300" },
-  reconnecting: { label: "Reconnecting…", cls: "bg-amber-500/20 text-amber-300" },
-  unauthorized: { label: "Session expired — log in again", cls: "bg-red-500/20 text-red-300" },
+// Label + color of the badge for each connection status.
+const STATUS_BADGE: Record<QueueStreamStatus, { label: string; style: string }> = {
+  connecting: { label: "Connecting…", style: "bg-amber-500/20 text-amber-300" },
+  live: { label: "Live", style: "bg-emerald-500/20 text-emerald-300" },
+  reconnecting: { label: "Reconnecting…", style: "bg-amber-500/20 text-amber-300" },
+  unauthorized: {
+    label: "Session expired — log in again",
+    style: "bg-red-500/20 text-red-300",
+  },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function QueueingMonitor(_props: QueueingMonitorProps) {
-  const { entries, state, lastUpdated } = useQueueStream();
-  const screenRef = useRef<HTMLDivElement>(null);
-  const [now, setNow] = useState(new Date());
+  const [queueEntries, setQueueEntries] = useState<QueueEntry[]>([]);
+  const [status, setStatus] = useState<QueueStreamStatus>("connecting");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
+  // Used for the Fullscreen button.
+  const screenRef = useRef<HTMLDivElement>(null);
+
+  // Counts how many times we asked for the queue (explained in loadQueue).
+  const latestRequest = useRef(0);
+
+  // Live clock in the header.
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  const byType = useMemo(() => {
-    const out: Record<string, { serving: MonitorEntry[]; waiting: MonitorEntry[]; done: number }> = {};
-    for (const col of SERVICE_COLUMNS) out[col.type] = { serving: [], waiting: [], done: 0 };
-    for (const e of entries) {
-      const bucket = out[e.service_type];
-      if (!bucket) continue;
-      if (e.status === "serving") bucket.serving.push(e);
-      else if (e.status === "waiting" || e.status === "skipped") bucket.waiting.push(e);
-      else if (e.status === "completed") bucket.done += 1;
-    }
-    return out;
-  }, [entries]);
+  // Loads today's queue from the REST API.
+  // SSE tells us WHEN to call this, the data itself comes from here.
+  const loadQueue = useCallback(async () => {
+    // If the queue changes twice quickly, two requests are sent. If the first
+    // one answers LAST, it would replace newer data with older data.
+    // So we number each request and ignore any answer that is not the latest.
+    latestRequest.current += 1;
+    const thisRequest = latestRequest.current;
 
-  const stale = state !== "live";
+    try {
+      const res = await api.get("/api/admin/queues");
+      if (thisRequest !== latestRequest.current) return; // an older answer, ignore it
+
+      setQueueEntries(res.data.queueEntries);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error("Error loading queue entries:", error);
+    }
+  }, []);
+
+  // THE LIVE CONNECTION
+  // All the SSE work is in services/queue-sse/connectQueueStream.ts.
+  // This page only says what to do when the queue changed: reload it.
+  useEffect(() => {
+    const closeQueueStream = connectQueueStream({
+      onQueueChanged: loadQueue,
+      onStatusChange: setStatus,
+    });
+
+    // Cleanup: close the connection when leaving the page.
+    return closeQueueStream;
+  }, [loadQueue]);
+
+  function handleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      screenRef.current?.requestFullscreen();
+    }
+  }
+
+  // Fade the board when we are not live so nobody trusts old numbers.
+  const isLive = status === "live";
 
   return (
     <div
       ref={screenRef}
       className="mx-6 flex min-h-[80vh] flex-col rounded-2xl bg-slate-900 p-6 text-white"
     >
+      {/* HEADER: title, connection badge, clock, fullscreen */}
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h2 className="text-2xl font-bold tracking-tight">Queue Monitor</h2>
-          <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${STATE_BADGE[state].cls}`}>
-            <span className={`h-2 w-2 rounded-full bg-current ${state === "live" ? "animate-pulse" : ""}`} />
-            {STATE_BADGE[state].label}
+          <span
+            className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${STATUS_BADGE[status].style}`}
+          >
+            <span
+              className={`h-2 w-2 rounded-full bg-current ${isLive ? "animate-pulse" : ""}`}
+            />
+            {STATUS_BADGE[status].label}
           </span>
         </div>
+
         <div className="flex items-center gap-4 text-slate-300">
-          <span className="tabular-nums text-xl">{now.toLocaleTimeString()}</span>
+          <span className="text-xl tabular-nums">
+            {currentTime.toLocaleTimeString()}
+          </span>
           <button
-            onClick={() =>
-              document.fullscreenElement ? document.exitFullscreen() : screenRef.current?.requestFullscreen()
-            }
+            onClick={handleFullscreen}
             className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm hover:bg-slate-800"
           >
             Fullscreen
@@ -75,67 +120,22 @@ function QueueingMonitor(_props: QueueingMonitorProps) {
         </div>
       </header>
 
-      {/* Dim the board when the feed is not live, so nobody trusts stale numbers. */}
-      <div className={`grid flex-1 gap-6 lg:grid-cols-2 ${stale ? "opacity-50" : ""}`}>
-        {SERVICE_COLUMNS.map((col) => {
-          const { serving, waiting, done } = byType[col.type];
-          return (
-            <section key={col.type} className="flex flex-col rounded-xl bg-slate-800/70 p-5">
-              <div className="mb-4 flex items-baseline justify-between">
-                <h3 className="text-xl font-semibold">{col.title}</h3>
-                <span className="text-sm text-slate-400">
-                  {waiting.length} waiting · {done} done today
-                </span>
-              </div>
-
-              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-emerald-300">Now serving</p>
-              {serving.length === 0 ? (
-                <p className="mb-6 rounded-lg border border-dashed border-slate-600 p-5 text-center text-slate-500">
-                  No one is being served
-                </p>
-              ) : (
-                <div className="mb-6 grid gap-3">
-                  {serving.map((e) => (
-                    <div key={e.queue_id} className="flex items-center justify-between rounded-lg bg-emerald-500/15 p-4 ring-1 ring-emerald-400/40">
-                      <div>
-                        <p className="text-4xl font-black tabular-nums">{e.queue_id}</p>
-                        <p className="text-slate-300">{e.display_name}</p>
-                      </div>
-                      {e.room && <p className="text-right text-lg text-emerald-200">{e.room}</p>}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-400">Next in line</p>
-              {waiting.length === 0 ? (
-                <p className="text-slate-500">Queue is empty</p>
-              ) : (
-                <ol className="space-y-2">
-                  {waiting.slice(0, NEXT_IN_LINE).map((e) => (
-                    <li key={e.queue_id} className="flex items-center justify-between rounded-lg bg-slate-700/50 px-4 py-2.5">
-                      <span className="text-xl font-bold tabular-nums">{e.queue_id}</span>
-                      <span className="flex items-center gap-3 text-slate-300">
-                        {e.status === "skipped" && <span className="text-xs text-amber-300">skipped</span>}
-                        {e.is_priority && (
-                          <span className="rounded bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-300">PRIORITY</span>
-                        )}
-                        {e.display_name}
-                      </span>
-                    </li>
-                  ))}
-                  {waiting.length > NEXT_IN_LINE && (
-                    <li className="px-4 text-sm text-slate-500">+{waiting.length - NEXT_IN_LINE} more</li>
-                  )}
-                </ol>
-              )}
-            </section>
-          );
-        })}
+      {/* BOARD: one column per service type */}
+      <div className={`grid flex-1 gap-6 lg:grid-cols-2 ${isLive ? "" : "opacity-50"}`}>
+        <QueueColumn
+          title="Consultation"
+          entries={queueEntries.filter((entry) => entry.service_type === "consultation")}
+        />
+        <QueueColumn
+          title="Laboratory"
+          entries={queueEntries.filter((entry) => entry.service_type === "laboratory")}
+        />
       </div>
 
       <footer className="mt-4 text-right text-xs text-slate-500">
-        {lastUpdated ? `Last update ${lastUpdated.toLocaleTimeString()}` : "Waiting for first update…"}
+        {lastUpdated
+          ? `Last update ${lastUpdated.toLocaleTimeString()}`
+          : "Waiting for first update…"}
       </footer>
     </div>
   );

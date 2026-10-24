@@ -11,7 +11,7 @@ import QueueTabs from "../components/Queues/QueueTabs";
 import QueueFilters from "../components/Queues/QueueFilters";
 import QueueTable from "../components/Queues/QueueTable";
 import RoomInfo from "../components/Queues/RoomInfo";
-import QueueRequestsTable from "../components/Queues/QueueRequestsTable";
+// import QueueRequestsTable from "../components/Queues/QueueRequestsTable";
 import AddToQueueModal from "../components/Queues/QueueRequestsTable/AddToQueueModal";
 
 type QueuesProps = {
@@ -93,7 +93,6 @@ function Queues({
 
   return (
     <main className="flex-1 min-w-0 ">
-
       <div className="flex  items-center  justify-between px-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-80">Queue Management</h1>
@@ -116,10 +115,10 @@ function Queues({
         />
         <div className="grid grid-cols-7">
           <div className="col-span-5 flex flex-col gap-2">
-            <QueueRequestsTable
+            {/* <QueueRequestsTable
               queueRequests={queueRequests}
               onAddToQueue={setSelectedRequest}
-            />
+            /> */}
             <QueueTable queues={visibleQueues} />
           </div>
           <div className="col-span-2">

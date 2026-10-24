@@ -212,6 +212,31 @@ export async function generatePrescriptionId() {
   return `RX-${prefix}-${String(nextNumber).padStart(4, "0")}`;
 }
 
+export async function generateConsultationRecordId(client: PoolClient) {
+  const now = new Date();
+
+  const year = String(now.getFullYear()).slice(-2);
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  const prefix = `${year}-${month}${day}`;
+
+  const { rows: consultationRecordToday } = await client.query(
+    `SELECT consultation_record_id
+   FROM consultation_records
+   WHERE consultation_record_id LIKE $1
+   ORDER BY consultation_record_id DESC
+   LIMIT 1`,
+    [`CR-${prefix}-%`],
+  );
+
+  const nextNumber =
+    consultationRecordToday.length > 0
+      ? Number(consultationRecordToday[0].consultation_record_id.slice(-4)) + 1
+      : 1;
+
+  return `CR-${prefix}-${String(nextNumber).padStart(4, "0")}`;
+}
 /////////=================================== QUQUE ID GENERATOR =========================================
 // export async function generateConsultationQueueId() {
 //   const queue = await sql`
@@ -285,66 +310,67 @@ export async function generatePrescriptionId() {
 // }
 ///=======================================================================================
 
-export async function generateConsultationQueueId() {
-  const queue = await sql`
-    SELECT queue_id
-    FROM queue_entries
-    WHERE queue_id LIKE 'CONS-%'
-    ORDER BY queue_id DESC
-    LIMIT 1
-  `;
+export async function generateConsultationQueueId(client: PoolClient) {
+  const { rows } = await client.query(
+    `SELECT queue_id
+     FROM queue_entries
+     WHERE queue_id LIKE 'CONS-%'
+     ORDER BY SPLIT_PART(queue_id, '-', 2)::int DESC
+     LIMIT 1`,
+  );
 
-  let nextNumber = 1;
-  const last = queue[0]?.queue_id;
+  const last = rows[0]?.queue_id;
+  const nextNumber = last ? Number(last.split("-")[1]) + 1 : 1;
 
-  if (last) {
-    nextNumber = Number(last.split("-")[1]) + 1;
-  }
-
-  const sequence = String(nextNumber).padStart(4, "0");
-  return `CONS-${sequence}`;
+  return `CONS-${String(nextNumber).padStart(4, "0")}`;
 }
 
-export async function generateLaboratoryQueueId() {
-  const queue = await sql`
-    SELECT queue_id
-    FROM queue_entries
-    WHERE queue_id LIKE 'LAB-%'
-    ORDER BY queue_id DESC
-    LIMIT 1
-  `;
+export async function generateLaboratoryQueueId(client: PoolClient) {
+  const { rows } = await client.query(
+    `SELECT queue_id
+     FROM queue_entries
+     WHERE queue_id LIKE 'LAB-%'
+     ORDER BY SPLIT_PART(queue_id, '-', 2)::int DESC
+     LIMIT 1`,
+  );
 
-  let nextNumber = 1;
-  const last = queue[0]?.queue_id;
+  const last = rows[0]?.queue_id;
+  const nextNumber = last ? Number(last.split("-")[1]) + 1 : 1;
 
-  if (last) {
-    nextNumber = Number(last.split("-")[1]) + 1;
-  }
-
-  const sequence = String(nextNumber).padStart(4, "0");
-  return `LAB-${sequence}`;
+  return `LAB-${String(nextNumber).padStart(4, "0")}`;
 }
 
-export async function generateQueueNumberConsultation() {
-  const queue = await sql`
-    SELECT COALESCE(MAX(queue_number), 0) + 1 AS next
-    FROM queue_entries
-    WHERE queue_id LIKE 'CONS-%'
-      AND (created_at AT TIME ZONE 'Asia/Manila')::date =
-          (NOW() AT TIME ZONE 'Asia/Manila')::date
-  `;
+export async function generateQueueNumberConsultation(client: PoolClient) {
+  const { rows } = await client.query(
+    `SELECT COALESCE(MAX(queue_number), 0) + 1 AS next
+     FROM queue_entries
+     WHERE queue_id LIKE 'CONS-%'
+       AND (created_at AT TIME ZONE 'Asia/Manila')::date =
+           (NOW() AT TIME ZONE 'Asia/Manila')::date`,
+  );
 
-  return Number(queue[0].next);
+  return Number(rows[0].next);
 }
 
-export async function generateQueueNumberLaboratory() {
-  const queue = await sql`
-    SELECT COALESCE(MAX(queue_number), 0) + 1 AS next
-    FROM queue_entries
-    WHERE queue_id LIKE 'LAB-%'
-      AND (created_at AT TIME ZONE 'Asia/Manila')::date =
-          (NOW() AT TIME ZONE 'Asia/Manila')::date
-  `;
+export async function generateQueueNumberLaboratory(
+  client: PoolClient,
+  room: string,
+) {
+  const { rows } = await client.query(
+    `SELECT COALESCE(MAX(qe.queue_number), 0) + 1 AS next
+     FROM queue_entries qe
+     WHERE qe.queue_id LIKE 'LAB-%'
+       AND (qe.created_at AT TIME ZONE 'Asia/Manila')::date =
+           (NOW() AT TIME ZONE 'Asia/Manila')::date
+       AND EXISTS (
+         SELECT 1
+         FROM laboratory_request_items lri
+         JOIN services s ON s.service_id = lri.service_id
+         WHERE lri.queue_id = qe.queue_id
+           AND s.room::text = $1
+       )`,
+    [room],
+  );
 
-  return Number(queue[0].next);
+  return Number(rows[0].next);
 }

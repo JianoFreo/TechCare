@@ -1,4 +1,4 @@
-import { sql } from "../../config/db.js";
+import { sql, pool } from "../../config/db.js";
 import type { Request, Response } from "express";
 import type {
   acceptQueueEntry,
@@ -8,7 +8,7 @@ import type {
   startLaboratoryAnalysis,
   releaseLaboratoryResult,
 } from "./dto/update.dto.js";
-
+import { publishQueueChange } from "../../services/queue-sse/index.js";
 export async function acceptQueueEntry(
   req: Request,
   res: Response<acceptQueueEntry.response | acceptQueueEntry.error>,
@@ -18,55 +18,77 @@ export async function acceptQueueEntry(
     const { room } = req.body as acceptQueueEntry.body;
 
     if (!queue_id) {
-      return res.status(400).json({ message: "Queue ID is required!" } as acceptQueueEntry.error);
+      return res
+        .status(400)
+        .json({ message: "Queue ID is required!" } as acceptQueueEntry.error);
     }
-    if (!room) {
-      return res.status(400).json({ message: "room is required" } as acceptQueueEntry.error);
+    if (room === undefined || room === null || room === "") {
+      return res
+        .status(400)
+        .json({ message: "room is required" } as acceptQueueEntry.error);
     }
+
+    const roomText = String(room);
 
     const [updated] = await sql`
       UPDATE queue_entries q
       SET
         status = 'Serving',
         updated_at = NOW()
-      FROM services s
       WHERE q.queue_id = ${queue_id}
         AND q.queue_id LIKE 'LAB-%'
-        AND s.service_id = q.service_id
-        AND s.room = ${room}
         AND LOWER(q.status) IN ('waiting', 'skipped')
+        AND EXISTS (
+          SELECT 1
+          FROM laboratory_request_items lri
+          JOIN services s ON s.service_id = lri.service_id
+          WHERE lri.queue_id = q.queue_id
+            AND s.room::text = ${roomText}
+        )
       RETURNING q.*
     `;
 
     if (!updated) {
       const [existing] = await sql`
-        SELECT q.status, s.room
+        SELECT
+          q.status,
+          EXISTS (
+            SELECT 1
+            FROM laboratory_request_items lri
+            JOIN services s ON s.service_id = lri.service_id
+            WHERE lri.queue_id = q.queue_id
+              AND s.room::text = ${roomText}
+          ) AS in_room
         FROM queue_entries q
-        JOIN services s ON s.service_id = q.service_id
         WHERE q.queue_id = ${queue_id}
           AND q.queue_id LIKE 'LAB-%'
       `;
 
       if (!existing) {
-        return res.status(404).json({ message: "Queue entry not found." } as acceptQueueEntry.error);
+        return res.status(404).json({
+          message: "Queue entry not found.",
+        } as acceptQueueEntry.error);
       }
-      if (existing.room !== room) {
-        return res
-          .status(403)
-          .json({ message: "This queue belongs to a different room." } as acceptQueueEntry.error);
+      if (!existing.in_room) {
+        return res.status(403).json({
+          message: "This queue belongs to a different room.",
+        } as acceptQueueEntry.error);
       }
       return res.status(409).json({
         message: `Queue is ${existing.status} and can't be accepted.`,
       } as acceptQueueEntry.error);
     }
 
+    publishQueueChange();
     return res.status(200).json({
       message: "Queue entry accepted and now being served.",
       queue: updated,
     } as acceptQueueEntry.response);
   } catch (error) {
     console.error("Unable to accept queue", error);
-    return res.status(500).json({ message: "Internal Server Error" } as acceptQueueEntry.error);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error" } as acceptQueueEntry.error);
   }
 }
 
@@ -99,12 +121,17 @@ export async function completeQueueEntry(
             WHEN LOWER(q.status) = 'completed' THEN q.updated_at
             ELSE NOW()
           END
-        FROM services s
         WHERE q.queue_id = ${queue_id}
           AND q.queue_id LIKE 'LAB-%'
-          AND s.service_id = q.service_id
-          AND s.room = ${room}
           AND LOWER(q.status) IN ('serving', 'completed')
+          AND EXISTS (
+            SELECT 1
+            FROM laboratory_request_items ri
+            JOIN services item_service
+              ON item_service.service_id = ri.service_id
+            WHERE ri.queue_id = q.queue_id
+              AND item_service.room::text = ${room}
+          )
           AND (
             LOWER(q.status) = 'completed'
             OR EXISTS (
@@ -113,7 +140,7 @@ export async function completeQueueEntry(
               JOIN services item_service
                 ON item_service.service_id = ri.service_id
               WHERE ri.queue_id = q.queue_id
-                AND item_service.room = ${room}
+                AND item_service.room::text = ${room}
                 AND LOWER(ri.status) IN (
                   'requested',
                   'waiting',
@@ -132,7 +159,7 @@ export async function completeQueueEntry(
         FROM completed_queue cq, services s
         WHERE ri.queue_id = cq.queue_id
           AND s.service_id = ri.service_id
-          AND s.room = ${room}
+          AND s.room::text = ${room}
           AND LOWER(ri.status) IN (
             'requested',
             'waiting',
@@ -142,16 +169,22 @@ export async function completeQueueEntry(
       )
       SELECT
         cq.*,
-        (SELECT COUNT(*)::int FROM collected_items)
-          AS collected_item_count
+        (SELECT COUNT(*)::int FROM collected_items) AS collected_item_count
       FROM completed_queue cq
     `;
 
     if (!updated) {
       const [existing] = await sql`
-        SELECT q.status, s.room
+        SELECT
+          q.status,
+          EXISTS (
+            SELECT 1
+            FROM laboratory_request_items ri
+            JOIN services s ON s.service_id = ri.service_id
+            WHERE ri.queue_id = q.queue_id
+              AND s.room::text = ${room}
+          ) AS in_room
         FROM queue_entries q
-        JOIN services s ON s.service_id = q.service_id
         WHERE q.queue_id = ${queue_id}
           AND q.queue_id LIKE 'LAB-%'
       `;
@@ -162,7 +195,7 @@ export async function completeQueueEntry(
         } as completeQueueEntry.error);
       }
 
-      if (existing.room !== room) {
+      if (!existing.in_room) {
         return res.status(403).json({
           message: "This queue belongs to a different room.",
         } as completeQueueEntry.error);
@@ -182,6 +215,7 @@ export async function completeQueueEntry(
 
     const { collected_item_count, ...queue } = updated;
 
+    publishQueueChange();
     return res.status(200).json({
       message: "Queue entry completed.",
       queue,
@@ -212,12 +246,23 @@ export async function skipQueueEntry(
     }
 
     // Find the patient's current queue entry.
-    // We need the service_id and queue_number to identify
-    // the correct queue and determine the patient's position.
+    // The room now comes from the lab items attached to this queue,
+    // since queue_entries no longer has a service_id.
     const queue = await sql`
-      SELECT queue_id, queue_number, service_id, status
-      FROM queue_entries
-      WHERE queue_id = ${queue_id}
+      SELECT
+        qe.queue_id,
+        qe.queue_number,
+        qe.status,
+        (
+          SELECT s.room::text
+          FROM laboratory_request_items lri
+          JOIN services s ON s.service_id = lri.service_id
+          WHERE lri.queue_id = qe.queue_id
+          ORDER BY lri.lab_item_id
+          LIMIT 1
+        ) AS room
+      FROM queue_entries qe
+      WHERE qe.queue_id = ${queue_id}
       LIMIT 1;
     `;
 
@@ -228,7 +273,7 @@ export async function skipQueueEntry(
       } as skipQueueEntry.error);
     }
 
-    const { queue_number: currentQueueNumber, service_id, status } = queue[0];
+    const { queue_number: currentQueueNumber, room, status } = queue[0];
 
     // Only waiting or serving entries can be skipped.
     if (!["waiting", "serving"].includes(String(status).toLowerCase())) {
@@ -238,14 +283,21 @@ export async function skipQueueEntry(
     }
 
     // Move the next waiting patient forward by one position.
+    // "Same queue" now means: a queue with lab items in the same room.
     await sql`
-      UPDATE queue_entries
+      UPDATE queue_entries q
       SET
-        queue_number = queue_number - 1,
+        queue_number = q.queue_number - 1,
         updated_at = NOW()
-      WHERE queue_number = ${currentQueueNumber + 1}
-        AND service_id = ${service_id}
-        AND LOWER(status) = 'waiting';
+      WHERE q.queue_number = ${currentQueueNumber + 1}
+        AND LOWER(q.status) = 'waiting'
+        AND EXISTS (
+          SELECT 1
+          FROM laboratory_request_items lri
+          JOIN services s ON s.service_id = lri.service_id
+          WHERE lri.queue_id = q.queue_id
+            AND s.room::text = ${room}
+        );
     `;
 
     // Move the skipped patient back one position and mark the entry
@@ -259,7 +311,7 @@ export async function skipQueueEntry(
       WHERE queue_id = ${queue_id}
       RETURNING *;
     `;
-
+    publishQueueChange();
     return res.status(200).json({
       message: "Queue skipped successfully and returned to the queue.",
       queue: updatedQueue[0],
@@ -354,6 +406,7 @@ export async function cancelQueueEntry(
       RETURNING lab_item_id, request_id, queue_id, reason;
     `;
 
+    publishQueueChange();
     return res.status(200).json({
       message: "Queue cancelled successfully.",
       queue: updatedQueue[0],
@@ -371,9 +424,12 @@ export async function cancelQueueEntry(
 
 export async function startLaboratoryAnalysis(
   req: Request,
-  res: Response<startLaboratoryAnalysis.response | startLaboratoryAnalysis.error>,
+  res: Response<
+    startLaboratoryAnalysis.response | startLaboratoryAnalysis.error
+  >,
 ) {
-  const { room, lab_item_ids } = (req.body ?? {}) as startLaboratoryAnalysis.body;
+  const { room, lab_item_ids } = (req.body ??
+    {}) as startLaboratoryAnalysis.body;
   if (
     typeof room !== "string" ||
     !room.trim() ||
@@ -383,11 +439,9 @@ export async function startLaboratoryAnalysis(
     lab_item_ids.some((id) => typeof id !== "string" || !id.trim()) ||
     new Set(lab_item_ids).size !== lab_item_ids.length
   ) {
-    return res
-      .status(400)
-      .json({
-        message: "A room and distinct laboratory item IDs are required.",
-      } as startLaboratoryAnalysis.error);
+    return res.status(400).json({
+      message: "A room and distinct laboratory item IDs are required.",
+    } as startLaboratoryAnalysis.error);
   }
   try {
     const items = await sql`
@@ -406,22 +460,26 @@ export async function startLaboratoryAnalysis(
       RETURNING ri.lab_item_id, ri.status
     `;
     if (items.length !== lab_item_ids.length)
-      return res
-        .status(409)
-        .json({
-          message:
-            "Some tests are already completed or are not collected samples in this room. Refresh the list.",
-        } as startLaboratoryAnalysis.error);
-    return res.json({ items: items as unknown as startLaboratoryAnalysis.item[] } as startLaboratoryAnalysis.response);
+      return res.status(409).json({
+        message:
+          "Some tests are already completed or are not collected samples in this room. Refresh the list.",
+      } as startLaboratoryAnalysis.error);
+    return res.json({
+      items: items as unknown as startLaboratoryAnalysis.item[],
+    } as startLaboratoryAnalysis.response);
   } catch (error) {
     console.error("Unable to start analysis:", error);
-    return res.status(500).json({ message: "Unable to start analysis." } as startLaboratoryAnalysis.error);
+    return res.status(500).json({
+      message: "Unable to start analysis.",
+    } as startLaboratoryAnalysis.error);
   }
 }
 
 export async function releaseLaboratoryResult(
   req: Request,
-  res: Response<releaseLaboratoryResult.response | releaseLaboratoryResult.error>,
+  res: Response<
+    releaseLaboratoryResult.response | releaseLaboratoryResult.error
+  >,
 ) {
   try {
     const { result_id } = req.params;

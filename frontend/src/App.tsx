@@ -5,9 +5,10 @@ import Admin from "./users/admin/Admin";
 import Doctor from "./users/doctor/Doctor";
 import FrontdeskStaff from "./users/frontdesk_staff/FrontdeskStaff";
 import PatientInformation from "./users/patient/PatientInformation";
-import QueueTracking from "./queue/QueueTracking";
+// import QueueTracking from "./queue/QueueTracking";
 import LaboratoryStaff from "./users/laboratory_staff/LaboratoryStaff";
 import ProtectedRoute from "./lib/ProtectedRoute";
+import SSEProtocols from "./users/test/sse/SSEProtocols";
 function App() {
   return (
     <div className="select-none">
@@ -56,8 +57,12 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Public-facing display, intentionally not gated */}
-        <Route path="/queue-tracking" element={<QueueTracking />} />
+        <Route
+          path="/sse-protocols" 
+          element={<SSEProtocols />} 
+          />
+        {/* Public-facing display, intentionally not gated
+        <Route path="/queue-tracking" element={<QueueTracking />} /> */}
       </Routes>
     </div>
   );

@@ -9,7 +9,6 @@ import {
   getAllBilling,
   getAllPatients,
   getAllQueueEntries,
-  getLaboratoryRequest,
   getMedicalHistory,
   getMedicalHistoryDetails,
   getPrintablePatientRecord,
@@ -19,9 +18,10 @@ import {
 import { getPatientMedicalHistory } from "../controllers/fdstaff/getMedicalHistory.controller.js";
 import {
   addBills,
+  addConsultationRecord,
   addLaboratoryRequest,
   addPatient,
-  addToQueue,
+  // addToQueue,
 } from "../controllers/fdstaff/postRequests.controller.js";
 import {
   confirmLabRequestPayment,
@@ -47,7 +47,6 @@ router.get("/billing/unpaid-lab", getUnpaidRequests);
 router.get("/services", getAllservices);
 router.get("/queues", getAllQueueEntries);
 router.get("/patients/:patient_id/print", getPrintablePatientRecord);
-router.get("/patients/:patient_id/laboratory-requests", getLaboratoryRequest);
 router.get("/patients/:patient_id/medical-history", getPatientMedicalHistory);
 router.get("/queue-requests", getQueueRequests);
 
@@ -66,8 +65,9 @@ router.post("/patients", upload.single("image"), addPatient);
 //   addPatient,
 // );
 router.post("/billing", addBills);
-router.post("/queues", addToQueue);
+// router.post("/queues", addToQueue);
 router.post("/laboratory-requests", addLaboratoryRequest);
+router.post("/consultation-requests", addConsultationRecord);
 //UPDATE requests
 router.put("/queues/:queue_id", serveQueueEntry);
 router.patch("/queues/:queue_id", skipQueueEntry);

@@ -1,119 +1,86 @@
+import { sql } from "../../config/db.js";
 import type { Request, Response } from "express";
-import { pool } from "../../config/db.js";
-import { resolveDoctorId } from "../../utils/resolveDoctorId.js";
-import type { consultationQueueAction } from "./dto/update.dto.js";
+import { skipQueueEntry } from "./dto/update.dto.js";
+import { publishQueueChange } from "../../services/queue-sse/index.js";
 
-type ActionResponse = Response<consultationQueueAction.response | consultationQueueAction.error>;
-
-export function acceptConsultationQueue(req: Request, res: ActionResponse) {
-  return updateConsultationQueue(req, res, "Serving");
-}
-
-export function cancelConsultationQueue(req: Request, res: ActionResponse) {
-  return updateConsultationQueue(req, res, "Cancelled");
-}
-
-async function updateConsultationQueue(
+export async function skipConsultationQueueEntry(
   req: Request,
-  res: ActionResponse,
-  nextStatus: "Serving" | "Cancelled",
+  res: Response<skipQueueEntry.response | skipQueueEntry.error>,
 ) {
-  const queueId = req.params.queue_id;
-  if (typeof queueId !== "string" || !queueId.trim() || queueId.length > 255) {
-    return res.status(400).json({ message: "A valid queue ID is required." });
-  }
-
-  const doctorId = resolveDoctorId(req);
-  if (!doctorId) {
-    return res.status(401).json({ message: "Doctor could not be identified." });
-  }
-
-  const reason = typeof req.body?.reason === "string" ? req.body.reason.trim() : "";
-  if (nextStatus === "Cancelled" && (!reason || reason.length > 255)) {
-    return res.status(400).json({
-      message: "Cancellation reason is required and must not exceed 255 characters.",
-    });
-  }
-
   try {
-    const client = await pool.connect();
-    try {
-      await client.query("BEGIN");
-      const { rows: doctors } = await client.query(
-        `SELECT user_id FROM users
-         WHERE user_id = $1 AND role = 'doctor' AND account_status = TRUE`,
-        [doctorId],
-      );
-      if (!doctors.length) {
-        await client.query("ROLLBACK");
-        return res.status(403).json({ message: "An active doctor account is required." });
-      }
+    // Get the queue_id of the patient who wants to skip.
+    const { queue_id } = req.params;
 
-      // Lock both rows so accepting and cancelling the same visit cannot race.
-      const { rows } = await client.query(
-        `SELECT q.*, cr.consultation_record_id, cr.doctor_id,
-                cr.status AS consultation_status
-         FROM queue_entries q
-         JOIN services s ON s.service_id = q.service_id
-         JOIN consultation_records cr ON cr.queue_id = q.queue_id
-           AND cr.patient_id = q.patient_id AND cr.service_id = q.service_id
-         WHERE q.queue_id = $1 AND q.queue_id LIKE 'CONS-%'
-           AND LOWER(s.service_type) LIKE 'consultation%'
-         FOR UPDATE OF q, cr`,
-        [queueId.trim()],
-      );
-      if (!rows.length) {
-        await client.query("ROLLBACK");
-        return res.status(404).json({ message: "Consultation queue entry not found." });
-      }
-      if (rows.length !== 1) {
-        await client.query("ROLLBACK");
-        return res.status(409).json({ message: "Queue entry must have exactly one consultation record." });
-      }
-
-      const entry = rows[0];
-      if (entry.doctor_id !== doctorId) {
-        await client.query("ROLLBACK");
-        return res.status(403).json({ message: "This consultation is assigned to another doctor." });
-      }
-      const allowed = nextStatus === "Serving"
-        ? ["waiting", "skipped"]
-        : ["waiting", "skipped", "serving"];
-      if (!allowed.includes(String(entry.status).toLowerCase()) ||
-          !allowed.includes(String(entry.consultation_status).toLowerCase())) {
-        await client.query("ROLLBACK");
-        return res.status(409).json({
-          message: `Consultation cannot be ${nextStatus === "Serving" ? "accepted" : "cancelled"} in its current state.`,
-        });
-      }
-
-      const { rows: queues } = await client.query(
-        `UPDATE queue_entries SET status = $1, updated_at = NOW()
-         WHERE queue_id = $2 RETURNING *`,
-        [nextStatus, queueId.trim()],
-      );
-      const { rows: consultations } = await client.query(
-        `UPDATE consultation_records
-         SET status = $1, cancellation_reason = $2
-         WHERE consultation_record_id = $3 RETURNING *`,
-        [nextStatus, nextStatus === "Cancelled" ? reason : null, entry.consultation_record_id],
-      );
-      await client.query("COMMIT");
-      return res.status(200).json({
-        message: nextStatus === "Serving"
-          ? "Consultation accepted and now being served."
-          : "Consultation request cancelled successfully.",
-        queue: queues[0],
-        consultation: consultations[0],
-      });
-    } catch (error) {
-      await client.query("ROLLBACK").catch(console.error);
-      throw error;
-    } finally {
-      client.release();
+    // Validate the queue ID.
+    if (!queue_id) {
+      return res.status(400).json({
+        message: "Queue ID is required!",
+      } as skipQueueEntry.error);
     }
+
+    // Find the patient's current queue entry. Joining consultation_records
+    // makes sure this is a consultation queue and not a laboratory one.
+    const queue = await sql`
+      SELECT qe.queue_id, qe.queue_number, qe.status
+      FROM queue_entries qe
+      JOIN consultation_records cr ON cr.queue_id = qe.queue_id
+      WHERE qe.queue_id = ${queue_id}
+      LIMIT 1;
+    `;
+
+    // Stop if the queue entry doesn't exist (or isn't a consultation queue).
+    if (queue.length === 0) {
+      return res.status(404).json({
+        message: "Queue entry not found.",
+      } as skipQueueEntry.error);
+    }
+
+    const { queue_number: currentQueueNumber, status } = queue[0];
+
+    // Only waiting or serving entries can be skipped.
+    if (!["waiting", "serving"].includes(String(status).toLowerCase())) {
+      return res.status(409).json({
+        message: `Queue entry cannot be skipped because its status is ${status}.`,
+      } as skipQueueEntry.error);
+    }
+
+    // Move the next waiting patient forward by one position.
+    // All consultations share one line, so "same queue" means today's
+    // consultation queue entries.
+    await sql`
+      UPDATE queue_entries q
+      SET
+        queue_number = q.queue_number - 1,
+        updated_at = NOW()
+      WHERE q.queue_number = ${currentQueueNumber + 1}
+        AND LOWER(q.status) = 'waiting'
+        AND q.queue_id LIKE 'CONS-%'
+        AND q.created_at >= CURRENT_DATE
+        AND q.created_at <  CURRENT_DATE + INTERVAL '1 day';
+    `;
+
+    // Move the skipped patient back one position and mark the entry
+    // as skipped so it can be called again later.
+    const updatedQueue = await sql`
+      UPDATE queue_entries
+      SET
+        queue_number = ${currentQueueNumber + 2},
+        status = 'skipped',
+        updated_at = NOW()
+      WHERE queue_id = ${queue_id}
+      RETURNING *;
+    `;
+
+    publishQueueChange();
+    return res.status(200).json({
+      message: "Queue skipped successfully and returned to the queue.",
+      queue: updatedQueue[0],
+    } as skipQueueEntry.response);
   } catch (error) {
-    console.error("Unable to update consultation queue:", error);
-    return res.status(500).json({ message: "Unable to update consultation queue." });
+    console.error("Error in skipConsultationQueueEntry controller:", error);
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+    } as skipQueueEntry.error);
   }
 }

@@ -1,3 +1,4 @@
+
 import { ChevronDown, ChevronUp } from "lucide-react";
 import React, { useState, type Dispatch, type SetStateAction } from "react";
 import type { LaboratoryItem } from "../../../../interface/LaboratoryItem";
@@ -31,13 +32,13 @@ function QueueTable({
 }: QueueTableProps) {
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [acceptError, setAcceptError] = useState<string | null>(null);
+
   const handleToggleAccordion = (queue_id: string) => {
     setOpenQueueAccordion((currentQueueId) =>
       currentQueueId === queue_id ? null : queue_id,
     );
   };
 
-  // Shared: busy state, error handling, reload
   const runQueueRequest = async (
     queue_id: string,
     request: () => Promise<unknown>,
@@ -63,7 +64,6 @@ function QueueTable({
 
   const id = (queue_id: string) => encodeURIComponent(queue_id);
 
-  // Same endpoint, different action in the body
   const handleAccept = (queue_id: string) =>
     runQueueRequest(
       queue_id,
@@ -104,32 +104,36 @@ function QueueTable({
           {acceptError}
         </p>
       )}
+
       <table className="w-full table-fixed">
         <colgroup>
           <col className="w-1/40" />
           <col className="w-4/40" />
-          <col className="w-8/40" />
+          <col className="w-6/40" />
+          <col className="w-7/40" />
           <col className="w-5/40" />
           <col className="w-5/40" />
           <col className="w-5/40" />
-          <col className="w-12/40" />
+          <col className="w-7/40" />
         </colgroup>
-        <thead className=" bg-gray-100">
+
+        <thead className="bg-gray-100">
           <tr>
             <th className="px-1 py-2"></th>
             <th className="px-1 py-2">Queue ID</th>
             <th className="px-1 py-2">Patient ID</th>
+            <th className="px-1 py-2">Patient Name</th>
             <th className="px-1 py-2">Priority</th>
             <th className="px-1 py-2">Requested At</th>
             <th className="px-1 py-2">Status</th>
             <th className="px-1 py-2">Action</th>
           </tr>
         </thead>
-        <tbody className="">
+
+        <tbody>
           {filterQueues.map((queue) => (
             <React.Fragment key={queue.id}>
               <tr
-                key={queue.id}
                 className={`border-b border-gray-300 ${
                   queue.status === "Serving" ? "bg-green-50" : ""
                 }`}
@@ -149,29 +153,42 @@ function QueueTable({
                     />
                   )}
                 </td>
-                <td className="px-1 py-3 text-sm text-center ">
+
+                <td className="px-1 py-3 text-center text-sm">
                   {queue.queue_id}
                 </td>
-                <td className="px-1 py-3 text-sm text-center ">
+
+                <td className="px-1 py-3 text-center text-sm">
                   {queue.patient_id}
                 </td>
-                <td className="px-1 py-3 text-sm text-center ">
+
+                <td className="break-words px-1 py-3 text-center text-sm">
+                  {queue.patient_name || "Unknown"}
+                </td>
+
+                <td className="px-1 py-3 text-center text-sm">
                   {queue.is_priority ? "Priority" : "Non-priority"}
                 </td>
-                <td className="px-1 py-3 text-sm text-center ">
+
+                <td className="px-1 py-3 text-center text-sm">
                   {(() => {
                     const date = new Date(queue.created_at);
                     const h24 = date.getHours();
                     const m = date.getMinutes().toString().padStart(2, "0");
                     const suffix = h24 >= 12 ? "PM" : "AM";
                     const h12 = h24 % 12 || 12;
+
                     return `${h12}:${m} ${suffix}`;
                   })()}
                 </td>
-                <td className="px-1 py-3 text-sm text-center">{queue.status}</td>
-                <td className="px-1 py-3 flex items-center justify-center gap-3 ">
+
+                <td className="px-1 py-3 text-center text-sm">
+                  {queue.status}
+                </td>
+
+                <td className="flex items-center justify-center gap-3 px-1 py-3">
                   <button
-                    className="cursor-pointer px-4 py-2 text-xs rounded-sm border-2 border-blue-500 text-blue-500 transition-all duration-300 hover:scale-105 hover:bg-blue-100"
+                    className="cursor-pointer rounded-sm border-2 border-blue-500 px-4 py-2 text-xs text-blue-500 transition-all duration-300 hover:scale-105 hover:bg-blue-100"
                     onClick={() => {
                       setOpenInformationCard(true);
                       setQueueIdCard(queue.queue_id);
@@ -179,6 +196,7 @@ function QueueTable({
                   >
                     View
                   </button>
+
                   {(() => {
                     const status = queue.status?.toLowerCase();
                     const busy = acceptingId === queue.queue_id;
@@ -189,27 +207,29 @@ function QueueTable({
                           <button
                             disabled={busy}
                             onClick={() => handleAccept(queue.queue_id)}
-                            className="cursor-pointer px-4 py-2 text-xs rounded-sm border-2 border-green-500 text-green-500 transition-all duration-300 hover:scale-105 hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="cursor-pointer rounded-sm border-2 border-green-500 px-4 py-2 text-xs text-green-500 transition-all duration-300 hover:scale-105 hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Accept
                           </button>
                         )}
+
                         {status === "serving" && (
                           <button
                             disabled={busy}
                             onClick={() => handleComplete(queue.queue_id)}
-                            className="cursor-pointer px-4 py-2 text-xs rounded-sm border-2 border-green-500 text-green-500 transition-all duration-300 hover:scale-105 hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="cursor-pointer rounded-sm border-2 border-green-500 px-4 py-2 text-xs text-green-500 transition-all duration-300 hover:scale-105 hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Complete
                           </button>
                         )}
+
                         {(status === "serving" ||
                           status === "waiting" ||
                           status === "skipped") && (
                           <button
                             disabled={busy}
                             onClick={() => handleSkip(queue.queue_id)}
-                            className="cursor-pointer px-4 py-2 text-xs rounded-sm border-2 border-yellow-500 text-yellow-500 transition-all duration-300 hover:scale-105 hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="cursor-pointer rounded-sm border-2 border-yellow-500 px-4 py-2 text-xs text-yellow-500 transition-all duration-300 hover:scale-105 hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Skip
                           </button>
@@ -219,9 +239,10 @@ function QueueTable({
                   })()}
                 </td>
               </tr>
+
               {openQueueAccordion === queue.queue_id && (
                 <tr className="border-b border-gray-300 bg-gray-50">
-                  <td colSpan={7} className="p-4">
+                  <td colSpan={8} className="p-4">
                     {accordionLoading ? (
                       <p className="text-sm text-gray-500">
                         Loading laboratory items...
@@ -235,7 +256,7 @@ function QueueTable({
                         No laboratory items found.
                       </p>
                     ) : (
-                      <table className="w-full bg-gray-100 table-fixed">
+                      <table className="w-full table-fixed bg-gray-100">
                         <colgroup>
                           <col className="w-4/40" />
                           <col className="w-4/40" />
@@ -243,6 +264,7 @@ function QueueTable({
                           <col className="w-5/40" />
                           <col className="w-5/40" />
                         </colgroup>
+
                         <thead className="bg-gray-300">
                           <tr>
                             <th className="px-3 py-2 text-center text-sm font-medium">
@@ -262,25 +284,26 @@ function QueueTable({
                             </th>
                           </tr>
                         </thead>
+
                         <tbody>
                           {laboratoryItems.map((item) => (
                             <tr
                               key={item.lab_item_id}
                               className="border-b border-gray-200 bg-white text-sm"
                             >
-                              <td className="px-3 py-3 text-xs text-center">
+                              <td className="px-3 py-3 text-center text-xs">
                                 {item.lab_item_id}
                               </td>
-                              <td className="px-3 py-3 text-xs text-center">
+                              <td className="px-3 py-3 text-center text-xs">
                                 {item.service_name}
                               </td>
-                              <td className="px-3 py-3 text-xs text-center">
+                              <td className="px-3 py-3 text-center text-xs">
                                 {item.service_type}
                               </td>
-                              <td className="px-3 py-3 text-xs text-center">
+                              <td className="px-3 py-3 text-center text-xs">
                                 {item.status}
                               </td>
-                              <td className="px-3 py-3 text-xs text-center">
+                              <td className="px-3 py-3 text-center text-xs">
                                 {(() => {
                                   const date = new Date(item.created_at);
                                   const h24 = date.getHours();
@@ -290,6 +313,7 @@ function QueueTable({
                                     .padStart(2, "0");
                                   const suffix = h24 >= 12 ? "PM" : "AM";
                                   const h12 = h24 % 12 || 12;
+
                                   return `${h12}:${m} ${suffix}`;
                                 })()}
                               </td>
