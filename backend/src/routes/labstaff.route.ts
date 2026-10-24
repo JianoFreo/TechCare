@@ -8,6 +8,7 @@ import {
   getLaboratoryQueues,
   getLaboratoryRequestDetails,
   getReleasedLaboratoryResults,
+  getReleasedLaboratoryResult,
   getAnalysisItems,
   getSavedLaboratoryResults,
 } from "../controllers/labstaff/getRequests.controller.js";
@@ -46,6 +47,7 @@ router.get("/laboratory-results/saved", getSavedLaboratoryResults);
 
 // IMPORTANT: Fetches laboratory results only after they have been released.
 router.get("/laboratory-results", getReleasedLaboratoryResults);
+router.get("/laboratory-results/:result_id", getReleasedLaboratoryResult);
 
 // POST ROUTES
 router.post("/laboratory-results/:lab_item_id", saveLaboratoryResult);
