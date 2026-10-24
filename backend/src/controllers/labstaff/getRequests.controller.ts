@@ -10,6 +10,7 @@ import type {
   getAnalysisReadyRequests,
   getAvailableFormTemplates,
   getReleasedLaboratoryResults,
+  getReleasedLaboratoryResult,
 } from "./dto/get.dto.js";
 
 export async function getRoomSpecificServices(
