@@ -50,15 +50,27 @@ function ServiceList({
       setSubmitting(true);
       setError(null);
 
-      const res = await api.post("/api/fdstaff/laboratory-requests", {
-        patient_id: patientId,
-        services: selectedServices.map((service_id) => ({ service_id })),
-      });
+      if (activeTab === "laboratory") {
+        const res = await api.post("/api/fdstaff/laboratory-requests", {
+          patient_id: patientId,
+          services: selectedServices.map((service_id) => ({ service_id })),
+        });
 
-      setSuccess({
-        requestId: res.data.request?.request_id,
-        count: selectedServices.length,
-      });
+        setSuccess({
+          requestId: res.data.request?.request_id,
+          count: selectedServices.length,
+        });
+      } else {
+        const res = await api.post("/api/fdstaff/consultation-requests", {
+          patient_id: patientId,
+          service_id: selectedServices[0],
+        });
+
+        setSuccess({
+          requestId: res.data.consultationRecord?.consultation_record_id,
+          count: 1,
+        });
+      }
 
       onClearAll();
     } catch (err) {

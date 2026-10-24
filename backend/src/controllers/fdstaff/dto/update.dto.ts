@@ -75,7 +75,9 @@ export namespace skipQueueEntry {
 export namespace confirmLabRequestPayment {
   export interface response {
     message: string;
-    request: Record<string, unknown>[];
+    request: Record<string, unknown>;
+    queues: Record<string, unknown>[];
+    items: Record<string, unknown>[];
   }
 
   export interface error {

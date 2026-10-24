@@ -18,9 +18,10 @@ import {
 import { getPatientMedicalHistory } from "../controllers/fdstaff/getMedicalHistory.controller.js";
 import {
   addBills,
+  addConsultationRecord,
   addLaboratoryRequest,
   addPatient,
-  addToQueue,
+  // addToQueue,
 } from "../controllers/fdstaff/postRequests.controller.js";
 import {
   confirmLabRequestPayment,
@@ -64,8 +65,9 @@ router.post("/patients", upload.single("image"), addPatient);
 //   addPatient,
 // );
 router.post("/billing", addBills);
-router.post("/queues", addToQueue);
+// router.post("/queues", addToQueue);
 router.post("/laboratory-requests", addLaboratoryRequest);
+router.post("/consultation-requests", addConsultationRecord);
 //UPDATE requests
 router.put("/queues/:queue_id", serveQueueEntry);
 router.patch("/queues/:queue_id", skipQueueEntry);
