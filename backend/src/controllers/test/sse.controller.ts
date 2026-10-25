@@ -8,7 +8,7 @@ export function test(req: Request, res: Response) {
 export function streamSSE(req: Request, res: Response) { 
 
   res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
+  res.write("data " + "hello\n\n"); // Send a test message to the client
   res.write("retry: 10000\n\n"); // Retry every 10 seconds if connection is lost
+  // why \n\n? Because the SSE protocol requires a double newline to indicate the end of a message.
 }
