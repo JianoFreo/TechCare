@@ -1,8 +1,9 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 
 function SSEProtocols() {
+  const [messages, setMessages] = useState<string[]>([]);
   const controller = new AbortController();
 
   async function connectSSE() {
@@ -14,7 +15,9 @@ function SSEProtocols() {
       signal: controller.signal,
 
       onmessage(event) {
+        const data = JSON.parse(event.data)
         console.log("Received message:", event.data);
+        setMessages(() =>[data.messages, ...messages])
       }
     });
   }
@@ -26,11 +29,19 @@ function SSEProtocols() {
     return () => {
       controller.abort();
     };
-  }, []);
+  });
 
   return (
-    <div>SSEProtocols</div>
-  );
+    <>
+      {messages.map((message) => 
+      {
+        <div>
+          {message}
+        </div>
+      }
+      )};
+    </>
+  )
 }
 
 export default SSEProtocols;
