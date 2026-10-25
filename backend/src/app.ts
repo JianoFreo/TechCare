@@ -36,8 +36,12 @@ app.use(
 app.use(express.json());
 
 // API routes
+
+// ---- TEST ROUTES ----
 app.use("/api/test", testRoutes);
 app.use("/api/sse", sseRoutes);
+//------------------------
+
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/fdstaff", fdstaffRoutes);
