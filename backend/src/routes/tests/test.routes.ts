@@ -1,6 +1,6 @@
-import { signIn, uploadImage, getUser, getMyAccount } from "../controllers/test.controller.js";
+import { signIn, uploadImage, getUser, getMyAccount } from "../../controllers/test.controller.js";
 // import { upload } from "../middlewares/multer.middleware.js";
-import { authenticateToken } from "../middlewares/test.middleware.js";
+import { authenticateToken } from "../../middlewares/test.middleware.js";
 
 import { Router } from "express";
 const router = Router();
