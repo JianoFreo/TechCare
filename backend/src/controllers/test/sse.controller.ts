@@ -1,14 +1,26 @@
 import { Request, Response } from "express";
+import { sql } from "../../config/db.js";
 
-export function test(req: Request, res: Response) {
+export async function test(req: Request, res: Response) {
   res.status(200).json({ message: "Test route is working for SSE!" });
 }
 
+export async function getMessagesSSE(req: Request, res: Response) {
+  const messages = await sql`
+    SELECT * FROM sse_test
+  `;
 
-export function streamSSE(req: Request, res: Response) { 
-
+  // Tells the client that the response is an SSE stream,
+  // allowing it to receive messages continuously instead of a regular JSON response.
   res.setHeader("Content-Type", "text/event-stream");
-  res.write("data " + "hello\n\n"); // Send a test message to the client
-  res.write("retry: 10000\n\n"); // Retry every 10 seconds if connection is lost
-  // why \n\n? Because the SSE protocol requires a double newline to indicate the end of a message.
+
+  // Prevents caches from storing the response,
+  // so the client receives fresh stream data instead of a cached response.
+  res.setHeader("Cache-Control", "no-cache");
+
+  // Tells the connection to remain open,
+  // allowing the server to send multiple events over the same HTTP connection.
+  res.setHeader("Connection", "keep-alive");
+
+  res.write(`data: ${JSON.stringify({ messages })}\n\n`);
 }
