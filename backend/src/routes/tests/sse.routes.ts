@@ -3,7 +3,7 @@ import { test, getMessagesSSE,  writeMessageSSE } from "../../controllers/test/s
 const router = Router();
 
 router.get("/", test);
-router.get("/streamSSE", getMessagesSSE);
-router.post("/streamSSE", writeMessageSSE);
+router.get("/stream-sse", getMessagesSSE);
+router.post("/write-sse", writeMessageSSE);
 
 export default router;

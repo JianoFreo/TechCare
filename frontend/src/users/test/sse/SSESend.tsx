@@ -1,4 +1,5 @@
 
+import api from "#lib/axios";
 import { useState, type FormEvent } from "react";
 
 function SSESend() {
@@ -10,18 +11,8 @@ function SSESend() {
         if (!message.trim()) return;
 
         try {
-            const response = await fetch("http://localhost:5000/api/sse/send", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ message }),
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to send message");
-            }
-
+            const response = await api.post("http://localhost:5000/api/sse/send", { message });
+            alert(response.data.message)
             setMessage("");
         } catch (error) {
             console.error("Error sending message:", error);

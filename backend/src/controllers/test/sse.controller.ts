@@ -4,7 +4,7 @@ import { sql } from "../../config/db.js";
 export async function test(req: Request, res: Response) {
   res.status(200).json({ message: "Test route is working for SSE!" });
 }
-
+// GET api/sse/stream-sse
 export async function getMessagesSSE(req: Request, res: Response) {
   try {
     const messages = await sql`
@@ -28,7 +28,7 @@ export async function getMessagesSSE(req: Request, res: Response) {
     res.status(500).json({ message: "Internal Server error" });
   }
 }
-
+//POST api/sse/write-sse
 export async function writeMessageSSE(req: Request, res: Response) {
   try {
     const { message } = req.body;
@@ -39,7 +39,7 @@ export async function writeMessageSSE(req: Request, res: Response) {
       VALUES (${message})
       RETURNING *;
     `
-    res.status(200).json({message: response[0].messages})
+    res.status(200).json({message: "Successfully added"})
   } catch (error) {
     res.status(500).json({ message: "Internal Server error" });
   }
