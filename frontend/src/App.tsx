@@ -58,14 +58,13 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Routes>
+
           {/* Your existing routes */}
 
           <Route path="/sse-protocols">
             <Route path="sse-send" element={<SSESend />} />
             <Route path="SSEProtocols" element={<SSEProtocols />} />
           </Route>
-        </Routes>
         {/* Public-facing display, intentionally not gated
         <Route path="/queue-tracking" element={<QueueTracking />} /> */}
       </Routes>
