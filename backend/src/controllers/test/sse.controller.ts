@@ -32,6 +32,14 @@ export async function getMessagesSSE(req: Request, res: Response) {
 export async function writeMessageSSE(req: Request, res: Response) {
   try {
     const { message } = req.body;
+
+
+    const response = await sql`
+      INSERT INTO sse_test ( messages )
+      VALUES (${message})
+      RETURNING *;
+    `
+    res.status(200).json({message: response[0].messages})
   } catch (error) {
     res.status(500).json({ message: "Internal Server error" });
   }
