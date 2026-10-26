@@ -5,8 +5,8 @@ import type {
   DiagnosisType,
   FieldErrors,
   FindingsFormState,
-} from "../consultation/types.ts";
-import { PHYSICAL_EXAM_FIELDS, newDiagnosisRow } from "../consultation/types.ts";
+} from "./types.ts";
+import { PHYSICAL_EXAM_FIELDS, newDiagnosisRow } from "./types.ts";
 import { LIMITS, validateFindingsForm } from "./validation.ts";
 
 type Props = {

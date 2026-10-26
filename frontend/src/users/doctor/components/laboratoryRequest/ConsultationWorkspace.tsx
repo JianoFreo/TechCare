@@ -4,20 +4,20 @@ import { AlertCircle, Loader2, Search } from "lucide-react";
 import calculateAge from "../../../../utils/calculateAge.ts";
 import PrescriptionManager from "../prescription/PrescriptionManager.tsx";
 import type { PatientInfo } from "../prescription/types.ts";
-import ConsultationPatientHeader from "../consultation/ConsultationPatientHeader.tsx";
-import ConsultationFindingsForm from "../consultation/ConsultationFindingsForm.tsx";
-import LaboratoryRequestForm from "../consultation/LaboratoryRequestsForm.tsx";
+import ConsultationPatientHeader from "../consultations/ConsultationPatientHeader.tsx";
+import ConsultationFindingsForm from "../consultations/ConsultationFindingsForm.tsx";
+import LaboratoryRequestForm from "../consultations/LaboratoryRequestsForm.tsx";
 import {
   fetchConsultationPatient,
   saveConsultationFindings,
   toApiFailure,
-} from "../consultation/consultationsApi.ts";
+} from "../consultations/consultationsApi.ts";
 import type {
   ConsultationPatient,
   FieldErrors,
   FindingsFormState,
   WorkspaceTab,
-} from "../consultation/types.ts";
+} from "../consultations/types.ts";
 
 const STORAGE_PATIENT = "techcare.consultation.patient_id";
 const draftKey = (patientId: string) => `techcare.consultation.draft.${patientId}`;
