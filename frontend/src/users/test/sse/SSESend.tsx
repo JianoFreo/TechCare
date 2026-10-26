@@ -1,9 +1,11 @@
 import React from 'react'
-
+import { useState } from 'react'
 function SSESend() {
-  return (
-    <div>SSESend</div>
-  )
+
+    const [messages, setMessages] = useState([])
+    return (
+        <div>SSESend</div>
+    )
 }
 
 export default SSESend
