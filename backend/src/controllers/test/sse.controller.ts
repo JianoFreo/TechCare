@@ -31,6 +31,7 @@ export async function getMessagesSSE(req: Request, res: Response) {
 
 export async function writeMessageSSE(req: Request, res: Response) {
   try {
+    const { message } = req.body;
   } catch (error) {
     res.status(500).json({ message: "Internal Server error" });
   }
