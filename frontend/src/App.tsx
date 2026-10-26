@@ -9,6 +9,7 @@ import PatientInformation from "./users/patient/PatientInformation";
 import LaboratoryStaff from "./users/laboratory_staff/LaboratoryStaff";
 import ProtectedRoute from "./lib/ProtectedRoute";
 import SSEProtocols from "./users/test/sse/SSEProtocols";
+import SSESend from "./users/test/sse/SSESend";
 function App() {
   return (
     <div className="select-none">
@@ -57,10 +58,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/sse-protocols" 
-          element={<SSEProtocols />} 
-          />
+        <Routes>
+          {/* Your existing routes */}
+
+          <Route path="/sse-protocols">
+            <Route path="sse-send" element={<SSESend />} />
+            <Route path="SSEProtocols" element={<SSEProtocols />} />
+          </Route>
+        </Routes>
         {/* Public-facing display, intentionally not gated
         <Route path="/queue-tracking" element={<QueueTracking />} /> */}
       </Routes>
