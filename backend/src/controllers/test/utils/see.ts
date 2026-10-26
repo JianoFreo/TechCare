@@ -3,7 +3,7 @@ import type { Response } from "express";
 // Set stores the Response object for every client connected to our SSE endpoint.
 // Each Response object represents one client's open HTTP connection.
 // We use a Set so we can add and remove connected clients.
-const clients = new Set<Response>();
+const clients = new Set<Response>(); //  Client is a collection of response
 
 // This function registers a client when it connects to our SSE endpoint.
 export function addClient(res: Response) {
