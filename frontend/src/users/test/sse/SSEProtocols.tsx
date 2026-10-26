@@ -10,7 +10,7 @@ function SSEProtocols() {
 
     async function connectSSE() {
       try {
-        await fetchEventSource("http://localhost:3000/test/sse", {
+        await fetchEventSource("http://localhost:3000/api/sse/stream-sse", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,

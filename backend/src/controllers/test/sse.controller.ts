@@ -1,46 +1,90 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { sql } from "../../config/db.js";
-
-export async function test(req: Request, res: Response) {
-  res.status(200).json({ message: "Test route is working for SSE!" });
-}
-
+import { addClient } from "./utils/see.js";
+import { sendSSE } from "./utils/see.js";
 export async function getMessagesSSE(req: Request, res: Response) {
   try {
-    const messages = await sql`
-    SELECT * FROM sse_test
-  `;
-
-    // Tells the client that the response is an SSE stream,
-    // allowing it to receive messages continuously instead of a regular JSON response.
+    // Tell the browser that this response is an SSE stream,
+    // not an ordinary JSON response.
     res.setHeader("Content-Type", "text/event-stream");
 
-    // Prevents caches from storing the response,
-    // so the client receives fresh stream data instead of a cached response.
+    // Tell caches not to store this response.
+    // We want the client to receive live updates, not a cached response.
     res.setHeader("Cache-Control", "no-cache");
 
-    // Tells the connection to remain open,
-    // allowing the server to send multiple events over the same HTTP connection.
+    // Ask the connection to remain open so we can send
+    // multiple SSE events through the same HTTP connection.
     res.setHeader("Connection", "keep-alive");
 
+    // Send the response headers immediately instead of waiting
+    // for the first piece of data to be written.
+    res.flushHeaders();
+
+    // Save this client's connection so writeMessageSSE()
+    // can send new messages to this client later.
+    addClient(res);
+
+    // Query PostgreSQL to retrieve the messages already in the table.
+    const messages = await sql`
+            SELECT * FROM sse_test
+        `;
+
+    // Send the existing messages as the first SSE event.
+    // JSON.stringify converts the object to text.
+    // The browser receives this text in its onmessage handler.
+    // The two newlines mark the end of this event.
     res.write(`data: ${JSON.stringify({ messages })}\n\n`);
   } catch (error) {
-    res.status(500).json({ message: "Internal Server error" });
+    // Print the actual error in the backend terminal for debugging.
+    console.error(error);
+
+    // If headers have not been sent, we can still send a normal
+    // HTTP 500 error response.
+    if (!res.headersSent) {
+      res.status(500).json({
+        message: "Internal Server error",
+      });
+    } else {
+      // If the SSE response has already started,
+      // close the connection instead of trying to send JSON
+      // as if this were a normal response.
+      res.end();
+    }
   }
 }
 
 export async function writeMessageSSE(req: Request, res: Response) {
   try {
+    // Extract the "message" property from the JSON request body.
+    // For example, the frontend might send { "message": "Hello" }.
     const { message } = req.body;
 
+    // Insert the message into PostgreSQL.
+    // RETURNING * tells PostgreSQL to return the newly inserted row.
+    const [newMessage] = await sql`
+            INSERT INTO sse_test (messages)
+            VALUES (${message})
+            RETURNING *;
+        `;
 
-    const response = await sql`
-      INSERT INTO sse_test ( messages )
-      VALUES (${message})
-      RETURNING *;
-    `
-    res.status(200).json({message: response[0].messages})
+    // Broadcast the newly inserted row to every connected SSE client.
+    // sendSSE() loops through the clients Set and writes an SSE event
+    // to each client's existing connection.
+    sendSSE({ message: newMessage });
+
+    // Send an ordinary HTTP JSON response to the client that
+    // submitted the POST request.
+    // This confirms the insert succeeded; it is not the SSE broadcast.
+    res.status(200).json({
+      message: "Successfully added",
+    });
   } catch (error) {
-    res.status(500).json({ message: "Internal Server error" });
+    // Log the error in the backend terminal.
+    console.error(error);
+
+    // Return an HTTP 500 error if the operation fails.
+    res.status(500).json({
+      message: "Internal Server error",
+    });
   }
 }

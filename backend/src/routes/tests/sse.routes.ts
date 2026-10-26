@@ -1,9 +1,8 @@
 import { Router } from "express";
-import { test, getMessagesSSE,  writeMessageSSE } from "../../controllers/test/sse.controller.js";
+import { getMessagesSSE,  writeMessageSSE } from "../../controllers/test/sse.controller.js";
 const router = Router();
 
-router.get("/", test);
-router.get("/streamSSE", getMessagesSSE);
-router.post("/streamSSE", writeMessageSSE);
+router.get("/stream-sse", getMessagesSSE);
+router.post("/write-sse", writeMessageSSE);
 
 export default router;
