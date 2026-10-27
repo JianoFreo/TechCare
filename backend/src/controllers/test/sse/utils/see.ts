@@ -24,11 +24,28 @@ export function addClient(res: Response) {
 // but TypeScript requires us to handle it safely.
 export function sendSSE(data: unknown) {
     // Loop through every connected client's Response object.
-    for (const client of clients) {
+    for (const client of clients) { // loops trhogh eachh client like multicast
         // Convert the JavaScript object into a JSON string.
         // SSE requires messages to use the "data:" field.
         // The two newline characters (\n\n) tell the browser that
         // this SSE event has ended and can now be processed.
         client.write(`data: ${JSON.stringify(data)}\n\n`);
+    }
+}
+
+
+
+/////////// ------  TESTING FOR UNICAST ------------------------------
+const specifiedClients = new Map<string, Response>();
+
+export function addSpecifiedClient(userId: string, res: Response) {
+    specifiedClients.set(userId, res);
+}
+
+export function sendSSEToUser(userId: string, data: unknown) {
+    const specifiedClient = specifiedClients.get(userId);
+
+    if (specifiedClient) {
+        specifiedClient.write(`data: ${JSON.stringify(data)}\n\n`);
     }
 }

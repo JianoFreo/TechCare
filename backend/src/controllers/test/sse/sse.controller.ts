@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { sql } from "../../config/db.js";
+import { sql } from "../../../config/db.js";
 import { addClient } from "./utils/see.js";
 import { sendSSE } from "./utils/see.js";
 export async function getMessagesSSE(req: Request, res: Response) {
@@ -70,7 +70,7 @@ export async function writeMessageSSE(req: Request, res: Response) {
     // Broadcast the newly inserted row to every connected SSE client.
     // sendSSE() loops through the clients Set and writes an SSE event
     // to each client's existing connection.
-    sendSSE({ message: newMessage });
+    sendSSE({ message: newMessage }); 
 
     // Send an ordinary HTTP JSON response to the client that
     // submitted the POST request.

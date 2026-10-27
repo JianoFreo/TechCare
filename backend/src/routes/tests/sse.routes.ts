@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getMessagesSSE,  writeMessageSSE } from "../../controllers/test/sse.controller.js";
+import { getMessagesSSE,  writeMessageSSE } from "../../controllers/test/sse/sse.controller.js";
 const router = Router();
 
 router.get("/stream-sse", getMessagesSSE);
