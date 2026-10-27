@@ -13,7 +13,7 @@ function SSESend() {
         try {
             setLoading(true);
 
-            const response = await api.post("/api/sse/send", {
+            const response = await api.post("/api/sse/send-sse", {
                 message: message.trim(),
             });
 
