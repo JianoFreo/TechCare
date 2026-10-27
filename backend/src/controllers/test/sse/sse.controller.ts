@@ -70,7 +70,7 @@ export async function writeMessageSSE(req: Request, res: Response) {
     // Broadcast the newly inserted row to every connected SSE client.
     // sendSSE() loops through the clients Set and writes an SSE event
     // to each client's existing connection.
-    sendSSE({ message: newMessage }); 
+    sendSSE({ messages: [newMessage] });  //[newMessage] extracts the first row from the SQL result array.
 
     // Send an ordinary HTTP JSON response to the client that
     // submitted the POST request.

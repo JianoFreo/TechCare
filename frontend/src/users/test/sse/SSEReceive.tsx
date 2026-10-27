@@ -36,7 +36,11 @@ function SSEProtocols() {
 
             onmessage(event) {
               const data = JSON.parse(event.data);
-              setMessages(data.messages.map((item: { message: string }) => item.message));
+
+              setMessages((prev) => [
+                ...data.messages.map((item: { message: string }) => item.message),
+                ...prev,
+              ]);
             },
 
             onerror(error) { // Key: onerror | Value: callback function
