@@ -62,7 +62,7 @@ export async function writeMessageSSE(req: Request, res: Response) {
     // Insert the message into PostgreSQL.
     // RETURNING * tells PostgreSQL to return the newly inserted row.
     const [newMessage] = await sql`
-            INSERT INTO sse_test (messages)
+            INSERT INTO sse_test (message)
             VALUES (${message})
             RETURNING *;
         `;

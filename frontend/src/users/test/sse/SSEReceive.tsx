@@ -34,30 +34,9 @@ function SSEProtocols() {
               }
             },
 
-            onmessage(event) { // Key: onmessage | Value: callback function
-              try {
-                const data = JSON.parse(event.data);
-                const incoming = data.messages;
-
-                if (Array.isArray(incoming)) {
-                  setMessages(
-                    incoming.map((message) =>
-                      typeof message === "string"
-                        ? message
-                        : JSON.stringify(message)
-                    )
-                  );
-                } else if (incoming !== undefined) {
-                  setMessages((previous) => [
-                    typeof incoming === "string"
-                      ? incoming
-                      : JSON.stringify(incoming),
-                    ...previous,
-                  ]);
-                }
-              } catch (error) {
-                console.error("Failed to parse SSE message:", error);
-              }
+            onmessage(event) {
+              const data = JSON.parse(event.data);
+              setMessages(data.messages.map((item: { message: string }) => item.message));
             },
 
             onerror(error) { // Key: onerror | Value: callback function
