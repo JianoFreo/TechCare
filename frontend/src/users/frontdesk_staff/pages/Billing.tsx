@@ -9,7 +9,7 @@ import BillingQueue from "../components/Billing/BillingQueue";
 import ProcessPayment from "../components/Billing/ProcessPayment";
 import { BillingButton, BillingNotice } from "../components/Billing/BillingUi";
 import { paidRequestsAwaitingLab, recordEntry, requestEntry } from "../components/Billing/billingModel";
-import "../frontdesk.css";
+
 
 type BillingProps = {
   unpaidRequests: UnpaidRequests[];

@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { sql } from "../../../config/db.js";
-import { addClient } from "./utils/see.js";
-import { sendSSE } from "./utils/see.js";
+import { addClient } from "./utils/sse.js";
+import { sendSSE } from "./utils/sse.js";
 export async function getMessagesSSE(req: Request, res: Response) {
   try {
     // Tell the browser that this response is an SSE stream,
@@ -62,7 +62,7 @@ export async function writeMessageSSE(req: Request, res: Response) {
     // Insert the message into PostgreSQL.
     // RETURNING * tells PostgreSQL to return the newly inserted row.
     const [newMessage] = await sql`
-            INSERT INTO sse_test (messages)
+            INSERT INTO sse_test (message)
             VALUES (${message})
             RETURNING *;
         `;
@@ -70,7 +70,7 @@ export async function writeMessageSSE(req: Request, res: Response) {
     // Broadcast the newly inserted row to every connected SSE client.
     // sendSSE() loops through the clients Set and writes an SSE event
     // to each client's existing connection.
-    sendSSE({ message: newMessage }); 
+    sendSSE({ messages: [newMessage] });  //[newMessage] extracts the first row from the SQL result array.
 
     // Send an ordinary HTTP JSON response to the client that
     // submitted the POST request.
