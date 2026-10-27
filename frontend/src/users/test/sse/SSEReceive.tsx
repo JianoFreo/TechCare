@@ -6,8 +6,8 @@ function SSEProtocols() {
   const [status, setStatus] = useState<"connecting" | "connected" | "error">(
     "connecting"
   );
-
   useEffect(() => {
+    // Create a controller to cancel the SSE connection when needed.
     const controller = new AbortController();
 
     async function connectSSE() {
@@ -19,12 +19,17 @@ function SSEProtocols() {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
+
+            // Connect the controller to the SSE request.
+            // Calling controller.abort() will cancel this request.
             signal: controller.signal,
 
             async onopen(response) {
+              // Mark the connection as established if the response is successful.
               if (response.ok) {
                 setStatus("connected");
               } else {
+                // Throw an error if the server returns an unsuccessful status.
                 setStatus("error");
                 throw new Error(`SSE connection failed: ${response.status}`);
               }
@@ -32,9 +37,11 @@ function SSEProtocols() {
 
             onmessage(event) {
               try {
+                // Convert the incoming SSE payload from JSON text into an object.
                 const data = JSON.parse(event.data);
                 const incoming = data.messages;
 
+                // Replace the current messages when the payload contains an array.
                 if (Array.isArray(incoming)) {
                   setMessages(
                     incoming.map((message) =>
@@ -44,6 +51,7 @@ function SSEProtocols() {
                     )
                   );
                 } else if (incoming !== undefined) {
+                  // Add a new message to the beginning of the existing list.
                   setMessages((previous) => [
                     typeof incoming === "string"
                       ? incoming
@@ -52,17 +60,22 @@ function SSEProtocols() {
                   ]);
                 }
               } catch (error) {
+                // Log errors if the incoming payload is not valid JSON.
                 console.error("Failed to parse SSE message:", error);
               }
             },
 
             onerror(error) {
+              // Update the status while fetchEventSource attempts to reconnect.
               setStatus("connecting");
+
+              // Rethrow the error to stop automatic retries.
               throw error;
             },
           }
         );
       } catch (error) {
+        // Ignore cancellation errors because disconnecting may be intentional.
         if (!controller.signal.aborted) {
           setStatus("error");
           console.error("SSE connection failed:", error);
@@ -72,7 +85,11 @@ function SSEProtocols() {
 
     connectSSE();
 
-    return () => controller.abort();
+    // Runs when the component unmounts.
+    // Cancels the SSE request, allowing the server to detect the disconnect.
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   const statusStyles = {
@@ -106,13 +123,12 @@ function SSEProtocols() {
               className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium ring-1 ${statusStyles[status]}`}
             >
               <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  status === "connected"
+                className={`h-1.5 w-1.5 rounded-full ${status === "connected"
                     ? "animate-pulse bg-emerald-400"
                     : status === "error"
                       ? "bg-red-400"
                       : "animate-pulse bg-amber-400"
-                }`}
+                  }`}
               />
               {status.charAt(0).toUpperCase() + status.slice(1)}
             </span>
