@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { sql } from "../../../config/db.js";
-import { addClient } from "./utils/see.js";
-import { sendSSE } from "./utils/see.js";
+import { addClient } from "./utils/sse.js";
+import { sendSSE } from "./utils/sse.js";
 export async function getMessagesSSE(req: Request, res: Response) {
   try {
     // Tell the browser that this response is an SSE stream,
