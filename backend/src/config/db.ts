@@ -552,9 +552,9 @@ const TABLES: {
   {
     table: "sse_test",
     createSQL: `CREATE TABLE IF NOT EXISTS actions (
-      message_id           SERIAL PRIMARY KEY,
-      messages         VARCHAR(255) NOT NULL
-    )`,
+    message_id SERIAL PRIMARY KEY,
+    messages VARCHAR(255) NOT NULL
+  )`,
     columns: {
       message_id: "SERIAL PRIMARY KEY",
       messages: "VARCHAR(255) NOT NULL",

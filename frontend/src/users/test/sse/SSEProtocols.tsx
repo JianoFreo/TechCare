@@ -13,7 +13,7 @@ function SSEProtocols() {
     async function connectSSE() {
       try {
         await fetchEventSource(
-          "http://localhost:3000/api/sse/stream-sse",
+          "http://localhost:5000/api/sse/stream-sse",
           {
             method: "GET",
             headers: {
