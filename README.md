@@ -1,4 +1,3 @@
-
 # TechCare: Cloud-Based Integrated Information System for Reyna G. Diagnostic Medical Clinic
 
 TechCare is a full-stack clinic management system designed to streamline patient registration, consultation and laboratory queueing, laboratory requests, billing, and administrative operations for Reyna G. Diagnostic Medical Clinic.
@@ -16,75 +15,81 @@ TechCare is a full-stack clinic management system designed to streamline patient
 
 ## System Architecture
 
-The following diagram illustrates the frontend, backend, middleware, database, external services, and SSE-based queue monitoring.
-
-
+The diagram below reflects the code as it exists today: the React role dashboards, the Express 5 API with its JWT and role middleware, the five role routers, the SSE-based live queue monitor, the Neon PostgreSQL schema, and the external services.
 
 ```mermaid
 flowchart TD
-    %% Frontend
-    A[React Frontend<br/>Vite · TypeScript · Tailwind CSS]
-    B[Role-Based Dashboards<br/>Admin · Front Desk · Doctor<br/>Laboratory Staff · Patient]
-    C[Axios API Client<br/>JWT Bearer Token]
-    D[Admin QueueingMonitor<br/>Queue State and UI]
-    E[fetch-event-source<br/>Authenticated SSE Client]
+    %% ---------------- Frontend ----------------
+    subgraph FE["Frontend: React 19 · Vite · Tailwind CSS 4 · react-router"]
+        A["App.tsx Routes<br/>ProtectedRoute role guard<br/>(enforced in production builds only)"]
+        B["Role Dashboards<br/>Admin · Front Desk · Doctor<br/>Laboratory Staff · Patient"]
+        C["lib/axios.ts<br/>Bearer token from sessionStorage"]
+        D["Admin QueueingMonitor<br/>reloads queue on queue-changed"]
+        E["connectQueueStream.ts<br/>fetch-event-source with auth header"]
+    end
 
-    %% Backend
-    F[Express Server<br/>server.ts]
-    G[API Routers<br/>Auth · Admin · Front Desk<br/>Doctor · Laboratory · Patient]
-    H[JWT Authentication Middleware]
-    I[Role Authorization Middleware]
-    J[Route Controllers<br/>Request Validation and Business Logic]
-    K[Shared Utilities<br/>generateId.ts · calculateAge.ts]
+    %% ---------------- Backend ----------------
+    subgraph BE["Backend: Express 5 · TypeScript · ESM"]
+        F["server.ts<br/>connectNeon on boot<br/>syncSchema when IS_PRODUCTION<br/>graceful SSE shutdown"]
+        G["app.ts<br/>CORS · JSON body · routers<br/>static frontend/dist + SPA fallback"]
+        H["API Routers<br/>/api/auth · /api/admin · /api/fdstaff<br/>/api/doctor · /api/labstaff · /api/patient<br/>(dev only: /api/test · /api/sse)"]
+        I["authMiddleware<br/>verify JWT, load users row"]
+        J["Role Middleware<br/>admin: always on<br/>fdstaff · doctor · labstaff: only when IS_PRODUCTION<br/>patientMiddleware: patient lab results"]
+        K["Controllers + DTO types<br/>get · post · update · delete per role"]
+        L["Utils<br/>generateId · consultationValidation<br/>activityLogger · calculateAge"]
+        M["multer<br/>temp disk upload, images only, 5 MB"]
+    end
 
-    %% Queue SSE
-    L[SSE Endpoint<br/>GET /api/admin/queue/stream]
-    M[queueStream.controller.ts<br/>Handle Stream Connection]
-    N[queueStream.ts<br/>Register Clients · Heartbeat<br/>publishQueueChange]
-    O[getQueueMonitorEntries.ts<br/>Fetch Queue Snapshot]
+    %% ---------------- Queue SSE ----------------
+    subgraph SSE["services/queue-sse"]
+        N["queueStream.handlers.ts<br/>GET /api/admin/queue/stream<br/>GET /api/admin/queue/stream/stats"]
+        O["queueStream.hub.ts<br/>connected screens · 25s ping<br/>publishQueueChange, debounced 150 ms"]
+    end
 
-    %% Data and services
-    P[(Neon PostgreSQL<br/>Users · Patients · Services<br/>Queue · Consultations · Lab<br/>Prescriptions · Bills · Activity Logs)]
-    Q[Cloudinary<br/>Image and File Storage]
+    %% ---------------- Data and services ----------------
+    P[("Neon PostgreSQL<br/>users · patients · services · packages<br/>queue_entries · consultation_records · prescription_records<br/>laboratory_requests · laboratory_request_items · laboratory_results<br/>form_templates · form_components · form_component_types<br/>bills · activity_logs · actions · system_activity")]
+    Q["Cloudinary<br/>patient and staff photos"]
+    R["Seed scripts<br/>seed.sql · seed.ts · seedBulk.ts"]
 
-    %% Normal API flow
+    %% ---------------- Normal API flow ----------------
     A --> B
     B --> C
-    C -->|HTTP Request + JWT| F
-    F --> G
+    C -->|"HTTP request + JWT"| G
     G --> H
     H --> I
     I --> J
     J --> K
-    J -->|Read and Write Records| P
-    J -->|Upload Files| Q
+    K --> L
+    K -->|"read and write via sql / pool"| P
+    K -->|"image upload"| M
+    M -->|"upload, store secure_url"| Q
 
-    %% SSE connection flow
+    %% ---------------- Startup ----------------
+    F --> G
+    F -->|"CREATE TABLE IF NOT EXISTS<br/>additive repairs"| P
+    R -->|"seed data"| P
+
+    %% ---------------- SSE connection flow ----------------
     B --> D
     D --> E
-    E -->|Authenticated Stream Request| F
-    F --> L
-    L --> H
-    H --> I
-    I --> M
-    M --> N
+    E -->|"authenticated stream request"| H
+    H -->|"admin router, JWT and admin role"| N
     N --> O
-    O -->|Query Queue Data| P
-    O -->|Return Snapshot| N
-    N -->|Initial Queue Snapshot| E
 
-    %% Live queue update flow
-    J -->|After Successful Queue Mutation| N
-    N -->|Broadcast queue-updated Event| E
-    E -->|Parse Event and Update State| D
+    %% ---------------- Live queue update flow ----------------
+    K -->|"after a queue mutation:<br/>publishQueueChange"| O
+    O -->|"queue-changed signal only"| E
+    E -->|"onQueueChanged"| D
+    D -->|"GET /api/admin/queues<br/>reload today's queue"| C
 
-    %% Frontend hosting
-    F -.->|SPA Fallback| A
+    %% ---------------- Frontend hosting ----------------
+    G -.->|"SPA fallback index.html"| A
 ```
+
+**How the live queue works.** SSE carries only a small `queue-changed` signal, never the queue data. When a controller changes `queue_entries` (front desk adds a consultation or confirms a lab payment, a doctor or lab staff accepts, skips, completes, or cancels an entry), it calls `publishQueueChange()`. The hub waits 150 ms so bursts collapse into one message, then notifies every connected Queue Monitor, which reloads today's queue from `GET /api/admin/queues`. The monitor also reloads whenever the stream (re)connects, so it never misses changes. The hub keeps its screen list in memory, so this works with a single backend instance only.
 
 ## Documentation
 
 For detailed setup and deployment instructions, see:
 
 **[TechCare Setup and Deployment Notes](docs/SETUP.md)**
-
