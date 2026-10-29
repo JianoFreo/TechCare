@@ -8,8 +8,8 @@ import PatientInformation from "./users/patient/PatientInformation";
 // import QueueTracking from "./queue/QueueTracking";
 import LaboratoryStaff from "./users/laboratory_staff/LaboratoryStaff";
 import ProtectedRoute from "./lib/ProtectedRoute";
-import SSEProtocols from "./users/test/sse/SSEReceive";
-import SSESend from "./users/test/sse/SSESend";
+import SSEProtocols from "./users/test/sse_queue/MessageSSEReceive";
+import SSESend from "./users/test/sse_queue/MessageSSESend";
 function App() {
   return (
     <div className="select-none">
