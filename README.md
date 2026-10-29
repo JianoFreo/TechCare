@@ -15,7 +15,7 @@ TechCare is a full-stack clinic management system designed to streamline patient
 
 ## System Architecture
 
-The diagram below reflects the code as it exists today: the React role dashboards, the Express 5 API with its JWT and role middleware, the five role routers, the SSE-based live queue monitor, the Neon PostgreSQL schema, and the external services.
+The diagram below reflects the code as it exists today: the React role dashboards, the Express 5 API with its JWT and role middleware, the five role routers, the SSE-based live queue monitor, the PostgreSQL schema, and the external services.
 
 ```mermaid
 flowchart TD
@@ -86,7 +86,6 @@ flowchart TD
     G -.->|"SPA fallback index.html"| A
 ```
 
-**How the live queue works.** SSE carries only a small `queue-changed` signal, never the queue data. When a controller changes `queue_entries` (front desk adds a consultation or confirms a lab payment, a doctor or lab staff accepts, skips, completes, or cancels an entry), it calls `publishQueueChange()`. The hub waits 150 ms so bursts collapse into one message, then notifies every connected Queue Monitor, which reloads today's queue from `GET /api/admin/queues`. The monitor also reloads whenever the stream (re)connects, so it never misses changes. The hub keeps its screen list in memory, so this works with a single backend instance only.
 
 ## Documentation
 
