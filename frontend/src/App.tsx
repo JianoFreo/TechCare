@@ -8,8 +8,10 @@ import PatientInformation from "./users/patient/PatientInformation";
 // import QueueTracking from "./queue/QueueTracking";
 import LaboratoryStaff from "./users/laboratory_staff/LaboratoryStaff";
 import ProtectedRoute from "./lib/ProtectedRoute";
-import SSEProtocols from "./users/test/sse/SSEReceive";
-import SSESend from "./users/test/sse/SSESend";
+import MessageSSERecieve from "./users/test/sse_message/MessageSSEReceive";
+import MessageSSESend from "./users/test/sse_message/MessageSSESend";
+import QueueSendSSE from "./users/test/sse_queue/QueueSendSSE";
+import QueueReceiveSSE from "./users/test/sse_queue/QueueReceiveSSE";
 function App() {
   return (
     <div className="select-none">
@@ -59,12 +61,18 @@ function App() {
           }
         />
 
-          {/* Your existing routes */}
+        {/* Your existing routes */}
 
-          <Route path="/sse-protocols">
-            <Route path="sse-send" element={<SSESend />} />
-            <Route path="sse-receive" element={<SSEProtocols />} />
+        <Route path="/sse">
+          <Route path="sse-message">
+            <Route path="sse-send" element={<MessageSSESend />} />
+            <Route path="sse-receive" element={<MessageSSERecieve />} />
           </Route>
+          <Route path="sse-queue">
+            <Route path="sse-send" element={<QueueReceiveSSE />} />
+            <Route path="sse-receive" element={<QueueSendSSE />} />
+          </Route>
+        </Route>
         {/* Public-facing display, intentionally not gated
         <Route path="/queue-tracking" element={<QueueTracking />} /> */}
       </Routes>
