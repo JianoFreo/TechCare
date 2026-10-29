@@ -26,12 +26,9 @@ export async function receiveQueueSSE(req: Request, res: Response) {
 
     res.write(`data: ${JSON.stringify({ messages })}`);
   } catch (error) {
-    // Print the actual error in the backend terminal for debugging.
     console.error(error);
-
-    // If headers have not been sent, we can still send a normal
-    // HTTP 500 error response.
     if (!res.headersSent) {
+      // If headers have not been sent, we can still send a normal
       res.status(500).json({
         message: "Internal Server error",
       });
@@ -41,5 +38,17 @@ export async function receiveQueueSSE(req: Request, res: Response) {
       // as if this were a normal response.
       res.end();
     }
+  }
+}
+
+export async function addQueue(req: Request, res: Response) {
+  try {
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      // Return an HTTP 500 error if the operation fails.
+      message: "Internal Server error",
+    });
   }
 }
