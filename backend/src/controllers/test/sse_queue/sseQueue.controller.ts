@@ -19,7 +19,7 @@ export async function receiveQueueSSE(req: Request, res: Response) {
     // Send the response headers immediately instead of waiting
     // for the first piece of data to be written.
     res.flushHeaders();
-    addClient(res);
+    addClient(res, req.user);
     const messages = await sql`
         SELECT * FROM sse_test
     `;
