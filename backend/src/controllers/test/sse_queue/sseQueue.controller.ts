@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { addClient } from "./utils/utils.js";
+import { sql } from "../../../config/db.js";
 export async function receiveQueueSSE(req: Request, res: Response) {
   try {
     const { message } = req.body;
@@ -18,6 +19,27 @@ export async function receiveQueueSSE(req: Request, res: Response) {
     // Send the response headers immediately instead of waiting
     // for the first piece of data to be written.
     res.flushHeaders();
-    addClient(res)
-  } catch (error) {}
+    addClient(res);
+    const messages = await sql`
+        SELECT * FROM sse_test
+    `;
+
+    res.write(`data: ${JSON.stringify({ messages })}`);
+  } catch (error) {
+    // Print the actual error in the backend terminal for debugging.
+    console.error(error);
+
+    // If headers have not been sent, we can still send a normal
+    // HTTP 500 error response.
+    if (!res.headersSent) {
+      res.status(500).json({
+        message: "Internal Server error",
+      });
+    } else {
+      // If the SSE response has already started,
+      // close the connection instead of trying to send JSON
+      // as if this were a normal response.
+      res.end();
+    }
+  }
 }
