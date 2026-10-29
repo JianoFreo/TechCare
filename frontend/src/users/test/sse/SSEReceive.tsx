@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 
-function SSEProtocols() {
+function SSEREcieve() {
   const [messages, setMessages] = useState<string[]>([]);
   const [status, setStatus] = useState<"connecting" | "connected" | "error">(
     "connecting"
@@ -180,4 +180,4 @@ function SSEProtocols() {
   );
 }
 
-export default SSEProtocols;
+export default SSEREcieve;

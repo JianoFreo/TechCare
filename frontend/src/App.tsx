@@ -63,7 +63,7 @@ function App() {
 
           <Route path="/sse-protocols">
             <Route path="sse-send" element={<SSESend />} />
-            <Route path="SSEProtocols" element={<SSEProtocols />} />
+            <Route path="sse-receive" element={<SSEProtocols />} />
           </Route>
         {/* Public-facing display, intentionally not gated
         <Route path="/queue-tracking" element={<QueueTracking />} /> */}
