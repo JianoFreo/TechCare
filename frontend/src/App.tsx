@@ -10,6 +10,8 @@ import LaboratoryStaff from "./users/laboratory_staff/LaboratoryStaff";
 import ProtectedRoute from "./lib/ProtectedRoute";
 import MessageSSERecieve from "./users/test/sse_message/MessageSSEReceive";
 import MessageSSESend from "./users/test/sse_message/MessageSSESend";
+import QueueSendSSE from "./users/test/sse_queue/QueueSendSSE";
+import QueueReceiveSSE from "./users/test/sse_queue/QueueReceiveSSE";
 function App() {
   return (
     <div className="select-none">
@@ -65,6 +67,10 @@ function App() {
           <Route path="sse-message">
             <Route path="sse-send" element={<MessageSSESend />} />
             <Route path="sse-receive" element={<MessageSSERecieve />} />
+          </Route>
+          <Route path="sse-queue">
+            <Route path="sse-send" element={<QueueReceiveSSE />} />
+            <Route path="sse-receive" element={<QueueSendSSE />} />
           </Route>
         </Route>
         {/* Public-facing display, intentionally not gated

@@ -1,9 +1,9 @@
 import React from 'react'
 
-function QueueSendSSE() {
+function QueueSend() {
   return (
     <div>QueueSendSSE</div>
   )
 }
 
-export default QueueSendSSE
+export default QueueSend
