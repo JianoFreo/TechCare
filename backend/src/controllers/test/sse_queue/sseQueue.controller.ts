@@ -1,9 +1,8 @@
 import type { Request, Response } from "express";
-import { addClient } from "./utils/utils.js";
+import { addClient, sendData } from "./utils/utils.js";
 import { sql } from "../../../config/db.js";
 export async function receiveQueueSSE(req: Request, res: Response) {
   try {
-    const { message } = req.body;
     // Tell the browser that this response is an SSE stream,
     // not an ordinary JSON response.
     res.setHeader("Content-Type", "text/event-stream");
@@ -19,19 +18,32 @@ export async function receiveQueueSSE(req: Request, res: Response) {
     // Send the response headers immediately instead of waiting
     // for the first piece of data to be written.
     res.flushHeaders();
-    addClient(res);
+    addClient(res, req.user);
     const messages = await sql`
         SELECT * FROM sse_test
     `;
 
-    res.write(`data: ${JSON.stringify({ messages })}`);
-  } catch (error) {
-    // Print the actual error in the backend terminal for debugging.
-    console.error(error);
+    res.write(`data: ${JSON.stringify(messages)}`);
 
-    // If headers have not been sent, we can still send a normal
-    // HTTP 500 error response.
+    //example payload
+    // data: [
+    //   {
+    //     id: 1,
+    //     message: "Hello",
+    //   },
+    //   {
+    //     id: 2,
+    //     message: "Good morning",
+    //   },
+    //   {
+    //     id: 3,
+    //     message: "How are you?",
+    //   },
+    // ];
+  } catch (error) {
+    console.error(error);
     if (!res.headersSent) {
+      // If headers have not been sent, we can still send a normal
       res.status(500).json({
         message: "Internal Server error",
       });
@@ -41,5 +53,24 @@ export async function receiveQueueSSE(req: Request, res: Response) {
       // as if this were a normal response.
       res.end();
     }
+  }
+}
+
+export async function addQueue(req: Request, res: Response) {
+  try {
+    const { message } = req.body;
+
+    const addedMessage = await sql`
+      INSERT INTO sse_test (message)
+      VALUES (${message})
+      RETURNING *;
+      `;
+    sendData(addedMessage);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      // Return an HTTP 500 error if the operation fails.
+      message: "Internal Server error",
+    });
   }
 }
