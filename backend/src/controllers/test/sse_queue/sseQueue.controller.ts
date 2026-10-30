@@ -23,7 +23,23 @@ export async function receiveQueueSSE(req: Request, res: Response) {
         SELECT * FROM sse_test
     `;
 
-    res.write(`data: ${JSON.stringify({ messages })}`);
+    res.write(`data: ${JSON.stringify(messages)}`);
+
+    //example payload
+    // data: [
+    //   {
+    //     id: 1,
+    //     message: "Hello",
+    //   },
+    //   {
+    //     id: 2,
+    //     message: "Good morning",
+    //   },
+    //   {
+    //     id: 3,
+    //     message: "How are you?",
+    //   },
+    // ];
   } catch (error) {
     console.error(error);
     if (!res.headersSent) {
@@ -42,15 +58,14 @@ export async function receiveQueueSSE(req: Request, res: Response) {
 
 export async function addQueue(req: Request, res: Response) {
   try {
-    const { message } = req.body
+    const { message } = req.body;
 
-    const addedMessage = await sql
-      `
+    const addedMessage = await sql`
       INSERT INTO sse_test (message)
       VALUES (${message})
       RETURNING *;
-      `
-    sendData(addedMessage)
+      `;
+    sendData(addedMessage);
   } catch (error) {
     console.error(error);
     res.status(500).json({
