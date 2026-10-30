@@ -38,8 +38,8 @@ export async function addClient(res: Response, user: User) {
   });
 }
 
-export async function sendData(data: any) {
+export async function sendData(data: string) {
   for (const [client, user] of clients) {
-    client.write(`data: ${JSON.stringify({ data })}`);
+    client.write(`data: ${JSON.stringify(data)}`);
   }
 }

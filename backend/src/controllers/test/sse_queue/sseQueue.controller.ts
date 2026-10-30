@@ -44,13 +44,13 @@ export async function addQueue(req: Request, res: Response) {
   try {
     const { message } = req.body
 
-    const messages = await sql
+    const [addedMessage] = await sql
       `
       INSERT INTO sse_test (message)
       VALUES (${message})
       RETURNING *;
       `
-    sendData(messages)
+    sendData(addedMessage.message)
   } catch (error) {
     console.error(error);
     res.status(500).json({
