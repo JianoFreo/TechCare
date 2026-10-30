@@ -40,9 +40,10 @@ export async function addClient(res: Response, user: User) {
 
 export async function sendData(data: any[]) {
   for (const [client, user] of clients) {
+    if (user.role === "admin"){
     client.write(`data: ${JSON.stringify(data)}`);
+    }
   }
-
   //expected payload
   // data: [{"id":4,"message":"New message"}]
 }
