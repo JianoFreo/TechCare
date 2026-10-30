@@ -1,9 +1,8 @@
 import type { Request, Response } from "express";
-import { addClient } from "./utils/utils.js";
+import { addClient, sendData } from "./utils/utils.js";
 import { sql } from "../../../config/db.js";
 export async function receiveQueueSSE(req: Request, res: Response) {
   try {
-    const { message } = req.body;
     // Tell the browser that this response is an SSE stream,
     // not an ordinary JSON response.
     res.setHeader("Content-Type", "text/event-stream");
@@ -43,7 +42,15 @@ export async function receiveQueueSSE(req: Request, res: Response) {
 
 export async function addQueue(req: Request, res: Response) {
   try {
-    
+    const { message } = req.body
+
+    const messages = await sql
+      `
+      INSERT INTO sse_test (message)
+      VALUES (${message})
+      RETURNING *;
+      `
+    sendData(messages)
   } catch (error) {
     console.error(error);
     res.status(500).json({
