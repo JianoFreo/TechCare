@@ -1,5 +1,6 @@
 import ErrorMessage from "../../components/ErrorMessage";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 import {
   FileClock,
   FlaskConical,
@@ -16,13 +17,6 @@ import QueueTracking from "./pages/QueueTracking";
 import PatientDashboard from "./pages/PatientDashboard";
 import type { PatientSessionUser } from "../../interface/PatientPortal";
 
-type PatientPage =
-  | "dashboard"
-  | "medical-history"
-  | "queue-tracking"
-  | "laboratory-results"
-  | "prescriptions";
-
 function readLoggedInPatient(): PatientSessionUser | null {
   const stored = sessionStorage.getItem("user");
   if (!stored) return null;
@@ -38,10 +32,11 @@ function Patient() {
   const [sidebarOpen, setSidebarOpen] = useState(
     () => window.innerWidth >= 1024,
   );
-  const [activePage, setActivePage] = useState<PatientPage>("dashboard");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activePage = searchParams.get("page") ?? "dashboard";
+  const consultationId = searchParams.get("consultation_id") ?? undefined;
   const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [consultationId, setConsultationId] = useState<string | undefined>();
 
   useEffect(() => {
     const refreshWhenVisible = () => {
@@ -83,10 +78,10 @@ function Patient() {
     { page: "prescriptions", label: "Prescriptions", icon: <Pill size={20} /> },
   ];
 
-  function setPage(page: string) {
+  // Changing pages drops page-specific params such as consultation_id.
+  function setPage(page: string, params: Record<string, string> = {}) {
     if (!navItems.some((item) => item.page === page)) return;
-    setActivePage(page as PatientPage);
-    setConsultationId(undefined);
+    setSearchParams({ page, ...params });
     setLoading(false);
     if (window.innerWidth < 1024) setSidebarOpen(false);
   }
@@ -142,10 +137,9 @@ function Patient() {
                 refreshKey={refreshKey}
                 onLoadingChange={setLoading}
                 laboratoryOnly={activePage === "laboratory-results"}
-                onPrescriptions={(id) => {
-                  setPage("prescriptions");
-                  setConsultationId(id);
-                }}
+                onPrescriptions={(id) =>
+                  setPage("prescriptions", id ? { consultation_id: id } : {})
+                }
               />
             )}
             {activePage === "prescriptions" && (
@@ -156,6 +150,18 @@ function Patient() {
                 onLoadingChange={setLoading}
                 consultationId={consultationId}
               />
+            )}
+            {!navItems.some((item) => item.page === activePage) && (
+              <div className="rounded-md border border-gray-200 bg-white p-4 text-center sm:p-8">
+                <h2 className="font-semibold text-gray-800">Page not found</h2>
+                <button
+                  type="button"
+                  onClick={() => setPage("dashboard")}
+                  className="mt-3 text-sm text-sky-600 hover:underline"
+                >
+                  Return to Dashboard
+                </button>
+              </div>
             )}
           </main>
         </div>
